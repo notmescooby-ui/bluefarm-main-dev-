@@ -9,29 +9,60 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'main_shell.dart';
 import 'buyer_shell.dart';
-import 'admin_shell.dart';
-import 'pending_approval_screen.dart';
+import 'device_connect_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  CONFIG — replace with your actual Anthropic API key
 // ─────────────────────────────────────────────────────────────────────────────
-const _kAnthropicKey = 'YOUR_ANTHROPIC_API_KEY';
+const _kAnthropicKey = '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';
 const _kAnthropicUrl = 'https://api.anthropic.com/v1/messages';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  DROPDOWNS
+//  DROPDOWN DATA
 // ─────────────────────────────────────────────────────────────────────────────
-const _farmingTypes = [
-  'Earthen Pond', 'Concrete Tank', 'RAS (Recirculating Aquaculture System)',
-  'Cage Culture', 'Raceway', 'Biofloc', 'Paddy-cum-Fish', 'Other',
+const _waterbodyTypes = [
+  'Earthen Pond',
+  'Concrete Tank',
+  'RAS (Recirculating Aquaculture System)',
+  'Cage Culture',
+  'Raceway / Channel',
+  'Biofloc Tank',
+  'Paddy-cum-Fish',
+  'Reservoir / Lake',
+  'Brackish Water Pond',
+  'Other',
 ];
+
 const _fishSpecies = [
-  'Rohu', 'Catla', 'Mrigal', 'Tilapia', 'Pangasius', 'Shrimp (Vannamei)',
-  'Shrimp (Tiger)', 'Catfish', 'Carp', 'Hilsa', 'Salmon', 'Other',
+  'Rohu',
+  'Catla',
+  'Mrigal',
+  'Tilapia (Nile)',
+  'Pangasius',
+  'Shrimp – Vannamei',
+  'Shrimp – Tiger',
+  'Catfish (Magur)',
+  'Common Carp',
+  'Silver Carp',
+  'Bighead Carp',
+  'Grass Carp',
+  'Hilsa',
+  'Salmon',
+  'Trout',
+  'Milkfish',
+  'Other',
 ];
+
 const _buyerTypes = [
-  'Wholesale Trader', 'Retail Trader', 'Export Company',
-  'Processing Unit', 'Hotel / Restaurant', 'Individual Buyer', 'Other',
+  'Wholesale Trader',
+  'Retail Trader',
+  'Export Company',
+  'Processing / Cold Storage Unit',
+  'Hotel / Restaurant',
+  'Supermarket / Retail Chain',
+  'Individual Buyer',
+  'NGO / Co-operative',
+  'Other',
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,8 +71,14 @@ const _buyerTypes = [
 class FarmerInfoScreen extends StatefulWidget {
   final String phone;
   final String? email;
+  final String? role;
 
-  const FarmerInfoScreen({super.key, required this.phone, this.email});
+  const FarmerInfoScreen({
+    super.key,
+    required this.phone,
+    this.email,
+    this.role,
+  });
 
   @override
   State<FarmerInfoScreen> createState() => _FarmerInfoScreenState();
@@ -53,62 +90,87 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
   // ── role ──────────────────────────────────────────────────────────────────
   String? _role;
 
-  // ── controllers ───────────────────────────────────────────────────────────
-  final _nameCtrl      = TextEditingController();
-  final _aadhaarCtrl   = TextEditingController();
-  final _farmNameCtrl  = TextEditingController();
-  final _pincodeCtrl   = TextEditingController();
-  final _farmSizeCtrl  = TextEditingController();
-  final _secondaryCtrl = TextEditingController();
-  final _companyCtrl   = TextEditingController();
-  final _gstCtrl       = TextEditingController();
-  final _devIdCtrl     = TextEditingController();
-  final _devRoleCtrl   = TextEditingController();
+  // ── FARMER controllers ────────────────────────────────────────────────────
+  final _farmNameCtrl    = TextEditingController(); // Farm Name (first)
+  final _farmerNameCtrl  = TextEditingController(); // Farmer Name (second)
+  final _farmerAgeCtrl   = TextEditingController(); // Age
+  final _aadhaarCtrl     = TextEditingController(); // Aadhaar number
+  final _pincodeCtrl     = TextEditingController(); // Pincode
+  final _gpsCtrl         = TextEditingController(); // GPS (editable)
+  final _farmSizeCtrl    = TextEditingController(); // Pond area acres
+  final _customWaterCtrl = TextEditingController(); // Other waterbody
+  final _stockingCtrl    = TextEditingController(); // Stocking density
+  final _secondaryCtrl   = TextEditingController(); // Secondary species
+
+  // ── BUYER controllers ─────────────────────────────────────────────────────
+  final _buyerNameCtrl    = TextEditingController(); // Buyer Name (first)
+  final _companyCtrl      = TextEditingController(); // Company Name (second)
+  final _buyerAgeCtrl     = TextEditingController(); // Age (not shown per spec, kept for DB)
+  final _buyerPincodeCtrl = TextEditingController(); // Business pincode
+  final _buyerGpsCtrl     = TextEditingController(); // Business GPS
 
   // ── dropdowns ─────────────────────────────────────────────────────────────
-  String? _farmingType;
+  String? _waterbodyType;
   String? _primarySpecies;
   String? _buyerType;
 
-  // ── aadhaar verification ──────────────────────────────────────────────────
+  // ── Aadhaar ───────────────────────────────────────────────────────────────
   XFile?  _aadhaarPhoto;
   bool    _aadhaarVerified  = false;
   bool    _aadhaarVerifying = false;
   String? _aadhaarError;
   String? _aadhaarSuccess;
 
-  // ── gst ───────────────────────────────────────────────────────────────────
-  bool    _gstValid = false;
-  String? _gstError;
+  // Detailed check results to show the user
+  bool _checkEmblem  = false;
+  bool _checkName    = false;
+  bool _checkFormat  = false;
 
-  // ── location ──────────────────────────────────────────────────────────────
+  // ── location – farmer ─────────────────────────────────────────────────────
   String? _region;
-  String? _gpsAddress;
   bool    _locLoading = false;
+
+  // ── location – buyer ──────────────────────────────────────────────────────
+  String? _buyerRegion;
+  bool    _buyerLocLoading = false;
 
   // ── submit ────────────────────────────────────────────────────────────────
   bool _submitting = false;
 
-  // ── animation ─────────────────────────────────────────────────────────────
+  // ── animations ────────────────────────────────────────────────────────────
   late AnimationController _fadeCtrl;
   late Animation<double>   _fadeAnim;
+  late AnimationController _roleCtrl;
+  late Animation<double>   _roleAnim;
 
   @override
   void initState() {
     super.initState();
     _fadeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    _fadeAnim =
-        CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+        vsync: this, duration: const Duration(milliseconds: 450));
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+
+    _roleCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 700));
+    _roleAnim = CurvedAnimation(parent: _roleCtrl, curve: Curves.easeOutCubic);
+    _roleCtrl.forward();
+
+    if (widget.role != null) {
+      _role = widget.role;
+      _fadeCtrl.forward();
+    }
   }
 
   @override
   void dispose() {
     _fadeCtrl.dispose();
+    _roleCtrl.dispose();
     for (final c in [
-      _nameCtrl, _aadhaarCtrl, _farmNameCtrl, _pincodeCtrl,
-      _farmSizeCtrl, _secondaryCtrl, _companyCtrl, _gstCtrl,
-      _devIdCtrl, _devRoleCtrl,
+      _farmNameCtrl, _farmerNameCtrl, _farmerAgeCtrl, _aadhaarCtrl,
+      _pincodeCtrl, _gpsCtrl, _farmSizeCtrl, _customWaterCtrl,
+      _stockingCtrl, _secondaryCtrl,
+      _buyerNameCtrl, _companyCtrl, _buyerAgeCtrl,
+      _buyerPincodeCtrl, _buyerGpsCtrl,
     ]) {
       c.dispose();
     }
@@ -124,100 +186,114 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     _fadeCtrl.forward(from: 0);
   }
 
+  // The name used for Aadhaar matching depends on the active role
+  String get _registeredName => _role == 'farmer'
+      ? _farmerNameCtrl.text.trim()
+      : _buyerNameCtrl.text.trim();
+
   bool get _canSubmit {
     if (!_aadhaarVerified) return false;
-    if (_nameCtrl.text.trim().isEmpty) return false;
-    switch (_role) {
-      case 'farmer':
-        return _farmNameCtrl.text.trim().isNotEmpty &&
-            _pincodeCtrl.text.trim().length == 6 &&
-            _farmSizeCtrl.text.trim().isNotEmpty &&
-            _farmingType != null &&
-            _primarySpecies != null;
-      case 'buyer':
-        return _companyCtrl.text.trim().isNotEmpty &&
-            _buyerType != null &&
-            _gstValid &&
-            _pincodeCtrl.text.trim().length == 6;
-      case 'developer':
-        return _devIdCtrl.text.trim().isNotEmpty &&
-            _devRoleCtrl.text.trim().isNotEmpty;
-      default:
-        return false;
+    if (_role == 'farmer') {
+      return _farmNameCtrl.text.trim().isNotEmpty &&
+          _farmerNameCtrl.text.trim().isNotEmpty &&
+          _farmerAgeCtrl.text.trim().isNotEmpty &&
+          _pincodeCtrl.text.trim().length == 6 &&
+          _farmSizeCtrl.text.trim().isNotEmpty &&
+          _waterbodyType != null &&
+          (_waterbodyType != 'Other' ||
+              _customWaterCtrl.text.trim().isNotEmpty) &&
+          _primarySpecies != null;
+    } else if (_role == 'buyer') {
+      return _buyerNameCtrl.text.trim().isNotEmpty &&
+          _companyCtrl.text.trim().isNotEmpty &&
+          _buyerType != null &&
+          _buyerPincodeCtrl.text.trim().length == 6;
     }
+    return false;
   }
 
-  // ── pincode lookup ────────────────────────────────────────────────────────
-  Future<void> _lookupPincode(String pin) async {
+  // ── Pincode lookup ────────────────────────────────────────────────────────
+  Future<void> _lookupPincode(String pin, {bool isBuyer = false}) async {
     if (pin.length != 6) return;
     try {
       final res = await http.get(
-        Uri.parse('https://api.postalpincode.in/pincode/$pin'),
-      );
+          Uri.parse('https://api.postalpincode.in/pincode/$pin'));
       final data = jsonDecode(res.body) as List;
       if (data.isNotEmpty && data[0]['Status'] == 'Success') {
         final po = (data[0]['PostOffice'] as List)[0];
+        final region = '${po['District']}, ${po['State']}, India';
         setState(() {
-          _region = '${po['District']}, ${po['State']}, India';
+          if (isBuyer) _buyerRegion = region;
+          else _region = region;
         });
       }
     } catch (_) {}
   }
 
-  // ── GPS location ──────────────────────────────────────────────────────────
-  Future<void> _detectLocation() async {
-    setState(() => _locLoading = true);
+  // ── GPS ───────────────────────────────────────────────────────────────────
+  Future<void> _detectLocation({bool isBuyer = false}) async {
+    setState(() {
+      if (isBuyer) _buyerLocLoading = true;
+      else _locLoading = true;
+    });
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _showSnack('Location services are disabled.');
-        return;
-      }
+      bool svcEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!svcEnabled) { _showSnack('Location services are disabled.'); return; }
       LocationPermission perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
-        if (perm == LocationPermission.denied) {
-          _showSnack('Location permission denied.');
-          return;
-        }
+        if (perm == LocationPermission.denied) { _showSnack('Permission denied.'); return; }
       }
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+          desiredAccuracy: LocationAccuracy.high);
+      final coords =
+          '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
       setState(() {
-        _gpsAddress =
-            '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
+        if (isBuyer) _buyerGpsCtrl.text = coords;
+        else _gpsCtrl.text = coords;
       });
     } catch (e) {
       _showSnack('Could not get location: $e');
     } finally {
-      setState(() => _locLoading = false);
+      setState(() {
+        if (isBuyer) _buyerLocLoading = false;
+        else _locLoading = false;
+      });
     }
   }
 
-  // ── pick aadhaar photo ────────────────────────────────────────────────────
-  Future<void> _pickAadhaarPhoto(ImageSource source) async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(
-      source: source,
-      imageQuality: 85,
-      maxWidth: 1200,
-    );
+  // ── Photo picker ──────────────────────────────────────────────────────────
+  Future<void> _pickPhoto(ImageSource source) async {
+    final file = await ImagePicker().pickImage(
+        source: source, imageQuality: 90, maxWidth: 1600);
     if (file == null) return;
     setState(() {
       _aadhaarPhoto    = file;
       _aadhaarVerified = false;
       _aadhaarError    = null;
       _aadhaarSuccess  = null;
+      _checkEmblem     = false;
+      _checkName       = false;
+      _checkFormat     = false;
     });
   }
 
   void _showPhotoSourceSheet() {
+    // Validate prerequisites before allowing upload
+    if (_registeredName.isEmpty) {
+      _showSnack('Please enter your full name first.');
+      return;
+    }
+    final aadhaar = _aadhaarCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (aadhaar.length != 12) {
+      _showSnack('Please enter a valid 12-digit Aadhaar number first.');
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -231,37 +307,37 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
                     borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(height: 16),
-              const Text('Upload Aadhaar Photo',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text('Upload Aadhaar Card Photo',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 8),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'Upload a clear photo of yourself holding your Aadhaar card. '
-                  'Ensure the Govt of India emblem and your name are clearly visible.',
+                  'Upload a clear, well-lit photo of your Aadhaar card.\n'
+                  'The system will verify:\n'
+                  '  ✦ Government of India logo\n'
+                  '  ✦ Your name matches\n'
+                  '  ✦ Aadhaar number format (XXXX XXXX XXXX)',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13, height: 1.5),
                 ),
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading:
-                    const CircleAvatar(child: Icon(Icons.camera_alt)),
+                leading: CircleAvatar(
+                  backgroundColor: const Color(0xFF1A6FA8).withOpacity(0.1),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF1A6FA8)),
+                ),
                 title: const Text('Take Photo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickAadhaarPhoto(ImageSource.camera);
-                },
+                onTap: () { Navigator.pop(context); _pickPhoto(ImageSource.camera); },
               ),
               ListTile(
-                leading: const CircleAvatar(
-                    child: Icon(Icons.photo_library)),
+                leading: CircleAvatar(
+                  backgroundColor: const Color(0xFF1A6FA8).withOpacity(0.1),
+                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF1A6FA8)),
+                ),
                 title: const Text('Choose from Gallery'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickAadhaarPhoto(ImageSource.gallery);
-                },
+                onTap: () { Navigator.pop(context); _pickPhoto(ImageSource.gallery); },
               ),
               const SizedBox(height: 8),
             ],
@@ -271,138 +347,190 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     );
   }
 
-  // ── Claude AI Aadhaar verification ────────────────────────────────────────
-  Future<void> _verifyAadhaarWithAI() async {
-    final name = _nameCtrl.text.trim();
-    // Strip ALL non-digit characters before validating
-    final aadhaar = _aadhaarCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+  // ─────────────────────────────────────────────────────────────────────────
+  //  AI OCR AADHAAR VERIFICATION
+  //  Tuned to the exact layout of the Indian Aadhaar card:
+  //  - Top-left: Ashoka Pillar emblem + "सत्यमेव जयते"
+  //  - Top-center: tricolor stripes + "Government of India" text
+  //  - Top-right: Aadhaar fingerprint/sun logo
+  //  - Center: photo, blurred name/DOB/address lines
+  //  - Bottom-center: XXXX XXXX XXXX number
+  //  - Bottom-right: QR code
+  // ─────────────────────────────────────────────────────────────────────────
+Future<void> _verifyAadhaarWithAI() async {
+  final name = _registeredName;
+  final aadhaar = _aadhaarCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Update field to show cleaned value
-    if (_aadhaarCtrl.text != aadhaar) {
-      _aadhaarCtrl.value = TextEditingValue(
-        text: aadhaar,
-        selection: TextSelection.collapsed(offset: aadhaar.length),
-      );
-    }
+  if (_aadhaarCtrl.text != aadhaar) {
+    _aadhaarCtrl.value = TextEditingValue(
+      text: aadhaar,
+      selection: TextSelection.collapsed(offset: aadhaar.length),
+    );
+  }
 
-    if (name.isEmpty) {
-      _showSnack('Please enter your full name first.');
-      return;
-    }
-    if (_aadhaarPhoto == null) {
-      _showSnack('Please upload a photo first.');
-      return;
-    }
-    if (aadhaar.length != 12) {
-      setState(() => _aadhaarError =
-          'Aadhaar must be 12 digits. You entered ${aadhaar.length} digit(s).');
-      return;
-    }
+  if (name.isEmpty) {
+    _showSnack('Please enter your full name first.');
+    return;
+  }
 
+  if (_aadhaarPhoto == null) {
+    _showSnack('Please upload your Aadhaar card photo first.');
+    return;
+  }
+
+  if (aadhaar.length != 12) {
     setState(() {
-      _aadhaarVerifying = true;
-      _aadhaarError     = null;
-      _aadhaarSuccess   = null;
+      _aadhaarError = 'Aadhaar must be exactly 12 digits.';
     });
+    return;
+  }
 
-    try {
-      final bytes     = await _aadhaarPhoto!.readAsBytes();
-      final base64Img = base64Encode(bytes);
-      final mimeType  = _aadhaarPhoto!.name.toLowerCase().endsWith('.png')
-          ? 'image/png'
-          : 'image/jpeg';
+  setState(() {
+    _aadhaarVerifying = true;
+    _aadhaarError = null;
+    _aadhaarSuccess = null;
+    _checkEmblem = false;
+    _checkName = false;
+    _checkFormat = false;
+  });
 
-      final prompt = '''
-You are a KYC verification assistant for an Indian government-regulated aquaculture app.
+  try {
+    final bytes = await _aadhaarPhoto!.readAsBytes();
+    final base64Img = base64Encode(bytes);
 
-Carefully examine the uploaded photo and verify ALL of the following:
+    final prompt = '''
+Verify this Aadhaar card.
 
-1. DOCUMENT VISIBLE: Is an Aadhaar card clearly visible in the photo?
-2. GOVT EMBLEM: Is the Government of India emblem (Ashoka Pillar / Lion Capital) visible on the Aadhaar card?
-3. NAME MATCH: Does the name printed on the Aadhaar card match the registered name: "$name"? Allow minor spacing or case differences but flag clear mismatches.
-4. AADHAAR NUMBER: Is the Aadhaar number "$aadhaar" visible on the card? It may be partially masked — if the last 4 digits match or the format is consistent, consider it a match.
+Name: "$name"
+Aadhaar: "$aadhaar"
 
-Respond ONLY in this exact JSON format with no extra text, preamble, or markdown:
+Check:
+1. Govt of India identity
+2. Name match
+3. Number format
+
+Return JSON:
 {
-  "verified": true or false,
+  "verified": true/false,
   "checks": {
-    "document_visible": true or false,
-    "emblem_visible": true or false,
-    "name_match": true or false,
-    "aadhaar_number_match": true or false
+    "emblem_present": true/false,
+    "name_match": true/false,
+    "aadhaar_format_valid": true/false
   },
-  "failure_reason": "Short plain English reason if verified is false, otherwise null"
+  "failure_reason": "text or null"
 }
 ''';
 
-      final response = await http.post(
-        Uri.parse(_kAnthropicUrl),
-        headers: {
-          'x-api-key': _kAnthropicKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-        },
-        body: jsonEncode({
-          'model': 'claude-opus-4-5',
-          'max_tokens': 300,
-          'messages': [
-            {
-              'role': 'user',
-              'content': [
-                {
-                  'type': 'image',
-                  'source': {
-                    'type': 'base64',
-                    'media_type': mimeType,
-                    'data': base64Img,
-                  },
+    final response = await http.post(
+      Uri.parse(_kAnthropicUrl),
+      headers: {
+        'x-api-key': _kAnthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: jsonEncode({
+        'model': 'claude-3-5-sonnet-20241022',
+        'max_tokens': 300,
+        'messages': [
+          {
+            'role': 'user',
+            'content': [
+              {
+                'type': 'image',
+                'source': {
+                  'type': 'base64',
+                  'media_type': 'image/jpeg',
+                  'data': base64Img,
                 },
-                {
-                  'type': 'text',
-                  'text': prompt,
-                },
-              ],
-            }
-          ],
-        }),
-      );
+              },
+              {
+                'type': 'text',
+                'text': prompt,
+              }
+            ]
+          }
+        ]
+      }),
+    );
+
+    // 🚨 FIXED: handle API failure properly
+    if (response.statusCode != 200) {
+      setState(() {
+        _aadhaarError =
+            'Verification service error (${response.statusCode}). Please try again.';
+        _aadhaarVerifying = false;
+      });
+      return;
+    }
+
+    final body = jsonDecode(response.body);
+
+    final text = (body['content'] as List)
+        .firstWhere((c) => c['type'] == 'text')['text'] as String;
+
+    final clean = text.replaceAll('```json', '').replaceAll('```', '').trim();
+
+    final result = jsonDecode(clean);
+
+    final verified = result['verified'] == true;
+    final checks = result['checks'] ?? {};
+
+    setState(() {
+      _aadhaarVerified = verified;
+      _checkEmblem = checks['emblem_present'] == true;
+      _checkName = checks['name_match'] == true;
+      _checkFormat = checks['aadhaar_format_valid'] == true;
+
+      _aadhaarError =
+          verified ? null : (result['failure_reason'] ?? 'Verification failed');
+
+      _aadhaarSuccess =
+          verified ? 'Aadhaar verified successfully ✓' : null;
+
+      _aadhaarVerifying = false;
+    });
+
+  } catch (e) {
+    setState(() {
+      _aadhaarError =
+          'Could not connect to verification service.';
+      _aadhaarVerifying = false;
+    });
+  }
+}
 
       if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final text = (body['content'] as List)
+        final body  = jsonDecode(response.body);
+        final text  = (body['content'] as List)
             .firstWhere((c) => c['type'] == 'text')['text'] as String;
-
-        final clean =
-            text.replaceAll('```json', '').replaceAll('```', '').trim();
+        final clean = text.replaceAll('```json', '').replaceAll('```', '').trim();
         final result = jsonDecode(clean) as Map<String, dynamic>;
 
         final verified = result['verified'] == true;
+        final checks   = result['checks'] as Map<String, dynamic>? ?? {};
         final reason   = result['failure_reason'] as String?;
 
         // Upload photo to Supabase Storage
         String? docUrl;
         try {
-          final userId =
-              Supabase.instance.client.auth.currentUser?.id;
-          final path =
-              'aadhaar/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final userId = Supabase.instance.client.auth.currentUser?.id;
+          final path   = 'aadhaar/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg';
           await Supabase.instance.client.storage
               .from('aadhaar-docs')
               .uploadBinary(path, bytes,
-                  fileOptions:
-                      const FileOptions(upsert: true));
+                  fileOptions: const FileOptions(upsert: true));
           docUrl = Supabase.instance.client.storage
               .from('aadhaar-docs')
               .getPublicUrl(path);
         } catch (_) {}
 
-        // Save verification status
+        // Persist verification status
         try {
-          final userId =
-              Supabase.instance.client.auth.currentUser?.id;
+          final userId = Supabase.instance.client.auth.currentUser?.id;
           if (userId != null) {
             await Supabase.instance.client.from('profiles').upsert({
-              'id': userId,
+              'id':               userId,
               'aadhaar_status':   verified ? 'verified' : 'failed',
               'aadhaar_verified': verified,
               if (docUrl != null) 'aadhaar_doc_url': docUrl,
@@ -412,116 +540,120 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
 
         setState(() {
           _aadhaarVerified = verified;
-          _aadhaarError    = verified
-              ? null
-              : (reason ?? 'Verification failed. Please try again with a clearer photo.');
-          _aadhaarSuccess  =
-              verified ? 'Identity verified successfully ✓' : null;
+          _checkEmblem     = checks['emblem_present']       == true;
+          _checkName       = checks['name_match']           == true;
+          _checkFormat     = checks['aadhaar_format_valid'] == true;
+          _aadhaarError    = verified ? null
+              : (reason ?? 'Verification failed. Please re-upload a clearer photo.');
+          _aadhaarSuccess  = verified
+              ? 'Aadhaar verified successfully ✓'
+              : null;
         });
       } else {
-        setState(() {
-          _aadhaarError =
-              'Verification service error (${response.statusCode}). Please try again.';
-        });
+        setState(() => _aadhaarError =
+            'Verification service error (${response.statusCode}). Please try again.');
       }
     } catch (e) {
-      setState(() {
-        _aadhaarError = 'Could not connect to verification service. Check your internet connection.';
-      });
+      setState(() => _aadhaarError =
+          'Could not connect to verification service. Check your internet connection.');
     } finally {
       setState(() => _aadhaarVerifying = false);
     }
   }
 
-  // ── GST validation ────────────────────────────────────────────────────────
-  void _validateGst(String val) {
-    final gstRegex = RegExp(
-        r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$');
-    setState(() {
-      _gstValid = gstRegex.hasMatch(val.toUpperCase());
-      _gstError = val.isEmpty
-          ? null
-          : (_gstValid ? null : 'Invalid GST format (e.g. 22AAAAA0000A1Z5)');
-    });
-  }
-
-  // ── submit ────────────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────────
   Future<void> _submit() async {
     setState(() => _submitting = true);
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) return;
 
-      await Supabase.instance.client.from('profiles').upsert({
-        'id':               user.id,
-        'full_name':        _nameCtrl.text.trim(),
-        'phone':            widget.phone.isNotEmpty ? widget.phone : null,
-        'email':            widget.email ?? user.email,
-        'role':             _role,
-        'aadhaar_verified': true,
-        'pincode':          _pincodeCtrl.text.trim(),
-        'region':           _region,
-        'gps_address':      _gpsAddress,
-        'account_status':   _role == 'developer' ? 'pending' : 'active',
-        if (_role == 'farmer') ...{
+      if (_role == 'farmer') {
+        await Supabase.instance.client.from('profiles').upsert({
+          'id':                user.id,
           'farm_name':         _farmNameCtrl.text.trim(),
+          'full_name':         _farmerNameCtrl.text.trim(),
+          'age':               int.tryParse(_farmerAgeCtrl.text.trim()),
+          'phone':             widget.phone.isNotEmpty ? widget.phone : null,
+          'email':             widget.email ?? user.email,
+          'role':              'farmer',
+          'aadhaar_verified':  true,
+          'pincode':           _pincodeCtrl.text.trim(),
+          'region':            _region,
+          'gps_address':       _gpsCtrl.text.trim(),
           'farm_size':         _farmSizeCtrl.text.trim(),
-          'farming_type':      _farmingType,
+          'waterbody_type':    _waterbodyType == 'Other'
+              ? _customWaterCtrl.text.trim()
+              : _waterbodyType,
           'fish_species':      _primarySpecies,
-          'secondary_species': _secondaryCtrl.text.trim(),
-        },
-        if (_role == 'buyer') ...{
-          'company_name': _companyCtrl.text.trim(),
-          'buyer_type':   _buyerType,
-          'gst_number':   _gstCtrl.text.trim().toUpperCase(),
-          'gst_verified': _gstValid,
-        },
-        if (_role == 'developer') ...{
-          'dev_id':   _devIdCtrl.text.trim(),
-          'dev_role': _devRoleCtrl.text.trim(),
-        },
-      });
+          'stocking_density':  _stockingCtrl.text.trim().isNotEmpty
+              ? _stockingCtrl.text.trim() : null,
+          'secondary_species': _secondaryCtrl.text.trim().isNotEmpty
+              ? _secondaryCtrl.text.trim() : null,
+          'account_status':    'active',
+        });
 
-      if (!mounted) return;
-
-      Widget destination;
-      if (_role == 'buyer') {
-        destination = BuyerShell();
-      } else if (_role == 'developer') {
-        destination = PendingApprovalScreen();
-      } else {
-        destination = MainShell();
-      }
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (_, __, ___) => destination,
-          transitionsBuilder: (_, anim, __, child) => FadeTransition(
-            opacity: anim,
-            child: ScaleTransition(
-              scale: Tween(begin: 0.96, end: 1.0).animate(
-                CurvedAnimation(
-                    parent: anim, curve: Curves.easeOutCubic),
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 600),
+            pageBuilder: (_, __, ___) => const DeviceConnectScreen(),
+            transitionsBuilder: (_, anim, __, child) => FadeTransition(
+              opacity: anim,
+              child: ScaleTransition(
+                scale: Tween(begin: 0.96, end: 1.0).animate(
+                    CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+                child: child,
               ),
-              child: child,
             ),
           ),
-        ),
-        (route) => false,
-      );
+          (route) => false,
+        );
+      } else {
+        // buyer
+        await Supabase.instance.client.from('profiles').upsert({
+          'id':               user.id,
+          'full_name':        _buyerNameCtrl.text.trim(),
+          'company_name':     _companyCtrl.text.trim(),
+          'phone':            widget.phone.isNotEmpty ? widget.phone : null,
+          'email':            widget.email ?? user.email,
+          'role':             'buyer',
+          'aadhaar_verified': true,
+          'buyer_type':       _buyerType,
+          'pincode':          _buyerPincodeCtrl.text.trim(),
+          'region':           _buyerRegion,
+          'gps_address':      _buyerGpsCtrl.text.trim(),
+          'account_status':   'active',
+        });
+
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 600),
+            pageBuilder: (_, __, ___) => BuyerShell(),
+            transitionsBuilder: (_, anim, __, child) => FadeTransition(
+              opacity: anim,
+              child: ScaleTransition(
+                scale: Tween(begin: 0.96, end: 1.0).animate(
+                    CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+                child: child,
+              ),
+            ),
+          ),
+          (route) => false,
+        );
+      }
     } catch (e) {
       _showSnack('Error saving profile: $e');
     } finally {
-      setState(() => _submitting = false);
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
-  }
+  void _showSnack(String msg) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
   // ─────────────────────────────────────────────────────────────────────────
   //  BUILD
@@ -536,53 +668,77 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
     );
   }
 
-  // ── ROLE SELECTION ────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  //  ROLE SELECTION
+  // ─────────────────────────────────────────────────────────────────────────
   Widget _buildRoleSelection() {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            const Icon(Icons.water, size: 64, color: Color(0xFF1A6FA8)),
-            const SizedBox(height: 20),
-            const Text('Welcome to BlueFarm',
-                style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0D4F7C))),
-            const SizedBox(height: 8),
-            const Text('Choose your role to get started',
-                style: TextStyle(color: Colors.grey, fontSize: 15)),
-            const SizedBox(height: 40),
-            _roleCard(
-              role: 'farmer',
-              icon: Icons.grass_rounded,
-              label: 'Farmer',
-              subtitle:
-                  'Manage your fish farm, monitor sensors & sell produce',
-              color: const Color(0xFF1A6FA8),
+    return FadeTransition(
+      opacity: _roleAnim,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: Column(
+              children: [
+                Container(
+                  width: 90, height: 90,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1565C0), Color(0xFF0097A7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                          color: const Color(0xFF1565C0).withOpacity(0.3),
+                          blurRadius: 30,
+                          spreadRadius: 2),
+                    ],
+                  ),
+                  child: const Icon(Icons.water, size: 44, color: Colors.white),
+                ),
+                const SizedBox(height: 22),
+                const Text('Welcome to BlueFarm',
+                    style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0D2B4E))),
+                const SizedBox(height: 8),
+                Text('Who are you? Choose your role to continue.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 15)),
+                const SizedBox(height: 40),
+                _roleCard(
+                  role: 'farmer',
+                  icon: Icons.agriculture_rounded,
+                  label: 'Farmer',
+                  subtitle:
+                      'Monitor your fish pond, manage stock\nand sell produce to buyers',
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1565C0), Color(0xFF0097A7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _roleCard(
+                  role: 'buyer',
+                  icon: Icons.storefront_rounded,
+                  label: 'Buyer',
+                  subtitle:
+                      'Browse marketplace listings\nand purchase fish directly from farms',
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2E7D32), Color(0xFF00897B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
             ),
-            const SizedBox(height: 16),
-            _roleCard(
-              role: 'buyer',
-              icon: Icons.storefront_rounded,
-              label: 'Buyer / Trader',
-              subtitle:
-                  'Browse listings, place orders & connect with farmers',
-              color: const Color(0xFF2E7D32),
-            ),
-            const SizedBox(height: 16),
-            _roleCard(
-              role: 'developer',
-              icon: Icons.code_rounded,
-              label: 'Developer / Admin',
-              subtitle:
-                  'Access admin dashboard (requires approval)',
-              color: const Color(0xFF6A1B9A),
-            ),
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );
@@ -593,96 +749,70 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
     required IconData icon,
     required String label,
     required String subtitle,
-    required Color color,
+    required LinearGradient gradient,
   }) {
     return GestureDetector(
       onTap: () => _selectRole(role),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: color.withOpacity(0.3), width: 1.5),
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
+                color: gradient.colors.first.withOpacity(0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8)),
           ],
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: color, size: 28),
+        child: Row(children: [
+          Container(
+            width: 62, height: 62,
+            decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16)),
+            child: Icon(icon, color: Colors.white, size: 32),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 5),
+                Text(subtitle,
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.85),
+                        fontSize: 13,
+                        height: 1.45)),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label,
-                      style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: color)),
-                  const SizedBox(height: 4),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          color: Colors.grey, fontSize: 13)),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded,
-                color: color, size: 16),
-          ],
-        ),
+          ),
+          Icon(Icons.arrow_forward_ios_rounded,
+              color: Colors.white.withOpacity(0.7), size: 18),
+        ]),
       ),
     );
   }
 
-  // ── FORM ──────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FORM WRAPPER
+  // ─────────────────────────────────────────────────────────────────────────
   Widget _buildForm() {
     return FadeTransition(
       opacity: _fadeAnim,
       child: Column(
         children: [
-          _buildFormHeader(),
+          _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sectionLabel('Basic Information'),
-                  _loginChip(),
-                  const SizedBox(height: 12),
-                  _field(_nameCtrl, 'Full Name', Icons.person_rounded),
-                  const SizedBox(height: 24),
-                  _sectionLabel('Identity Verification'),
-                  _aadhaarSection(),
-                  const SizedBox(height: 24),
-                  if (_aadhaarVerified) ...[
-                    _roleSpecificFields(),
-                    const SizedBox(height: 24),
-                    _locationSection(),
-                    const SizedBox(height: 32),
-                    _submitButton(),
-                    const SizedBox(height: 24),
-                  ] else ...[
-                    _lockedPlaceholder(),
-                    const SizedBox(height: 24),
-                  ],
-                ],
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+              child: _role == 'farmer' ? _farmerForm() : _buyerForm(),
             ),
           ),
         ],
@@ -690,25 +820,19 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
     );
   }
 
-  Widget _buildFormHeader() {
-    final roleLabel = _role == 'farmer'
-        ? 'Farmer'
-        : _role == 'buyer'
-            ? 'Buyer / Trader'
-            : 'Developer / Admin';
-    final roleColor = _role == 'farmer'
-        ? const Color(0xFF1A6FA8)
-        : _role == 'buyer'
-            ? const Color(0xFF2E7D32)
-            : const Color(0xFF6A1B9A);
-
+  // ── Header bar ────────────────────────────────────────────────────────────
+  Widget _buildHeader() {
+    final isFarmer = _role == 'farmer';
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: roleColor,
-        borderRadius:
-            const BorderRadius.vertical(bottom: Radius.circular(20)),
+        gradient: LinearGradient(
+          colors: isFarmer
+              ? [const Color(0xFF1565C0), const Color(0xFF0097A7)]
+              : [const Color(0xFF2E7D32), const Color(0xFF00897B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: Row(
         children: [
@@ -719,37 +843,35 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
               _aadhaarPhoto    = null;
               _aadhaarError    = null;
               _aadhaarSuccess  = null;
+              _checkEmblem     = false;
+              _checkName       = false;
+              _checkFormat     = false;
             }),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white, size: 20),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white, size: 18),
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Registration',
-                    style: TextStyle(
-                        color: Colors.white70, fontSize: 13)),
-                Text(roleLabel,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
-              ],
+            child: Text(
+              isFarmer ? 'Farmer Registration' : 'Buyer Registration',
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20)),
             child: Text(
               _aadhaarVerified ? '✓ Verified' : 'Unverified',
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 12),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
           ),
         ],
@@ -757,41 +879,200 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
     );
   }
 
-  Widget _loginChip() {
-    final loginInfo = widget.phone.isNotEmpty
-        ? '📱 ${widget.phone}'
-        : widget.email != null
-            ? '✉️ ${widget.email}'
-            : 'Not available';
-    return Container(
-      width: double.infinity,
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.lock_rounded,
-              size: 16, color: Colors.blue.shade700),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(loginInfo,
-                style: TextStyle(
-                    color: Colors.blue.shade700, fontSize: 13)),
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FARMER FORM
+  //  Order: Farm Name → Farmer Name → Contact (auto) → Age →
+  //         Aadhaar → Pincode/GPS → Farm Details
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _farmerForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Section 1: Basic Info ──────────────────────────────────────────
+        _sectionLabel('Basic Information', icon: Icons.person_outline_rounded),
+
+        _field(_farmNameCtrl,   'Farm Name',    Icons.home_work_rounded),
+        const SizedBox(height: 12),
+        _field(_farmerNameCtrl, 'Farmer Name',  Icons.person_rounded),
+        const SizedBox(height: 12),
+
+        // Auto-filled contact
+        _loginChip(),
+        const SizedBox(height: 12),
+
+        // Age
+        _field(_farmerAgeCtrl, 'Age', Icons.cake_rounded,
+            keyboard: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
+        const SizedBox(height: 28),
+
+        // ── Section 2: Aadhaar Verification ───────────────────────────────
+        _sectionLabel('Aadhaar Verification', icon: Icons.verified_user_outlined),
+        _aadhaarSection(),
+        const SizedBox(height: 28),
+
+        // ── Sections 3–5 locked until verified ────────────────────────────
+        if (!_aadhaarVerified) ...[
+          _lockedPlaceholder(
+              'Complete Aadhaar verification to unlock location & farm details.'),
+        ] else ...[
+
+          // ── Section 3: Location ──────────────────────────────────────────
+          _sectionLabel('Location', icon: Icons.location_on_outlined),
+          _locationBlock(
+            pincodeCtrl: _pincodeCtrl,
+            region: _region,
+            gpsCtrl: _gpsCtrl,
+            locLoading: _locLoading,
+            isBuyer: false,
           ),
-          Text('Auto-filled',
-              style: TextStyle(
-                  color: Colors.blue.shade400, fontSize: 11)),
+          const SizedBox(height: 28),
+
+          // ── Section 4: Farm Details ──────────────────────────────────────
+          _sectionLabel('Farm Details', icon: Icons.water_drop_outlined),
+
+          _field(_farmSizeCtrl, 'Pond / Farm Area (in acres)',
+              Icons.straighten_rounded,
+              keyboard: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+              ]),
+          const SizedBox(height: 14),
+
+          _dropdown(
+            label: 'Type of Water Body',
+            icon: Icons.pool_rounded,
+            value: _waterbodyType,
+            items: _waterbodyTypes,
+            onChanged: (v) => setState(() => _waterbodyType = v),
+          ),
+
+          if (_waterbodyType == 'Other') ...[
+            const SizedBox(height: 12),
+            _field(_customWaterCtrl, 'Describe your water body type',
+                Icons.edit_note_rounded),
+          ],
+          const SizedBox(height: 14),
+
+          _dropdown(
+            label: 'Primary Fish Species',
+            icon: Icons.set_meal_rounded,
+            value: _primarySpecies,
+            items: _fishSpecies,
+            onChanged: (v) => setState(() => _primarySpecies = v),
+          ),
+          const SizedBox(height: 14),
+
+          // Stocking density – optional
+          TextFormField(
+            controller: _stockingCtrl,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Stocking Density (optional)',
+              hintText: 'e.g. 5',
+              prefixIcon: const Icon(Icons.density_medium_rounded),
+              suffixText: 'fish / m²',
+              suffixStyle: TextStyle(
+                  color: Colors.grey.shade500, fontSize: 12),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Secondary species – free text, multiple entries
+          TextFormField(
+            controller: _secondaryCtrl,
+            maxLines: 2,
+            decoration: InputDecoration(
+              labelText: 'Secondary Fish Species (optional)',
+              hintText: 'Type freely, e.g. Rohu, Catla, Mrigal',
+              prefixIcon: const Icon(Icons.add_circle_outline_rounded),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          _submitButton(
+              label: 'Continue to Device Setup →',
+              color: const Color(0xFF1565C0)),
         ],
-      ),
+      ],
     );
   }
 
-  // ── aadhaar section ───────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  //  BUYER FORM
+  //  Order: Buyer Name → Company Name → Contact (auto) →
+  //         Aadhaar → Buyer Type → Business Location
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buyerForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Section 1: Basic Info ──────────────────────────────────────────
+        _sectionLabel('Basic Information', icon: Icons.person_outline_rounded),
+
+        _field(_buyerNameCtrl, 'Buyer Name',           Icons.person_rounded),
+        const SizedBox(height: 12),
+        _field(_companyCtrl,   'Company / Business Name', Icons.business_rounded),
+        const SizedBox(height: 12),
+        _loginChip(),
+        const SizedBox(height: 28),
+
+        // ── Section 2: Aadhaar Verification ───────────────────────────────
+        _sectionLabel('Aadhaar Verification', icon: Icons.verified_user_outlined),
+        _aadhaarSection(),
+        const SizedBox(height: 28),
+
+        if (!_aadhaarVerified) ...[
+          _lockedPlaceholder(
+              'Complete Aadhaar verification to unlock buyer details & location.'),
+        ] else ...[
+
+          // ── Section 3: Buyer Type ────────────────────────────────────────
+          _sectionLabel('Buyer Details', icon: Icons.category_outlined),
+          _dropdown(
+            label: 'Type of Buyer',
+            icon: Icons.storefront_rounded,
+            value: _buyerType,
+            items: _buyerTypes,
+            onChanged: (v) => setState(() => _buyerType = v),
+          ),
+          const SizedBox(height: 28),
+
+          // ── Section 4: Business Location ─────────────────────────────────
+          _sectionLabel('Business Location', icon: Icons.location_on_outlined),
+          _locationBlock(
+            pincodeCtrl: _buyerPincodeCtrl,
+            region: _buyerRegion,
+            gpsCtrl: _buyerGpsCtrl,
+            locLoading: _buyerLocLoading,
+            isBuyer: true,
+          ),
+          const SizedBox(height: 32),
+
+          _submitButton(
+              label: 'Go to Dashboard →',
+              color: const Color(0xFF2E7D32)),
+        ],
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  AADHAAR SECTION
+  // ─────────────────────────────────────────────────────────────────────────
   Widget _aadhaarSection() {
+    final accentColor = _role == 'buyer'
+        ? const Color(0xFF2E7D32)
+        : const Color(0xFF1565C0);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -805,77 +1086,81 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
                   : Colors.grey.shade200,
           width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Aadhaar number
+
+          // ── Aadhaar number field ─────────────────────────────────────────
           TextField(
             controller: _aadhaarCtrl,
             keyboardType: TextInputType.number,
             maxLength: 12,
             enabled: !_aadhaarVerified,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly
-            ],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               labelText: 'Aadhaar Number (12 digits)',
-              prefixIcon:
-                  const Icon(Icons.credit_card_rounded),
+              prefixIcon: const Icon(Icons.credit_card_rounded),
               counterText: '',
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: Colors.grey.shade50,
               suffixIcon: _aadhaarVerified
-                  ? const Icon(Icons.verified_rounded,
-                      color: Colors.green)
+                  ? const Icon(Icons.verified_rounded, color: Colors.green)
                   : null,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Photo upload
+          // ── Photo upload ─────────────────────────────────────────────────
           GestureDetector(
-            onTap: _aadhaarVerified
-                ? null
-                : _showPhotoSourceSheet,
-            child: Container(
+            onTap: _aadhaarVerified ? null : _showPhotoSourceSheet,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
               width: double.infinity,
-              constraints: BoxConstraints(
-                  minHeight: _aadhaarPhoto == null ? 110 : 0),
+              constraints:
+                  BoxConstraints(minHeight: _aadhaarPhoto == null ? 120 : 0),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: _aadhaarPhoto != null
+                    ? Colors.blue.shade50
+                    : Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _aadhaarPhoto != null
-                      ? Colors.blue.shade300
+                      ? accentColor.withOpacity(0.4)
                       : Colors.grey.shade300,
                   width: 1.5,
                 ),
               ),
               child: _aadhaarPhoto == null
                   ? Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(24),
                       child: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.upload_rounded,
-                              size: 36,
-                              color: Colors.grey.shade400),
-                          const SizedBox(height: 8),
+                          Icon(Icons.upload_file_rounded,
+                              size: 40, color: Colors.grey.shade400),
+                          const SizedBox(height: 10),
                           Text(
-                            'Upload photo holding your Aadhaar card',
+                            'Tap to upload your Aadhaar card photo',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: Colors.grey.shade500,
-                                fontSize: 13),
+                                color: Colors.grey.shade500, fontSize: 14),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
-                            'Govt of India emblem must be visible',
+                            'System will check: Govt of India logo  ·  Name  ·  Number format',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 11),
+                                color: Colors.grey.shade400, fontSize: 11),
                           ),
                         ],
                       ),
@@ -884,31 +1169,27 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
                       borderRadius: BorderRadius.circular(10),
                       child: kIsWeb
                           ? Container(
-                              height: 140,
+                              height: 150,
                               color: Colors.blue.shade50,
                               child: Center(
                                 child: Column(
-                                  mainAxisSize:
-                                      MainAxisSize.min,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(Icons.image_rounded,
                                         size: 48,
-                                        color: Colors
-                                            .blue.shade400),
+                                        color: accentColor),
                                     const SizedBox(height: 8),
-                                    Text(
-                                      'Photo selected ✓',
-                                      style: TextStyle(
-                                          color: Colors
-                                              .blue.shade600),
-                                    ),
+                                    Text('Photo selected ✓',
+                                        style: TextStyle(
+                                            color: accentColor,
+                                            fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
                             )
                           : Image.file(
                               File(_aadhaarPhoto!.path),
-                              height: 180,
+                              height: 190,
                               width: double.infinity,
                               fit: BoxFit.cover,
                             ),
@@ -922,106 +1203,100 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
               onTap: _showPhotoSourceSheet,
               child: Text('Change photo',
                   style: TextStyle(
-                      color: Colors.blue.shade600,
+                      color: accentColor,
                       fontSize: 12,
                       decoration: TextDecoration.underline)),
             ),
           ],
+          const SizedBox(height: 14),
 
-          const SizedBox(height: 12),
-
-          // Verify button
+          // ── Verify button ─────────────────────────────────────────────────
           if (!_aadhaarVerified)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: (_aadhaarPhoto != null &&
-                        !_aadhaarVerifying)
+                onPressed: (_aadhaarPhoto != null && !_aadhaarVerifying)
                     ? _verifyAadhaarWithAI
                     : null,
                 icon: _aadhaarVerifying
                     ? const SizedBox(
-                        width: 16,
-                        height: 16,
+                        width: 16, height: 16,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white),
-                      )
-                    : const Icon(
-                        Icons.verified_user_rounded),
+                            strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.verified_user_rounded),
                 label: Text(_aadhaarVerifying
-                    ? 'Verifying with AI...'
-                    : 'Verify Identity'),
+                    ? 'Verifying with OCR…'
+                    : 'Verify Aadhaar'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      const Color(0xFF1A6FA8),
+                  backgroundColor: accentColor,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      Colors.grey.shade300,
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 14),
+                  disabledBackgroundColor: Colors.grey.shade300,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
 
-          // Success
+          // ── Check results panel ───────────────────────────────────────────
+          if (_aadhaarVerified || _aadhaarError != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _aadhaarVerified
+                    ? Colors.green.shade50
+                    : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: _aadhaarVerified
+                        ? Colors.green.shade200
+                        : Colors.red.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _aadhaarVerified
+                        ? 'All checks passed'
+                        : 'Verification failed',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: _aadhaarVerified
+                            ? Colors.green.shade800
+                            : Colors.red.shade800),
+                  ),
+                  const SizedBox(height: 8),
+                  _checkRow('Government of India logo detected', _checkEmblem),
+                  const SizedBox(height: 4),
+                  _checkRow('Name matches registered name', _checkName),
+                  const SizedBox(height: 4),
+                  _checkRow('Aadhaar number format valid (XXXX XXXX XXXX)', _checkFormat),
+                  if (_aadhaarError != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _aadhaarError!,
+                      style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 12,
+                          height: 1.4),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+
+          // ── Success message ───────────────────────────────────────────────
           if (_aadhaarSuccess != null) ...[
             const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(10),
-                border:
-                    Border.all(color: Colors.green.shade200),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded,
-                      color: Colors.green, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(_aadhaarSuccess!,
-                        style: const TextStyle(
-                            color: Colors.green,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          // Error
-          if (_aadhaarError != null) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(10),
-                border:
-                    Border.all(color: Colors.red.shade200),
-              ),
-              child: Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.cancel_rounded,
-                      color: Colors.red, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(_aadhaarError!,
-                        style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500)),
-                  ),
-                ],
-              ),
+            _infoBanner(
+              icon: Icons.check_circle_rounded,
+              text: _aadhaarSuccess!,
+              color: Colors.green.shade700,
+              bg: Colors.green.shade50,
+              border: Colors.green.shade200,
             ),
           ],
         ],
@@ -1029,320 +1304,187 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
     );
   }
 
-  // ── locked placeholder ────────────────────────────────────────────────────
-  Widget _lockedPlaceholder() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.lock_rounded,
-              size: 36, color: Colors.grey.shade400),
-          const SizedBox(height: 10),
-          Text(
-            'Complete identity verification to unlock registration fields',
-            textAlign: TextAlign.center,
+  // Individual check row with tick/cross
+  Widget _checkRow(String label, bool passed) {
+    return Row(
+      children: [
+        Icon(
+          passed ? Icons.check_circle_rounded : Icons.cancel_rounded,
+          color: passed ? Colors.green.shade600 : Colors.red.shade400,
+          size: 16,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
             style: TextStyle(
-                color: Colors.grey.shade500, fontSize: 14),
+                fontSize: 12,
+                color: passed
+                    ? Colors.green.shade700
+                    : Colors.red.shade600),
           ),
-        ],
-      ),
-    );
-  }
-
-  // ── role specific fields ──────────────────────────────────────────────────
-  Widget _roleSpecificFields() {
-    switch (_role) {
-      case 'farmer':
-        return _farmerFields();
-      case 'buyer':
-        return _buyerFields();
-      case 'developer':
-        return _developerFields();
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  Widget _farmerFields() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionLabel('Farm Details'),
-        _field(_farmNameCtrl, 'Farm Name',
-            Icons.home_work_rounded),
-        const SizedBox(height: 12),
-        _field(_farmSizeCtrl, 'Farm Size (in acres)',
-            Icons.straighten_rounded,
-            keyboard: TextInputType.number),
-        const SizedBox(height: 12),
-        _dropdown(
-          label: 'Farming Type',
-          icon: Icons.water_rounded,
-          value: _farmingType,
-          items: _farmingTypes,
-          onChanged: (v) => setState(() => _farmingType = v),
         ),
-        const SizedBox(height: 12),
-        _dropdown(
-          label: 'Primary Species',
-          icon: Icons.set_meal_rounded,
-          value: _primarySpecies,
-          items: _fishSpecies,
-          onChanged: (v) =>
-              setState(() => _primarySpecies = v),
-        ),
-        const SizedBox(height: 12),
-        _field(_secondaryCtrl,
-            'Secondary Species (optional, type manually)',
-            Icons.more_horiz_rounded),
       ],
     );
   }
 
-  Widget _buyerFields() {
+  // ─────────────────────────────────────────────────────────────────────────
+  //  LOCATION BLOCK
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _locationBlock({
+    required TextEditingController pincodeCtrl,
+    required String? region,
+    required TextEditingController gpsCtrl,
+    required bool locLoading,
+    required bool isBuyer,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Business Details'),
-        _field(_companyCtrl, 'Company / Business Name',
-            Icons.business_rounded),
-        const SizedBox(height: 12),
-        _dropdown(
-          label: 'Buyer Type',
-          icon: Icons.category_rounded,
-          value: _buyerType,
-          items: _buyerTypes,
-          onChanged: (v) => setState(() => _buyerType = v),
-        ),
-        const SizedBox(height: 12),
         TextField(
-          controller: _gstCtrl,
-          textCapitalization: TextCapitalization.characters,
-          decoration: InputDecoration(
-            labelText: 'GST Number',
-            prefixIcon:
-                const Icon(Icons.receipt_long_rounded),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12)),
-            filled: true,
-            fillColor: Colors.white,
-            suffixIcon: _gstCtrl.text.isNotEmpty
-                ? Icon(
-                    _gstValid
-                        ? Icons.check_circle_rounded
-                        : Icons.cancel_rounded,
-                    color:
-                        _gstValid ? Colors.green : Colors.red,
-                  )
-                : null,
-            errorText: _gstError,
-          ),
-          onChanged: _validateGst,
-        ),
-      ],
-    );
-  }
-
-  Widget _developerFields() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.purple.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.purple.shade200),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.info_outline_rounded,
-                  color: Colors.purple.shade700, size: 18),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Developer accounts require admin approval before access is granted.',
-                  style: TextStyle(
-                      color: Colors.purple.shade700,
-                      fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _sectionLabel('Developer Details'),
-        _field(_devIdCtrl, 'Employee / Developer ID',
-            Icons.badge_rounded),
-        const SizedBox(height: 12),
-        _field(_devRoleCtrl, 'Role / Designation',
-            Icons.work_rounded),
-      ],
-    );
-  }
-
-  // ── location section ──────────────────────────────────────────────────────
-  Widget _locationSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionLabel('Location'),
-        TextField(
-          controller: _pincodeCtrl,
+          controller: pincodeCtrl,
           keyboardType: TextInputType.number,
           maxLength: 6,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly
-          ],
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: (v) {
+            setState(() {});
+            if (v.length == 6) _lookupPincode(v, isBuyer: isBuyer);
+          },
           decoration: InputDecoration(
             labelText: 'PIN Code',
-            prefixIcon:
-                const Icon(Icons.pin_drop_rounded),
+            prefixIcon: const Icon(Icons.pin_drop_rounded),
             counterText: '',
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12)),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
             fillColor: Colors.white,
           ),
-          onChanged: (v) {
-            if (v.length == 6) _lookupPincode(v);
-          },
         ),
-        if (_region != null) ...[
+
+        // Auto-detected region chip
+        if (region != null) ...[
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.teal.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: Colors.teal.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.location_city_rounded,
-                    color: Colors.teal.shade700, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(_region!,
-                      style: TextStyle(
-                          color: Colors.teal.shade700,
-                          fontWeight: FontWeight.w500)),
-                ),
-              ],
-            ),
+          _infoBanner(
+            icon: Icons.location_city_rounded,
+            text: region,
+            color: Colors.teal.shade700,
+            bg: Colors.teal.shade50,
+            border: Colors.teal.shade200,
           ),
         ],
-        const SizedBox(height: 12),
+
+        const SizedBox(height: 14),
+
+        // GPS button
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed:
-                _locLoading ? null : _detectLocation,
-            icon: _locLoading
+                locLoading ? null : () => _detectLocation(isBuyer: isBuyer),
+            icon: locLoading
                 ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2))
+                    width: 16, height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.my_location_rounded),
-            label: Text(_locLoading
-                ? 'Detecting...'
-                : 'Detect Pinpoint Location (GPS)'),
+            label: Text(locLoading
+                ? 'Detecting…'
+                : 'Detect My Location (GPS)'),
             style: OutlinedButton.styleFrom(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ),
-        if (_gpsAddress != null) ...[
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: Colors.blue.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.gps_fixed_rounded,
-                    color: Colors.blue.shade700, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'GPS: $_gpsAddress',
-                    style: TextStyle(
-                        color: Colors.blue.shade700,
-                        fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
+        const SizedBox(height: 10),
+
+        // Editable GPS field
+        TextField(
+          controller: gpsCtrl,
+          decoration: InputDecoration(
+            labelText: 'GPS Coordinates (editable)',
+            hintText: 'Auto-detected, or enter manually',
+            prefixIcon: const Icon(Icons.gps_fixed_rounded),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.white,
           ),
-        ],
+        ),
       ],
     );
   }
 
-  // ── submit button ─────────────────────────────────────────────────────────
-  Widget _submitButton() {
-    final roleColor = _role == 'farmer'
-        ? const Color(0xFF1A6FA8)
-        : _role == 'buyer'
-            ? const Color(0xFF2E7D32)
-            : const Color(0xFF6A1B9A);
-    final label = _role == 'developer'
-        ? 'Submit for Approval →'
-        : 'Enter BlueFarm →';
+  // ─────────────────────────────────────────────────────────────────────────
+  //  SHARED WIDGETS
+  // ─────────────────────────────────────────────────────────────────────────
 
-    return SizedBox(
+  Widget _loginChip() {
+    final hasPhone = widget.phone.isNotEmpty;
+    final loginInfo = hasPhone
+        ? '📱  ${widget.phone}'
+        : widget.email != null
+            ? '✉️  ${widget.email}'
+            : 'No contact info available';
+
+    return Container(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed:
-            (_canSubmit && !_submitting) ? _submit : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: roleColor,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: Colors.grey.shade300,
-          padding:
-              const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14)),
-        ),
-        child: _submitting
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white))
-            : Text(label,
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold)),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.lock_rounded, size: 16, color: Colors.blue.shade700),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(loginInfo,
+                style: TextStyle(
+                    color: Colors.blue.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500)),
+          ),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text('Auto-filled',
+                style: TextStyle(
+                    color: Colors.blue.shade600, fontSize: 10)),
+          ),
+        ],
       ),
     );
   }
 
-  // ── shared widgets ────────────────────────────────────────────────────────
-  Widget _sectionLabel(String text) {
+  Widget _sectionLabel(String text, {IconData? icon}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(text,
-          style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: Color(0xFF0D4F7C))),
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Container(
+              width: 28, height: 28,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A6FA8).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 15, color: const Color(0xFF1A6FA8)),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Text(text,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Color(0xFF0D2B4E))),
+        ],
+      ),
     );
   }
 
@@ -1351,15 +1493,18 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
     String label,
     IconData icon, {
     TextInputType keyboard = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: ctrl,
       keyboardType: keyboard,
+      inputFormatters: inputFormatters,
+      onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12)),
+        border:
+            OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.white,
       ),
@@ -1375,19 +1520,98 @@ Respond ONLY in this exact JSON format with no extra text, preamble, or markdown
   }) {
     return DropdownButtonFormField<String>(
       value: value,
+      onChanged: (v) { onChanged(v); setState(() {}); },
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12)),
+        border:
+            OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.white,
       ),
       items: items
-          .map((e) =>
-              DropdownMenuItem(value: e, child: Text(e)))
+          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
           .toList(),
-      onChanged: onChanged,
+    );
+  }
+
+  Widget _lockedPlaceholder(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.lock_rounded, size: 38, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Colors.grey.shade500, fontSize: 14, height: 1.4)),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoBanner({
+    required IconData icon,
+    required String text,
+    required Color color,
+    required Color bg,
+    required Color border,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: border)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text,
+                style: TextStyle(
+                    color: color,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 1.4)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _submitButton({required String label, required Color color}) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: (_canSubmit && !_submitting) ? _submit : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: Colors.grey.shade300,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 4,
+          shadowColor: color.withOpacity(0.4),
+        ),
+        child: _submitting
+            ? const SizedBox(
+                width: 22, height: 22,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2.5, color: Colors.white))
+            : Text(label,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold)),
+      ),
     );
   }
 }

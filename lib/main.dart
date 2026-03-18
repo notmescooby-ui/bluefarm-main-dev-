@@ -8,8 +8,6 @@ import 'screens/splash_screen.dart';
 import 'screens/farmer_info_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/buyer_shell.dart';
-import 'screens/admin_shell.dart';
-import 'screens/pending_approval_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -44,55 +42,46 @@ class _BlueFarmAppState extends State<BlueFarmApp> {
   @override
   void initState() {
     super.initState();
-    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen(
-      (data) async {
-        if (data.event == AuthChangeEvent.signedIn &&
-            data.session != null) {
-          final user = data.session!.user;
+    _authSub = Supabase.instance.client.auth.onAuthStateChange
+        .listen((data) async {
+      if (data.event == AuthChangeEvent.signedIn &&
+          data.session != null) {
+        final user = data.session!.user;
 
-          final profile = await Supabase.instance.client
-              .from('profiles')
-              .select('role, full_name, account_status')
-              .eq('id', user.id)
-              .maybeSingle();
+        // Check if user has already completed registration
+        final profile = await Supabase.instance.client
+            .from('profiles')
+            .select('role, full_name')
+            .eq('id', user.id)
+            .maybeSingle();
 
-          if (!mounted) return;
+        if (!mounted) return;
 
-          if (profile == null ||
-              (profile['full_name'] as String?)?.isEmpty != false) {
-            navigatorKey.currentState?.pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (_) => FarmerInfoScreen(
-                  phone: user.phone ?? '',
-                  email: user.email,
-                ),
+        if (profile == null ||
+            (profile['full_name'] as String?)?.isEmpty != false) {
+          // New user — go to FarmerInfoScreen which has role selection inside
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => FarmerInfoScreen(
+                phone: user.phone ?? '',
+                email: user.email,
               ),
-              (route) => false,
-            );
-          } else {
-            final role = profile['role'] as String? ?? 'farmer';
-            final status =
-                profile['account_status'] as String? ?? 'active';
+            ),
+            (route) => false,
+          );
+        } else {
+          // Returning user — route straight to their dashboard
+          final role = profile['role'] as String? ?? 'farmer';
+          Widget home =
+              role == 'buyer' ? BuyerShell() : const MainShell();
 
-            Widget home;
-            if (role == 'admin' && status == 'pending') {
-              home = PendingApprovalScreen();
-            } else if (role == 'admin' && status == 'active') {
-              home = AdminShell();
-            } else if (role == 'buyer') {
-              home = BuyerShell();
-            } else {
-              home = MainShell();
-            }
-
-            navigatorKey.currentState?.pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => home),
-              (route) => false,
-            );
-          }
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => home),
+            (route) => false,
+          );
         }
-      },
-    );
+      }
+    });
   }
 
   @override
