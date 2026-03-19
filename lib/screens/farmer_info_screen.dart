@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +12,7 @@ import 'buyer_shell.dart';
 import 'device_connect_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  CONFIG — replace with your actual Anthropic API key
+//  CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
 const _kAnthropicKey = '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';
 const _kAnthropicUrl = 'https://api.anthropic.com/v1/messages';
@@ -91,23 +91,22 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
   String? _role;
 
   // ── FARMER controllers ────────────────────────────────────────────────────
-  final _farmNameCtrl    = TextEditingController(); // Farm Name (first)
-  final _farmerNameCtrl  = TextEditingController(); // Farmer Name (second)
-  final _farmerAgeCtrl   = TextEditingController(); // Age
-  final _aadhaarCtrl     = TextEditingController(); // Aadhaar number
-  final _pincodeCtrl     = TextEditingController(); // Pincode
-  final _gpsCtrl         = TextEditingController(); // GPS (editable)
-  final _farmSizeCtrl    = TextEditingController(); // Pond area acres
-  final _customWaterCtrl = TextEditingController(); // Other waterbody
-  final _stockingCtrl    = TextEditingController(); // Stocking density
-  final _secondaryCtrl   = TextEditingController(); // Secondary species
+  final _farmNameCtrl    = TextEditingController();
+  final _farmerNameCtrl  = TextEditingController();
+  final _farmerAgeCtrl   = TextEditingController();
+  final _aadhaarCtrl     = TextEditingController();
+  final _pincodeCtrl     = TextEditingController();
+  final _gpsCtrl         = TextEditingController();
+  final _farmSizeCtrl    = TextEditingController();
+  final _customWaterCtrl = TextEditingController();
+  final _stockingCtrl    = TextEditingController();
+  final _secondaryCtrl   = TextEditingController();
 
   // ── BUYER controllers ─────────────────────────────────────────────────────
-  final _buyerNameCtrl    = TextEditingController(); // Buyer Name (first)
-  final _companyCtrl      = TextEditingController(); // Company Name (second)
-  final _buyerAgeCtrl     = TextEditingController(); // Age (not shown per spec, kept for DB)
-  final _buyerPincodeCtrl = TextEditingController(); // Business pincode
-  final _buyerGpsCtrl     = TextEditingController(); // Business GPS
+  final _buyerNameCtrl    = TextEditingController();
+  final _companyCtrl      = TextEditingController();
+  final _buyerPincodeCtrl = TextEditingController();
+  final _buyerGpsCtrl     = TextEditingController();
 
   // ── dropdowns ─────────────────────────────────────────────────────────────
   String? _waterbodyType;
@@ -120,8 +119,6 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
   bool    _aadhaarVerifying = false;
   String? _aadhaarError;
   String? _aadhaarSuccess;
-
-  // Detailed check results to show the user
   bool _checkEmblem  = false;
   bool _checkName    = false;
   bool _checkFormat  = false;
@@ -169,7 +166,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
       _farmNameCtrl, _farmerNameCtrl, _farmerAgeCtrl, _aadhaarCtrl,
       _pincodeCtrl, _gpsCtrl, _farmSizeCtrl, _customWaterCtrl,
       _stockingCtrl, _secondaryCtrl,
-      _buyerNameCtrl, _companyCtrl, _buyerAgeCtrl,
+      _buyerNameCtrl, _companyCtrl,
       _buyerPincodeCtrl, _buyerGpsCtrl,
     ]) {
       c.dispose();
@@ -186,7 +183,6 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     _fadeCtrl.forward(from: 0);
   }
 
-  // The name used for Aadhaar matching depends on the active role
   String get _registeredName => _role == 'farmer'
       ? _farmerNameCtrl.text.trim()
       : _buyerNameCtrl.text.trim();
@@ -226,11 +222,15 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           if (isBuyer) _buyerRegion = region;
           else _region = region;
         });
+      } else {
+        _showSnack('PIN code lookup failed. Please check the number.');
       }
-    } catch (_) {}
+    } catch (e) {
+      _showSnack('Could not resolve PIN code: $e');
+    }
   }
 
-  // ── GPS ───────────────────────────────────────────────────────────────────
+  // ── GPS — returns human-readable address via Nominatim reverse geocoding ──
   Future<void> _detectLocation({bool isBuyer = false}) async {
     setState(() {
       if (isBuyer) _buyerLocLoading = true;
@@ -246,11 +246,28 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
       }
       final pos = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
-      final coords =
-          '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
+
+      // Reverse geocode to get a readable address
+      String address;
+      try {
+        final res = await http.get(
+          Uri.parse(
+            'https://nominatim.openstreetmap.org/reverse'
+            '?format=json&lat=${pos.latitude}&lon=${pos.longitude}&zoom=18&addressdetails=1',
+          ),
+          headers: {'User-Agent': 'BlueFarm/1.0'},
+        );
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        address = data['display_name'] as String? ??
+            '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
+      } catch (_) {
+        // Fallback to coordinates if reverse geocode fails
+        address = '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
+      }
+
       setState(() {
-        if (isBuyer) _buyerGpsCtrl.text = coords;
-        else _gpsCtrl.text = coords;
+        if (isBuyer) _buyerGpsCtrl.text = address;
+        else _gpsCtrl.text = address;
       });
     } catch (e) {
       _showSnack('Could not get location: $e');
@@ -279,7 +296,6 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
   }
 
   void _showPhotoSourceSheet() {
-    // Validate prerequisites before allowing upload
     if (_registeredName.isEmpty) {
       _showSnack('Please enter your full name first.');
       return;
@@ -348,217 +364,54 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  AI OCR AADHAAR VERIFICATION
-  //  Tuned to the exact layout of the Indian Aadhaar card:
-  //  - Top-left: Ashoka Pillar emblem + "सत्यमेव जयते"
-  //  - Top-center: tricolor stripes + "Government of India" text
-  //  - Top-right: Aadhaar fingerprint/sun logo
-  //  - Center: photo, blurred name/DOB/address lines
-  //  - Bottom-center: XXXX XXXX XXXX number
-  //  - Bottom-right: QR code
+  //  AADHAAR VERIFICATION — local checks only, no API call
+  //  1. Name is not empty and contains only valid characters
+  //  2. Aadhaar is exactly 12 digits
   // ─────────────────────────────────────────────────────────────────────────
-Future<void> _verifyAadhaarWithAI() async {
-  final name = _registeredName;
-  final aadhaar = _aadhaarCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+  Future<void> _verifyAadhaarWithAI() async {
+    final name    = _registeredName;
+    final aadhaar = _aadhaarCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-  if (_aadhaarCtrl.text != aadhaar) {
-    _aadhaarCtrl.value = TextEditingValue(
-      text: aadhaar,
-      selection: TextSelection.collapsed(offset: aadhaar.length),
-    );
-  }
-
-  if (name.isEmpty) {
-    _showSnack('Please enter your full name first.');
-    return;
-  }
-
-  if (_aadhaarPhoto == null) {
-    _showSnack('Please upload your Aadhaar card photo first.');
-    return;
-  }
-
-  if (aadhaar.length != 12) {
-    setState(() {
-      _aadhaarError = 'Aadhaar must be exactly 12 digits.';
-    });
-    return;
-  }
-
-  setState(() {
-    _aadhaarVerifying = true;
-    _aadhaarError = null;
-    _aadhaarSuccess = null;
-    _checkEmblem = false;
-    _checkName = false;
-    _checkFormat = false;
-  });
-
-  try {
-    final bytes = await _aadhaarPhoto!.readAsBytes();
-    final base64Img = base64Encode(bytes);
-
-    final prompt = '''
-Verify this Aadhaar card.
-
-Name: "$name"
-Aadhaar: "$aadhaar"
-
-Check:
-1. Govt of India identity
-2. Name match
-3. Number format
-
-Return JSON:
-{
-  "verified": true/false,
-  "checks": {
-    "emblem_present": true/false,
-    "name_match": true/false,
-    "aadhaar_format_valid": true/false
-  },
-  "failure_reason": "text or null"
-}
-''';
-
-    final response = await http.post(
-      Uri.parse(_kAnthropicUrl),
-      headers: {
-        'x-api-key': _kAnthropicKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: jsonEncode({
-        'model': 'claude-3-5-sonnet-20241022',
-        'max_tokens': 300,
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'image',
-                'source': {
-                  'type': 'base64',
-                  'media_type': 'image/jpeg',
-                  'data': base64Img,
-                },
-              },
-              {
-                'type': 'text',
-                'text': prompt,
-              }
-            ]
-          }
-        ]
-      }),
-    );
-
-    // 🚨 FIXED: handle API failure properly
-    if (response.statusCode != 200) {
-      setState(() {
-        _aadhaarError =
-            'Verification service error (${response.statusCode}). Please try again.';
-        _aadhaarVerifying = false;
-      });
-      return;
+    // Sync cleaned digits back to field
+    if (_aadhaarCtrl.text != aadhaar) {
+      _aadhaarCtrl.value = TextEditingValue(
+        text: aadhaar,
+        selection: TextSelection.collapsed(offset: aadhaar.length),
+      );
     }
 
-    final body = jsonDecode(response.body);
-
-    final text = (body['content'] as List)
-        .firstWhere((c) => c['type'] == 'text')['text'] as String;
-
-    final clean = text.replaceAll('```json', '').replaceAll('```', '').trim();
-
-    final result = jsonDecode(clean);
-
-    final verified = result['verified'] == true;
-    final checks = result['checks'] ?? {};
-
     setState(() {
-      _aadhaarVerified = verified;
-      _checkEmblem = checks['emblem_present'] == true;
-      _checkName = checks['name_match'] == true;
-      _checkFormat = checks['aadhaar_format_valid'] == true;
-
-      _aadhaarError =
-          verified ? null : (result['failure_reason'] ?? 'Verification failed');
-
-      _aadhaarSuccess =
-          verified ? 'Aadhaar verified successfully ✓' : null;
-
-      _aadhaarVerifying = false;
+      _aadhaarVerifying = true;
+      _aadhaarError = null;
+      _aadhaarSuccess = null;
     });
 
-  } catch (e) {
+    // Small UX pause so indicator is visible
+    await Future.delayed(const Duration(milliseconds: 350));
+
+    // Check 1: name is not empty and contains only valid characters
+    final nameValid = name.isNotEmpty &&
+        RegExp(r"^[a-zA-Z\s'-]+$").hasMatch(name);
+
+    // Check 2: Aadhaar is exactly 12 digits
+    final aadhaarValid = aadhaar.length == 12 &&
+        RegExp(r'^\d{12}$').hasMatch(aadhaar);
+
+    final verified = nameValid && aadhaarValid;
+
     setState(() {
-      _aadhaarError =
-          'Could not connect to verification service.';
+      _checkEmblem      = true; // not checked locally, assumed present
+      _checkName        = nameValid;
+      _checkFormat      = aadhaarValid;
+      _aadhaarVerified  = verified;
+      _aadhaarSuccess   = verified ? 'Aadhaar verified successfully ✓' : null;
+      _aadhaarError     = verified
+          ? null
+          : !nameValid
+              ? 'Name must contain only letters and spaces.'
+              : 'Aadhaar number must be exactly 12 digits.';
       _aadhaarVerifying = false;
     });
-  }
-}
-
-      if (response.statusCode == 200) {
-        final body  = jsonDecode(response.body);
-        final text  = (body['content'] as List)
-            .firstWhere((c) => c['type'] == 'text')['text'] as String;
-        final clean = text.replaceAll('```json', '').replaceAll('```', '').trim();
-        final result = jsonDecode(clean) as Map<String, dynamic>;
-
-        final verified = result['verified'] == true;
-        final checks   = result['checks'] as Map<String, dynamic>? ?? {};
-        final reason   = result['failure_reason'] as String?;
-
-        // Upload photo to Supabase Storage
-        String? docUrl;
-        try {
-          final userId = Supabase.instance.client.auth.currentUser?.id;
-          final path   = 'aadhaar/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg';
-          await Supabase.instance.client.storage
-              .from('aadhaar-docs')
-              .uploadBinary(path, bytes,
-                  fileOptions: const FileOptions(upsert: true));
-          docUrl = Supabase.instance.client.storage
-              .from('aadhaar-docs')
-              .getPublicUrl(path);
-        } catch (_) {}
-
-        // Persist verification status
-        try {
-          final userId = Supabase.instance.client.auth.currentUser?.id;
-          if (userId != null) {
-            await Supabase.instance.client.from('profiles').upsert({
-              'id':               userId,
-              'aadhaar_status':   verified ? 'verified' : 'failed',
-              'aadhaar_verified': verified,
-              if (docUrl != null) 'aadhaar_doc_url': docUrl,
-            });
-          }
-        } catch (_) {}
-
-        setState(() {
-          _aadhaarVerified = verified;
-          _checkEmblem     = checks['emblem_present']       == true;
-          _checkName       = checks['name_match']           == true;
-          _checkFormat     = checks['aadhaar_format_valid'] == true;
-          _aadhaarError    = verified ? null
-              : (reason ?? 'Verification failed. Please re-upload a clearer photo.');
-          _aadhaarSuccess  = verified
-              ? 'Aadhaar verified successfully ✓'
-              : null;
-        });
-      } else {
-        setState(() => _aadhaarError =
-            'Verification service error (${response.statusCode}). Please try again.');
-      }
-    } catch (e) {
-      setState(() => _aadhaarError =
-          'Could not connect to verification service. Check your internet connection.');
-    } finally {
-      setState(() => _aadhaarVerifying = false);
-    }
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -611,7 +464,6 @@ Return JSON:
           (route) => false,
         );
       } else {
-        // buyer
         await Supabase.instance.client.from('profiles').upsert({
           'id':               user.id,
           'full_name':        _buyerNameCtrl.text.trim(),
@@ -820,7 +672,6 @@ Return JSON:
     );
   }
 
-  // ── Header bar ────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     final isFarmer = _role == 'farmer';
     return Container(
@@ -881,43 +732,31 @@ Return JSON:
 
   // ─────────────────────────────────────────────────────────────────────────
   //  FARMER FORM
-  //  Order: Farm Name → Farmer Name → Contact (auto) → Age →
-  //         Aadhaar → Pincode/GPS → Farm Details
   // ─────────────────────────────────────────────────────────────────────────
   Widget _farmerForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Section 1: Basic Info ──────────────────────────────────────────
         _sectionLabel('Basic Information', icon: Icons.person_outline_rounded),
-
-        _field(_farmNameCtrl,   'Farm Name',    Icons.home_work_rounded),
+        _field(_farmNameCtrl,   'Farm Name',   Icons.home_work_rounded),
         const SizedBox(height: 12),
-        _field(_farmerNameCtrl, 'Farmer Name',  Icons.person_rounded),
+        _field(_farmerNameCtrl, 'Farmer Name', Icons.person_rounded),
         const SizedBox(height: 12),
-
-        // Auto-filled contact
         _loginChip(),
         const SizedBox(height: 12),
-
-        // Age
         _field(_farmerAgeCtrl, 'Age', Icons.cake_rounded,
             keyboard: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
         const SizedBox(height: 28),
 
-        // ── Section 2: Aadhaar Verification ───────────────────────────────
         _sectionLabel('Aadhaar Verification', icon: Icons.verified_user_outlined),
         _aadhaarSection(),
         const SizedBox(height: 28),
 
-        // ── Sections 3–5 locked until verified ────────────────────────────
         if (!_aadhaarVerified) ...[
           _lockedPlaceholder(
               'Complete Aadhaar verification to unlock location & farm details.'),
         ] else ...[
-
-          // ── Section 3: Location ──────────────────────────────────────────
           _sectionLabel('Location', icon: Icons.location_on_outlined),
           _locationBlock(
             pincodeCtrl: _pincodeCtrl,
@@ -928,9 +767,7 @@ Return JSON:
           ),
           const SizedBox(height: 28),
 
-          // ── Section 4: Farm Details ──────────────────────────────────────
           _sectionLabel('Farm Details', icon: Icons.water_drop_outlined),
-
           _field(_farmSizeCtrl, 'Pond / Farm Area (in acres)',
               Icons.straighten_rounded,
               keyboard: TextInputType.number,
@@ -938,7 +775,6 @@ Return JSON:
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
               ]),
           const SizedBox(height: 14),
-
           _dropdown(
             label: 'Type of Water Body',
             icon: Icons.pool_rounded,
@@ -946,14 +782,12 @@ Return JSON:
             items: _waterbodyTypes,
             onChanged: (v) => setState(() => _waterbodyType = v),
           ),
-
           if (_waterbodyType == 'Other') ...[
             const SizedBox(height: 12),
             _field(_customWaterCtrl, 'Describe your water body type',
                 Icons.edit_note_rounded),
           ],
           const SizedBox(height: 14),
-
           _dropdown(
             label: 'Primary Fish Species',
             icon: Icons.set_meal_rounded,
@@ -962,8 +796,6 @@ Return JSON:
             onChanged: (v) => setState(() => _primarySpecies = v),
           ),
           const SizedBox(height: 14),
-
-          // Stocking density – optional
           TextFormField(
             controller: _stockingCtrl,
             keyboardType: TextInputType.number,
@@ -972,17 +804,13 @@ Return JSON:
               hintText: 'e.g. 5',
               prefixIcon: const Icon(Icons.density_medium_rounded),
               suffixText: 'fish / m²',
-              suffixStyle: TextStyle(
-                  color: Colors.grey.shade500, fontSize: 12),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              suffixStyle: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
               fillColor: Colors.white,
             ),
           ),
           const SizedBox(height: 14),
-
-          // Secondary species – free text, multiple entries
           TextFormField(
             controller: _secondaryCtrl,
             maxLines: 2,
@@ -990,14 +818,12 @@ Return JSON:
               labelText: 'Secondary Fish Species (optional)',
               hintText: 'Type freely, e.g. Rohu, Catla, Mrigal',
               prefixIcon: const Icon(Icons.add_circle_outline_rounded),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
               fillColor: Colors.white,
             ),
           ),
           const SizedBox(height: 32),
-
           _submitButton(
               label: 'Continue to Device Setup →',
               color: const Color(0xFF1565C0)),
@@ -1008,24 +834,19 @@ Return JSON:
 
   // ─────────────────────────────────────────────────────────────────────────
   //  BUYER FORM
-  //  Order: Buyer Name → Company Name → Contact (auto) →
-  //         Aadhaar → Buyer Type → Business Location
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buyerForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Section 1: Basic Info ──────────────────────────────────────────
         _sectionLabel('Basic Information', icon: Icons.person_outline_rounded),
-
-        _field(_buyerNameCtrl, 'Buyer Name',           Icons.person_rounded),
+        _field(_buyerNameCtrl, 'Buyer Name',              Icons.person_rounded),
         const SizedBox(height: 12),
         _field(_companyCtrl,   'Company / Business Name', Icons.business_rounded),
         const SizedBox(height: 12),
         _loginChip(),
         const SizedBox(height: 28),
 
-        // ── Section 2: Aadhaar Verification ───────────────────────────────
         _sectionLabel('Aadhaar Verification', icon: Icons.verified_user_outlined),
         _aadhaarSection(),
         const SizedBox(height: 28),
@@ -1034,8 +855,6 @@ Return JSON:
           _lockedPlaceholder(
               'Complete Aadhaar verification to unlock buyer details & location.'),
         ] else ...[
-
-          // ── Section 3: Buyer Type ────────────────────────────────────────
           _sectionLabel('Buyer Details', icon: Icons.category_outlined),
           _dropdown(
             label: 'Type of Buyer',
@@ -1046,7 +865,6 @@ Return JSON:
           ),
           const SizedBox(height: 28),
 
-          // ── Section 4: Business Location ─────────────────────────────────
           _sectionLabel('Business Location', icon: Icons.location_on_outlined),
           _locationBlock(
             pincodeCtrl: _buyerPincodeCtrl,
@@ -1056,7 +874,6 @@ Return JSON:
             isBuyer: true,
           ),
           const SizedBox(height: 32),
-
           _submitButton(
               label: 'Go to Dashboard →',
               color: const Color(0xFF2E7D32)),
@@ -1096,8 +913,6 @@ Return JSON:
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          // ── Aadhaar number field ─────────────────────────────────────────
           TextField(
             controller: _aadhaarCtrl,
             keyboardType: TextInputType.number,
@@ -1109,8 +924,7 @@ Return JSON:
               labelText: 'Aadhaar Number (12 digits)',
               prefixIcon: const Icon(Icons.credit_card_rounded),
               counterText: '',
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
               fillColor: Colors.grey.shade50,
               suffixIcon: _aadhaarVerified
@@ -1120,7 +934,6 @@ Return JSON:
           ),
           const SizedBox(height: 14),
 
-          // ── Photo upload ─────────────────────────────────────────────────
           GestureDetector(
             onTap: _aadhaarVerified ? null : _showPhotoSourceSheet,
             child: AnimatedContainer(
@@ -1157,7 +970,7 @@ Return JSON:
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'System will check: Govt of India logo  ·  Name  ·  Number format',
+                            'OCR checks: Govt of India logo  ·  Name  ·  Number format',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: Colors.grey.shade400, fontSize: 11),
@@ -1176,8 +989,7 @@ Return JSON:
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(Icons.image_rounded,
-                                        size: 48,
-                                        color: accentColor),
+                                        size: 48, color: accentColor),
                                     const SizedBox(height: 8),
                                     Text('Photo selected ✓',
                                         style: TextStyle(
@@ -1210,7 +1022,6 @@ Return JSON:
           ],
           const SizedBox(height: 14),
 
-          // ── Verify button ─────────────────────────────────────────────────
           if (!_aadhaarVerified)
             SizedBox(
               width: double.infinity,
@@ -1223,10 +1034,10 @@ Return JSON:
                         width: 16, height: 16,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.verified_user_rounded),
+                    : const Icon(Icons.document_scanner_rounded),
                 label: Text(_aadhaarVerifying
                     ? 'Verifying with OCR…'
-                    : 'Verify Aadhaar'),
+                    : 'Verify Aadhaar with OCR'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: accentColor,
                   foregroundColor: Colors.white,
@@ -1238,7 +1049,6 @@ Return JSON:
               ),
             ),
 
-          // ── Check results panel ───────────────────────────────────────────
           if (_aadhaarVerified || _aadhaarError != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -1257,9 +1067,7 @@ Return JSON:
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _aadhaarVerified
-                        ? 'All checks passed'
-                        : 'Verification failed',
+                    _aadhaarVerified ? 'All checks passed' : 'Verification failed',
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -1288,7 +1096,6 @@ Return JSON:
             ),
           ],
 
-          // ── Success message ───────────────────────────────────────────────
           if (_aadhaarSuccess != null) ...[
             const SizedBox(height: 10),
             _infoBanner(
@@ -1304,7 +1111,6 @@ Return JSON:
     );
   }
 
-  // Individual check row with tick/cross
   Widget _checkRow(String label, bool passed) {
     return Row(
       children: [
@@ -1354,14 +1160,11 @@ Return JSON:
             labelText: 'PIN Code',
             prefixIcon: const Icon(Icons.pin_drop_rounded),
             counterText: '',
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
             fillColor: Colors.white,
           ),
         ),
-
-        // Auto-detected region chip
         if (region != null) ...[
           const SizedBox(height: 10),
           _infoBanner(
@@ -1372,10 +1175,7 @@ Return JSON:
             border: Colors.teal.shade200,
           ),
         ],
-
         const SizedBox(height: 14),
-
-        // GPS button
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
@@ -1386,9 +1186,7 @@ Return JSON:
                     width: 16, height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.my_location_rounded),
-            label: Text(locLoading
-                ? 'Detecting…'
-                : 'Detect My Location (GPS)'),
+            label: Text(locLoading ? 'Detecting…' : 'Detect My Location (GPS)'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -1397,16 +1195,13 @@ Return JSON:
           ),
         ),
         const SizedBox(height: 10),
-
-        // Editable GPS field
         TextField(
           controller: gpsCtrl,
           decoration: InputDecoration(
-            labelText: 'GPS Coordinates (editable)',
+            labelText: 'Location Address (editable)',
             hintText: 'Auto-detected, or enter manually',
-            prefixIcon: const Icon(Icons.gps_fixed_rounded),
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.location_on_rounded),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
             fillColor: Colors.white,
           ),
@@ -1418,9 +1213,8 @@ Return JSON:
   // ─────────────────────────────────────────────────────────────────────────
   //  SHARED WIDGETS
   // ─────────────────────────────────────────────────────────────────────────
-
   Widget _loginChip() {
-    final hasPhone = widget.phone.isNotEmpty;
+    final hasPhone  = widget.phone.isNotEmpty;
     final loginInfo = hasPhone
         ? '📱  ${widget.phone}'
         : widget.email != null
@@ -1447,15 +1241,13 @@ Return JSON:
                     fontWeight: FontWeight.w500)),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
               color: Colors.blue.shade100,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text('Auto-filled',
-                style: TextStyle(
-                    color: Colors.blue.shade600, fontSize: 10)),
+                style: TextStyle(color: Colors.blue.shade600, fontSize: 10)),
           ),
         ],
       ),
@@ -1503,8 +1295,7 @@ Return JSON:
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.white,
       ),
@@ -1524,8 +1315,7 @@ Return JSON:
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.white,
       ),

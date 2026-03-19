@@ -6,7 +6,9 @@ import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../services/supabase_service.dart';
 import 'home_screen.dart';
-import 'ai_screen.dart';
+import 'knowledge_screen.dart';
+import 'insights_screen.dart';
+import 'harvest_screen.dart';
 import 'camera_screen.dart';
 import 'hardware_screen.dart';
 
@@ -23,9 +25,11 @@ class _MainShellState extends State<MainShell> {
 
   final List<String> _titles = [
     'Water Quality Dashboard',
-    'AI Smart Recommendations',
+    'Knowledge Center',
+    'Insights & Trends',
+    'Harvest & Market',
     'Farm Camera',
-    'AquaBot Hardware Controls',
+    'Hardware Controls',
   ];
 
   @override
@@ -38,7 +42,9 @@ class _MainShellState extends State<MainShell> {
             index: _currentIndex,
             children: const [
               HomeScreen(),
-              AIScreen(),
+              KnowledgeScreen(),
+              InsightsScreen(),
+              HarvestScreen(),
               CameraScreen(),
               HardwareScreen(),
             ],
@@ -79,20 +85,18 @@ class _MainShellState extends State<MainShell> {
                                 ),
                               ),
                               const SizedBox(width: 11),
-                              Consumer<AppProvider>(
-                                builder: (context, provider, _) => Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      provider.userProfile['farm_name'] as String? ?? provider.userProfile['full_name'] as String? ?? 'BlueFarm',
-                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
-                                    ),
-                                    Text(
-                                      '${provider.userProfile['region'] as String? ?? provider.userProfile['location'] as String? ?? 'Navi Mumbai'}  ·  ${provider.deviceStatus?['device_id'] as String? ?? 'AquaBot'}',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.65)),
-                                    ),
-                                  ],
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'BlueFarm',
+                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
+                                  ),
+                                  Text(
+                                    '${DateFormat('HH:mm').format(DateTime.now())} · Navi Mumbai',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.65)),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -174,25 +178,31 @@ class _MainShellState extends State<MainShell> {
                           ),
                           DockItemWidget(
                             index: 1,
-                            icon: Icons.psychology_outlined,
-                            label: 'AI Brain',
+                            icon: Icons.menu_book_outlined,
+                            label: 'Learn',
                             isActive: _currentIndex == 1,
                             onTap: () => setState(() => _currentIndex = 1),
                           ),
-                          const AadhaarCenterButton(),
                           DockItemWidget(
                             index: 2,
-                            icon: Icons.camera_alt_outlined,
-                            label: 'Camera',
+                            icon: Icons.insights_outlined,
+                            label: 'Insights',
                             isActive: _currentIndex == 2,
                             onTap: () => setState(() => _currentIndex = 2),
                           ),
                           DockItemWidget(
                             index: 3,
-                            icon: Icons.developer_board,
-                            label: 'Hardware',
+                            icon: Icons.storefront_outlined,
+                            label: 'Harvest',
                             isActive: _currentIndex == 3,
                             onTap: () => setState(() => _currentIndex = 3),
+                          ),
+                          DockItemWidget(
+                            index: 4,
+                            icon: Icons.camera_alt_outlined,
+                            label: 'Camera',
+                            isActive: _currentIndex == 4,
+                            onTap: () => setState(() => _currentIndex = 4),
                           ),
                         ],
                       ),
@@ -650,7 +660,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Container(
+                         Container(
                           width: 54,
                           height: 54,
                           decoration: BoxDecoration(
@@ -849,7 +859,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              OutlinedButton.icon(
+                               OutlinedButton.icon(
                                 onPressed: () => setState(() => _view = 'menu'),
                                 icon: const Icon(Icons.arrow_back, size: 16),
                                 label: const Text('Back'),
@@ -858,7 +868,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                               const SizedBox(height: 10),
                               const Text('Preferences', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                               const SizedBox(height: 12),
-                              Text('APPEARANCE', style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w700)),
+                               Text('APPEARANCE', style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w700)),
                               const SizedBox(height: 9),
                               Container(
                                 padding: const EdgeInsets.all(13),
@@ -896,13 +906,13 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              Text('NOTIFICATIONS', style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w700)),
+                               Text('NOTIFICATIONS', style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w700)),
                               const SizedBox(height: 9),
                               SwitchListTile(
                                 title: const Text('Push Notifications', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
                                 subtitle: const Text('Farm status updates', style: TextStyle(fontSize: 11)),
                                 value: true,
-                                onChanged: (v) {},
+                                onChanged: (v){},
                                 activeThumbColor: AppTheme.lightAccent,
                                 contentPadding: EdgeInsets.zero,
                               ),
@@ -910,13 +920,13 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 title: const Text('Sensor Alerts', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
                                 subtitle: const Text('Critical parameter changes', style: TextStyle(fontSize: 11)),
                                 value: true,
-                                onChanged: (v) {},
+                                onChanged: (v){},
                                 activeThumbColor: AppTheme.lightAccent,
                                 contentPadding: EdgeInsets.zero,
                               ),
-                            ],
-                          ),
-                        ),
+                            ]
+                          )
+                        )
             ),
           ],
         ),
@@ -1052,7 +1062,7 @@ class _AadhaarSheetState extends State<AadhaarSheet> with SingleTickerProviderSt
             ),
             child: Stack(
               children: [
-                Positioned.fill(child: Container(decoration: BoxDecoration(color: AppTheme.lightAccent.withOpacity(0.05), borderRadius: BorderRadius.circular(15)))),
+                 Positioned.fill(child: Container(decoration: BoxDecoration(color: AppTheme.lightAccent.withOpacity(0.05), borderRadius: BorderRadius.circular(15)))),
                 if (_scanning)
                   AnimatedBuilder(
                     animation: _scanController,
