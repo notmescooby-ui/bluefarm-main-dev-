@@ -14,7 +14,7 @@ import 'device_connect_screen.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 //  CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
-const _kAnthropicKey = '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';
+const _kAnthropicKey = String.fromEnvironment('ANTHROPIC_API_KEY');
 const _kAnthropicUrl = 'https://api.anthropic.com/v1/messages';
 
 // ─────────────────────────────────────────────────────────────────────────────
