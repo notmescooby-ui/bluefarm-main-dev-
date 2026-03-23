@@ -5,6 +5,7 @@ import '../providers/app_provider.dart';
 import '../models/sensor_data.dart';
 import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
+import '../localization/app_translations.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  HOME SCREEN
@@ -23,8 +24,8 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Live Parameters ────────────────────────────────────────────
-              const Text('Live Parameters',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              Text(AppTranslations.get('live_params'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               const SizedBox(height: 12),
 
               _FlippableCard(
@@ -73,24 +74,24 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // ── Smart Recommendations ──────────────────────────────────────
-              const Text('Smart Recommendations',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              Text(AppTranslations.get('smart_rec'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               const SizedBox(height: 10),
               _SmartRecommendation(reading: r),
               const SizedBox(height: 24),
 
               // ── AquaBot status ─────────────────────────────────────────────
-              const Text('AquaBot Status',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              Text(AppTranslations.get('aquabot_status'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               const SizedBox(height: 10),
               Row(children: [
-                Expanded(child: _StatusMini(label: 'Battery', value: '78%', icon: Icons.battery_5_bar)),
+                Expanded(child: _StatusMini(label: AppTranslations.get('battery'), value: '78%', icon: Icons.battery_5_bar)),
                 const SizedBox(width: 9),
-                Expanded(child: _StatusMini(label: 'Signal', value: 'Strong', icon: Icons.wifi)),
+                Expanded(child: _StatusMini(label: AppTranslations.get('signal'), value: 'Strong', icon: Icons.wifi)),
                 const SizedBox(width: 9),
                 Expanded(child: _StatusMini(
-                  label: 'Motor',
-                  value: provider.motorASpeed > 0 || provider.motorBSpeed > 0 ? 'Running' : 'Idle',
+                  label: AppTranslations.get('motor'),
+                  value: provider.motorASpeed > 0 || provider.motorBSpeed > 0 ? AppTranslations.get('running') : AppTranslations.get('idle'),
                   icon: Icons.settings_outlined,
                 )),
               ]),
@@ -259,7 +260,7 @@ class _FlippableCardState extends State<_FlippableCard>
           ]),
           const SizedBox(height: 5),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('Tap card for details',
+            Text(AppTranslations.get('tap_details'),
                 style: TextStyle(fontSize: 10,
                     color: Theme.of(context).textTheme.bodySmall!.color!.withOpacity(0.6))),
             Icon(Icons.touch_app_rounded, size: 14,
@@ -321,7 +322,7 @@ class _FlippableCardState extends State<_FlippableCard>
             ]),
           )),
         const SizedBox(height: 6),
-        Text('Tap to close', style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 10)),
+        Text(AppTranslations.get('tap_close'), style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 10)),
       ]),
     );
   }
@@ -395,11 +396,11 @@ class _SmartRecommendationState extends State<_SmartRecommendation> {
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_isAlert ? 'Action Required' : 'All Clear',
+            Text(_isAlert ? AppTranslations.get('action_required') : AppTranslations.get('all_clear'),
                 style: TextStyle(
                     fontWeight: FontWeight.w800, fontSize: 15,
                     color: _isAlert ? AppTheme.lightWarning : AppTheme.lightSuccess)),
-            Text('Decision Engine', style: TextStyle(fontSize: 11,
+            Text(AppTranslations.get('decision_engine'), style: TextStyle(fontSize: 11,
                 color: Theme.of(context).textTheme.bodySmall!.color!)),
           ])),
           IconButton(
@@ -415,7 +416,7 @@ class _SmartRecommendationState extends State<_SmartRecommendation> {
                     child: CircularProgressIndicator(strokeWidth: 2,
                         color: _isAlert ? AppTheme.lightWarning : AppTheme.lightAccent)),
                 const SizedBox(width: 10),
-                const Text('Analysing sensor data…', style: TextStyle(fontSize: 13)),
+                Text(AppTranslations.get('analysing'), style: TextStyle(fontSize: 13)),
               ])
             : Text(_text, style: const TextStyle(fontSize: 13.5, height: 1.55)),
       ]),

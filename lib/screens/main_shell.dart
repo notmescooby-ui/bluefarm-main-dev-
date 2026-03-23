@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../services/supabase_service.dart';
+import '../localization/app_translations.dart';
 import 'home_screen.dart';
 import 'knowledge_screen.dart';
 import 'insights_screen.dart';
@@ -23,7 +24,7 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   bool _sidebarOpen = false;
 
-  final List<String> _titles = [
+  List<String> get _titles => [
     'Water Quality Dashboard',
     'Knowledge Center',
     'Insights & Trends',
@@ -50,7 +51,7 @@ class _MainShellState extends State<MainShell> {
             ],
           ),
 
-          // Header
+          // Header — thin strip
           Positioned(
             top: 0,
             left: 0,
@@ -62,7 +63,7 @@ class _MainShellState extends State<MainShell> {
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -75,28 +76,34 @@ class _MainShellState extends State<MainShell> {
                               GestureDetector(
                                 onTap: () => setState(() => _sidebarOpen = true),
                                 child: Container(
-                                  width: 40,
-                                  height: 40,
+                                  width: 36,
+                                  height: 36,
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.17),
-                                    borderRadius: BorderRadius.circular(13),
+                                    borderRadius: BorderRadius.circular(11),
                                   ),
-                                  child: const Icon(Icons.person_outline, color: Colors.white, size: 20),
+                                  child: const Icon(Icons.person_outline, color: Colors.white, size: 18),
                                 ),
                               ),
-                              const SizedBox(width: 11),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'BlueFarm',
-                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
-                                  ),
-                                  Text(
-                                    '${DateFormat('HH:mm').format(DateTime.now())} · Navi Mumbai',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.65)),
-                                  ),
-                                ],
+                              const SizedBox(width: 10),
+                              Consumer<AppProvider>(
+                                builder: (context, provider, _) => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      provider.userProfile['farm_name'] as String? ??
+                                          provider.userProfile['full_name'] as String? ?? 'BlueFarm',
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                            color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      '${DateFormat('HH:mm').format(DateTime.now())}  ·  '
+                                      '${provider.userProfile['region'] as String? ?? provider.userProfile['location'] as String? ?? 'Navi Mumbai'}',
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: Colors.white.withOpacity(0.65), fontSize: 10),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -107,25 +114,26 @@ class _MainShellState extends State<MainShell> {
                               GestureDetector(
                                 onTap: () => setState(() => _sidebarOpen = true),
                                 child: Container(
-                                  width: 36,
-                                  height: 36,
+                                  width: 34,
+                                  height: 34,
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(11),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: const Icon(Icons.settings_outlined, color: Colors.white, size: 17),
+                                  child: const Icon(Icons.settings_outlined, color: Colors.white, size: 16),
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 3),
                       Text(
                         _titles[_currentIndex],
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.white.withOpacity(0.72),
                               fontWeight: FontWeight.w600,
+                              fontSize: 11,
                             ),
                       ),
                     ],
@@ -135,7 +143,7 @@ class _MainShellState extends State<MainShell> {
             ),
           ),
 
-          // Dock
+          // Dock — 5 tabs: Home, Learn, Insights, Harvest, Camera
           Positioned(
             bottom: 0,
             left: 0,
@@ -154,7 +162,8 @@ class _MainShellState extends State<MainShell> {
                             : Colors.white.withOpacity(0.83),
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: Colors.white.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.1 : 0.55),
+                          color: Colors.white.withOpacity(
+                              Theme.of(context).brightness == Brightness.dark ? 0.1 : 0.55),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -172,35 +181,35 @@ class _MainShellState extends State<MainShell> {
                           DockItemWidget(
                             index: 0,
                             icon: Icons.home_outlined,
-                            label: 'Home',
+                            label: AppTranslations.get('home'),
                             isActive: _currentIndex == 0,
                             onTap: () => setState(() => _currentIndex = 0),
                           ),
                           DockItemWidget(
                             index: 1,
                             icon: Icons.menu_book_outlined,
-                            label: 'Learn',
+                            label: AppTranslations.get('learn'),
                             isActive: _currentIndex == 1,
                             onTap: () => setState(() => _currentIndex = 1),
                           ),
                           DockItemWidget(
                             index: 2,
                             icon: Icons.insights_outlined,
-                            label: 'Insights',
+                            label: AppTranslations.get('insights'),
                             isActive: _currentIndex == 2,
                             onTap: () => setState(() => _currentIndex = 2),
                           ),
                           DockItemWidget(
                             index: 3,
                             icon: Icons.storefront_outlined,
-                            label: 'Harvest',
+                            label: AppTranslations.get('harvest'),
                             isActive: _currentIndex == 3,
                             onTap: () => setState(() => _currentIndex = 3),
                           ),
                           DockItemWidget(
                             index: 4,
                             icon: Icons.camera_alt_outlined,
-                            label: 'Camera',
+                            label: AppTranslations.get('camera'),
                             isActive: _currentIndex == 4,
                             onTap: () => setState(() => _currentIndex = 4),
                           ),
@@ -677,11 +686,20 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                           children: [
                             Consumer<AppProvider>(
                               builder: (context, p, _) => Text(
-                                p.userProfile['name'] ?? '',
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
+                                p.userProfile['full_name'] as String? ?? p.userProfile['name'] as String? ?? '',
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ),
-                            const Text('Fish Farmer · Navi Mumbai', style: TextStyle(fontSize: 11, color: Colors.white70)),
+                            Consumer<AppProvider>(
+                              builder: (context, p, _) => Text(
+                                '${p.userProfile['role'] as String? ?? 'Farmer'}  ·  ${p.userProfile['region'] as String? ?? p.userProfile['location'] as String? ?? 'Navi Mumbai'}',
+                                style: const TextStyle(fontSize: 10, color: Colors.white70),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
                             const SizedBox(height: 4),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -807,7 +825,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 child: Consumer<AppProvider>(
                                   builder: (context, p, _) => Column(
                                     children: [
-                                      _profileRow('Name', p.userProfile['name']),
+                                      _profileRow('Name', p.userProfile['full_name'] as String? ?? p.userProfile['name'] as String?),
                                       const Divider(),
                                       _profileRow('Farm Name', p.userProfile['farm_name']),
                                       const Divider(),

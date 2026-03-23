@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
+import '../localization/app_translations.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  HARVEST SCREEN  (Farmer → posts listing → Buyer sees it)
@@ -44,9 +45,9 @@ class _HarvestScreenState extends State<HarvestScreen> {
       Padding(
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
         child: Row(children: [
-          Expanded(child: _tabBtn('My Listings', 0)),
+          Expanded(child: _tabBtn(AppTranslations.get('my_listings'), 0)),
           const SizedBox(width: 10),
-          Expanded(child: _tabBtn('Add Harvest', 1)),
+          Expanded(child: _tabBtn(AppTranslations.get('add_harvest'), 1)),
         ]),
       ),
       const SizedBox(height: 2),
@@ -84,10 +85,10 @@ class _HarvestScreenState extends State<HarvestScreen> {
       return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade300),
         const SizedBox(height: 16),
-        Text('No harvest listings yet',
+        Text(AppTranslations.get('no_listings'),
             style: TextStyle(color: Colors.grey.shade500, fontSize: 16)),
         const SizedBox(height: 8),
-        Text('Tap "Add Harvest" to post your first listing',
+        Text(AppTranslations.get('no_listings_sub'),
             style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
       ]));
     }
@@ -159,7 +160,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                 foregroundColor: AppTheme.lightWarning,
                 side: BorderSide(color: AppTheme.lightWarning.withOpacity(0.5)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: const Text('Mark Sold', style: TextStyle(fontSize: 12)),
+            child: Text(AppTranslations.get('mark_sold'), style: TextStyle(fontSize: 12)),
           )),
           const SizedBox(width: 8),
           Expanded(child: OutlinedButton(
@@ -168,7 +169,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                 foregroundColor: AppTheme.lightDanger,
                 side: BorderSide(color: AppTheme.lightDanger.withOpacity(0.5)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: const Text('Delete', style: TextStyle(fontSize: 12)),
+            child: Text(AppTranslations.get('delete'), style: TextStyle(fontSize: 12)),
           )),
         ]),
       ]),
@@ -316,7 +317,7 @@ class _AddHarvestFormState extends State<_AddHarvestForm> {
         ),
         const SizedBox(height: 14),
 
-        _label('Quantity Available (kg) *'),
+        _label(AppTranslations.get('quantity_kg')),
         TextField(
           controller: _qtyCtrl,
           keyboardType: TextInputType.number,
@@ -326,7 +327,7 @@ class _AddHarvestFormState extends State<_AddHarvestForm> {
         ),
         const SizedBox(height: 14),
 
-        _label('Average Weight per Fish (grams)'),
+        _label(AppTranslations.get('avg_weight')),
         TextField(
           controller: _weightCtrl,
           keyboardType: TextInputType.number,
@@ -335,7 +336,7 @@ class _AddHarvestFormState extends State<_AddHarvestForm> {
         ),
         const SizedBox(height: 14),
 
-        _label('Price per kg (₹) *'),
+        _label(AppTranslations.get('price_per_kg')),
         TextField(
           controller: _priceCtrl,
           keyboardType: TextInputType.number,
@@ -345,7 +346,7 @@ class _AddHarvestFormState extends State<_AddHarvestForm> {
         ),
         const SizedBox(height: 14),
 
-        _label('Notes (optional)'),
+        _label(AppTranslations.get('notes')),
         TextField(
           controller: _notesCtrl,
           maxLines: 3,
@@ -361,7 +362,7 @@ class _AddHarvestFormState extends State<_AddHarvestForm> {
                 ? const SizedBox(width: 18, height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Icon(Icons.upload_rounded),
-            label: Text(_submitting ? 'Posting…' : 'Post Harvest Listing'),
+            label: Text(_submitting ? AppTranslations.get('posting') : AppTranslations.get('post_listing')),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.lightAccent,
               foregroundColor: Colors.white,

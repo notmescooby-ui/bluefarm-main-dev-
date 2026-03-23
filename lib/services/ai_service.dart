@@ -4,7 +4,7 @@ import '../models/sensor_data.dart';
 
 class AIService {
   static const String _apiUrl = 'https://api.anthropic.com/v1/messages';
-  static const String _apiKey = 'YOUR_ANTHROPIC_API_KEY';
+  static const String _apiKey = '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';
 
   Future<String> askClaude(String question, SensorData? data) async {
     final context = data != null

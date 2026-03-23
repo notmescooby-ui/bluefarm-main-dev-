@@ -1,252 +1,286 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../localization/app_translations.dart';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  KNOWLEDGE CENTER SCREEN
-// ═══════════════════════════════════════════════════════════════════════════════
 class KnowledgeScreen extends StatefulWidget {
   const KnowledgeScreen({super.key});
-
   @override
   State<KnowledgeScreen> createState() => _KnowledgeScreenState();
 }
 
 class _KnowledgeScreenState extends State<KnowledgeScreen> {
-  int _selectedCategory = 0;
+  int _sel = 0;
 
-  static const _categories = [
-    ('Feeding',   Icons.restaurant_outlined),
-    ('Species',   Icons.set_meal_outlined),
-    ('Diseases',  Icons.healing_outlined),
-    ('Harvest',   Icons.agriculture_outlined),
-    ('Breeding',  Icons.favorite_outline),
-    ('Weather',   Icons.wb_cloudy_outlined),
+  List<(String, IconData)> get _cats => [
+    (AppTranslations.get('feeding'),  Icons.restaurant_outlined),
+    (AppTranslations.get('species'),  Icons.set_meal_outlined),
+    (AppTranslations.get('diseases'), Icons.healing_outlined),
+    (AppTranslations.get('harvest'),  Icons.agriculture_outlined),
+    (AppTranslations.get('breeding'), Icons.favorite_outline),
+    (AppTranslations.get('weather'),  Icons.wb_cloudy_outlined),
   ];
 
-  static final _content = <List<_KCard>>[
-    // ── FEEDING ──────────────────────────────────────────────────────────────
+  // Full expanded content — all categories with thorough detail
+  static final _content = <List<_K>>[
+    // ── FEEDING ─────────────────────────────────────────────────────────────
     [
-      _KCard('Feeding Frequency',
-          Icons.access_time_outlined, const Color(0xFF059669),
-          'Feed fish 2–3 times daily at fixed times. Morning (7am), noon (12pm), and evening (5pm). Consistent schedules reduce stress and improve FCR.',
-          [
-            'Use 2–3% of body weight as daily feed quantity',
-            'Remove uneaten feed after 30 minutes to prevent water fouling',
-            'Reduce feed by 50% during monsoon or cold spells below 20°C',
-            'Observe feeding response — healthy fish eat within 10 minutes',
-          ]),
-      _KCard('Feed Types & Quality',
-          Icons.grain_outlined, const Color(0xFF0097A7),
-          'Feed quality directly impacts growth rate and water quality. Use pellets with 25–35% crude protein for most carps and catfish.',
-          [
-            'Floating pellets: easier to monitor consumption',
-            'Sinking pellets: preferred for bottom feeders like catfish',
-            'Protein requirements: Shrimp (35–40%), Carp (25–30%), Tilapia (28–32%)',
-            'Check expiry dates — stale feed reduces nutrition and causes disease',
-          ]),
-      _KCard('Feed Conversion Ratio (FCR)',
-          Icons.trending_up_outlined, const Color(0xFF7C3AED),
-          'FCR measures how efficiently fish convert feed into body mass. A lower FCR means better efficiency. Ideal FCR is 1.2–1.8 for carps.',
-          [
-            'FCR = Total feed given ÷ Weight gained',
-            'FCR above 2.5 indicates poor feed quality or overfeeding',
-            'Track FCR monthly to detect health or water quality issues early',
-            'High turbidity increases FCR as fish use energy to cope with stress',
-          ]),
+      _K('Feeding Frequency & Schedule', Icons.access_time_outlined, const Color(0xFF059669),
+        'Feed fish 2–3 times daily at fixed intervals. Consistent timing reduces stress and trains fish to come to feeding spots, dramatically improving FCR and growth rates.',
+        ['Feed at 7 AM, 12 PM, and 5 PM — morning feeding is the most important',
+         'Use 2–3% of total body weight as the daily feed amount',
+         'Remove uneaten feed within 30 minutes to prevent ammonia spikes',
+         'Observe feeding response — healthy fish eat vigorously within 5–8 minutes',
+         'Reduce feeding by 50% during monsoon, cloudy weather, or when temperature drops below 20°C',
+         'Stop feeding entirely if DO falls below 3 mg/L — fish will not eat and uneaten feed worsens crisis']),
+      _K('Feed Types, Quality & Protein Needs', Icons.grain_outlined, const Color(0xFF0097A7),
+        'Feed quality has the single biggest impact on growth rate, water quality, and farm profitability. Use species-appropriate protein levels for maximum efficiency.',
+        ['Floating pellets: easiest to monitor consumption, ideal for surface feeders like Catla',
+         'Sinking pellets: essential for bottom feeders like Magur catfish and Mrigal',
+         'Protein requirements by species: Shrimp 35–40%, Tilapia 28–32%, Carp 25–30%, Catfish 30–35%',
+         'Use certified feed from reputed manufacturers — cheap feed increases FCR and disease risk',
+         'Check manufacturing date — never use feed older than 3 months (fat oxidation reduces nutrition)',
+         'Supplement with natural feed: rice bran, groundnut cake, mustard oil cake for carps']),
+      _K('Feed Conversion Ratio (FCR)', Icons.trending_up_outlined, const Color(0xFF7C3AED),
+        'FCR = kg of feed given ÷ kg of weight gained. A lower FCR means better efficiency and higher profit. Tracking FCR monthly can reveal hidden problems early.',
+        ['Ideal FCR by species: Carp 1.5–2.0, Tilapia 1.2–1.6, Shrimp 1.4–1.8, Catfish 1.5–2.0',
+         'FCR above 2.5 signals overfeeding, poor quality feed, disease, or poor water quality',
+         'Weigh a sample of fish monthly (20–30 fish using a dipnet) to calculate weight gain',
+         'High turbidity increases FCR — fish expend energy coping with poor water, eat less efficiently',
+         'Track FCR in a register — sudden rise is the earliest warning sign of a health problem',
+         'Improving FCR by 0.3 points on a 1-tonne harvest saves approximately ₹9,000 in feed costs']),
+      _K('Feeding During Stress Periods', Icons.warning_amber_outlined, const Color(0xFFD97706),
+        'Fish under stress (disease, poor water, transport, temperature shock) should receive reduced feeding until conditions stabilize. Overfeeding during stress causes rapid water deterioration.',
+        ['Reduce to 50% feeding during: monsoon onset, disease outbreaks, temperature swings >3°C/day',
+         'Stop feeding 24–48 hours before harvest to empty gut — improves shelf life and market price',
+         'Never feed in first 24 hours after stocking new fish — let them settle and acclimatise',
+         'After adding lime or chemicals, skip one feeding to avoid interaction with digestive system',
+         'In winter below 18°C, feed every other day only — metabolism is too slow for daily feeding']),
     ],
-    // ── SPECIES ───────────────────────────────────────────────────────────────
+
+    // ── SPECIES ──────────────────────────────────────────────────────────────
     [
-      _KCard('Rohu (Labeo rohita)',
-          Icons.water_outlined, const Color(0xFF1565C0),
-          'Most popular freshwater fish in India. Column feeder. Thrives in 25–32°C. Reaches 1–2 kg in 12 months.',
-          [
-            'Ideal stocking density: 4,000–6,000 fish/hectare',
-            'Compatible with Catla and Mrigal in polyculture',
-            'Feed: rice bran, mustard cake, groundnut cake',
-            'Harvest size: 1–1.5 kg (12–18 months)',
-            'Disease risk: EUS (Epizootic Ulcerative Syndrome) in monsoon',
-          ]),
-      _KCard('Catla (Catla catla)',
-          Icons.water_outlined, const Color(0xFF0097A7),
-          'Surface feeder. Fast grower reaching 2–3 kg in 12 months. Best stocked at 20–30% of polyculture pond.',
-          [
-            'Feeds on phytoplankton and zooplankton — enhances water quality',
-            'Ideal water temperature: 26–32°C',
-            'Avoid overstocking — causes stunted growth',
-            'Can be combined with Rohu (40%) and Mrigal (30%)',
-          ]),
-      _KCard('Tilapia (Nile)',
-          Icons.water_outlined, const Color(0xFF059669),
-          'Hardy, disease-resistant species. Ideal for beginners. Monosex male culture preferred to prevent uncontrolled breeding.',
-          [
-            'Optimal temperature: 25–30°C, tolerates 15–40°C',
-            'Stocking: 20,000–30,000 fish/hectare in intensive systems',
-            'Reaches 400–600g in 6 months under good management',
-            'Risk: reproduces rapidly if monosex culture not maintained',
-          ]),
-      _KCard('Vannamei Shrimp',
-          Icons.water_outlined, const Color(0xFFD97706),
-          'High-value export crop. Requires brackish water (5–25 ppt salinity). Sensitive to water quality — strict monitoring needed.',
-          [
-            'DO must stay above 5 mg/L at all times',
-            'pH: 7.8–8.3, Temperature: 23–30°C',
-            'Harvest at 20g body weight in 90–120 days',
-            'Use probiotics to maintain gut health and water quality',
-            'Avoid sudden salinity changes — causes stress and mortality',
-          ]),
+      _K('Rohu (Labeo rohita)', Icons.water_outlined, const Color(0xFF1565C0),
+        'The most commercially important freshwater fish in India. A column feeder that thrives in polyculture systems. Hardy, fast-growing and in high demand in most Indian markets.',
+        ['Optimal temperature: 25–32°C; tolerates 18–38°C short-term',
+         'Ideal stocking density: 4,000–6,000 fish/hectare in polyculture',
+         'Combine with Catla (20–30%) and Mrigal (20–30%) for full pond utilization',
+         'Natural feed: phytoplankton, zooplankton, decaying plant matter, supplementary feed',
+         'Growth: 1–1.5 kg in 12–15 months; premium market size is 1.2 kg+',
+         'Disease risk: EUS during monsoon; Dropsy in overcrowded ponds',
+         'Harvesting tip: rohu fetch 10–20% higher price in early morning live-fish markets']),
+      _K('Catla (Catla catla)', Icons.water_outlined, const Color(0xFF0097A7),
+        'The fastest-growing Indian major carp. A surface feeder that cleans pond surface and feeds on plankton. Essential in polyculture systems — improves water clarity.',
+        ['Surface feeder — does not compete with Rohu or Mrigal for food',
+         'Optimal temperature: 26–32°C; grows fastest in summer months',
+         'Stocking: 2,000–3,000 fish/hectare (20–30% of total stocking)',
+         'Reaches 2–3 kg in 12 months under good management',
+         'Never overstock — stunted growth occurs rapidly in crowded ponds',
+         'Feeds on phytoplankton — high Catla density helps control algae bloom',
+         'Price premium: live Catla commands 15–25% higher price than dead fish']),
+      _K('Tilapia — Nile & Monosex', Icons.water_outlined, const Color(0xFF059669),
+        'Hardy, disease-resistant, and profitable. Monosex (all-male) culture is essential to prevent uncontrolled breeding that causes overpopulation and stunted growth.',
+        ['Always use monosex (all-male) fingerlings from certified hatcheries to prevent breeding',
+         'Optimal temperature: 25–30°C; tolerates 15–40°C — most temperature-resilient species',
+         'Intensive culture: 20,000–30,000 fish/hectare with continuous aeration',
+         'Feed protein 28–32%; reaches 400–600g in 5–6 months',
+         'Disease resistant — rarely affected by EUS or Dropsy; main risk is parasites in dense culture',
+         'Market demand: growing rapidly in restaurants, hotels, and frozen export markets',
+         'Low FCR of 1.2–1.4 makes Tilapia one of the most cost-efficient species in India']),
+      _K('Pangasius (Basa/Swai)', Icons.water_outlined, const Color(0xFF7C3AED),
+        'Extremely fast-growing catfish species. Can be farmed at very high densities with continuous aeration. Very popular in processing and export markets.',
+        ['Can be stocked at 50,000–80,000 fish/hectare in intensive systems with heavy aeration',
+         'Grows to 1 kg in just 5–6 months — fastest-growing commercially viable fish in India',
+         'Tolerates low DO better than most species but DO should still stay above 3 mg/L',
+         'Feed: 28–30% protein pellets; FCR 1.4–1.6 under good management',
+         'Mostly processed and sold as boneless fillets; requires processing unit linkage for best price',
+         'Water change of 20–30% per week is essential in intensive Pangasius culture']),
+      _K('Vannamei Shrimp', Icons.water_outlined, const Color(0xFFD97706),
+        'Highest value aquaculture crop in India. Demands strict water quality management. One mistake can cause catastrophic mortality. Best for experienced farmers with monitoring systems.',
+        ['Salinity: 5–25 ppt (brackish water essential); not suitable for freshwater ponds',
+         'Critical parameters: DO >5 mg/L always, pH 7.8–8.3, Temperature 23–30°C',
+         'Stocking: 60–80 PLs/m² in semi-intensive; 100–120 PLs/m² in intensive systems',
+         'Harvest at 15–20g body weight in 90–120 days for best price',
+         'Use probiotics weekly to maintain beneficial bacteria and prevent Vibrio disease',
+         'WSSV (White Spot Syndrome Virus) is the deadliest threat — test seedstock before stocking',
+         'Biosecurity is non-negotiable: disinfect all equipment, nets, and entry points']),
     ],
-    // ── DISEASES ──────────────────────────────────────────────────────────────
+
+    // ── DISEASES ─────────────────────────────────────────────────────────────
     [
-      _KCard('EUS – Epizootic Ulcerative Syndrome',
-          Icons.healing_outlined, const Color(0xFFDC2626),
-          'Fungal infection causing red ulcers on body surface. Most common during monsoon when temperature drops suddenly.',
-          [
-            'Symptoms: red bleeding ulcers, erratic swimming, appetite loss',
-            'Cause: Aphanomyces invadans fungus, triggered by low temperature + rain',
-            'Prevention: maintain pH 7–8, avoid sudden temperature changes',
-            'Treatment: lime treatment (500 kg/ha), potassium permanganate bath',
-            'Remove and isolate affected fish immediately',
-          ]),
-      _KCard('Bacterial Gill Disease',
-          Icons.healing_outlined, const Color(0xFFD97706),
-          'Caused by Flavobacterium species. Affects gill filaments reducing oxygen uptake. Common in overcrowded ponds.',
-          [
-            'Symptoms: gasping at surface, pale/swollen gills, lethargy',
-            'Risk factors: overcrowding, high ammonia, low DO',
-            'Prevention: maintain stocking density, aerate well',
-            'Treatment: salt bath (3–5 g/L for 5 minutes), consult veterinarian',
-          ]),
-      _KCard('Dropsy (Aeromoniasis)',
-          Icons.healing_outlined, const Color(0xFF7C3AED),
-          'Bacterial infection by Aeromonas hydrophila. Causes fluid accumulation, bloating, scale protrusion.',
-          [
-            'Symptoms: bloated belly, protruding scales, popped eyes',
-            'Trigger: poor water quality, organic overload, stress',
-            'Prevention: regular water changes, avoid overfeeding',
-            'Treatment: antibiotic under veterinary guidance only',
-          ]),
-      _KCard('White Spot (Ichthyophthiriasis)',
-          Icons.healing_outlined, const Color(0xFF059669),
-          'Parasitic infection causing white spots on skin and fins. Highly contagious — can wipe out entire stock.',
-          [
-            'Symptoms: white salt-like spots on skin, fish rubbing on walls',
-            'Treatment: raise temperature to 30°C for 3 days if possible',
-            'Salt treatment: 3–5 g/L for affected batches',
-            'Quarantine all new fish for 2 weeks before stocking',
-          ]),
+      _K('EUS — Epizootic Ulcerative Syndrome', Icons.healing_outlined, const Color(0xFFDC2626),
+        'The most widespread and devastating fish disease in Indian aquaculture. Caused by the oomycete fungus Aphanomyces invadans. Peaks during monsoon and early winter when temperatures drop suddenly.',
+        ['Symptoms: red-brown ulcers on body and head, erratic swimming, fish gathering at surface',
+         'Trigger: sudden temperature drop of 3–5°C + rain; weakens immune system allowing fungal invasion',
+         'Prevention: maintain pH 7.5–8.0 (lime treatment prevents EUS outbreaks)',
+         'Treatment: 500 kg/ha agricultural lime applied across pond immediately on first signs',
+         'Potassium permanganate bath: 10 mg/L for 30–60 minutes for moderate infections',
+         'Remove and destroy severely infected fish — do not sell EUS-infected fish',
+         'Report to district fisheries office — EUS is a notifiable disease in India']),
+      _K('Bacterial Gill Disease', Icons.healing_outlined, const Color(0xFFD97706),
+        'Caused by Flavobacterium columnare and related bacteria. Destroys gill tissue reducing oxygen uptake. Most common in overcrowded ponds with high organic load.',
+        ['Symptoms: fish gasping at surface, pale or brown-grey gills, reduced appetite, lethargy',
+         'Risk factors: stocking density too high, ammonia above 0.1 mg/L, organic overload',
+         'Diagnosis: examine gill tissue — healthy gills are bright red; diseased gills look pale/patchy',
+         'Prevention: maintain stocking density, regular water changes, proper feeding management',
+         'Emergency treatment: salt bath at 3–5 g/L for 5–10 minutes reduces bacterial load',
+         'Antibiotic treatment only under licensed veterinary guidance — do not self-medicate',
+         'Increase aeration immediately — gill disease fish cannot absorb oxygen efficiently']),
+      _K('Dropsy (Aeromoniasis)', Icons.healing_outlined, const Color(0xFF7C3AED),
+        'Bacterial infection by Aeromonas hydrophila. Considered a secondary infection — stress and poor water quality weaken immunity allowing bacteria already present in water to infect fish.',
+        ['Symptoms: bloated abdomen (fluid accumulation), protruding scales, bulging eyes (exophthalmia)',
+         'Trigger: sudden water quality crash, temperature stress, handling stress, overcrowding',
+         'Water quality response: reduce feeding immediately, increase water change to 30% daily',
+         'Prevention is the only reliable strategy — this disease has poor treatment success rate',
+         'Salt treatment (3 g/L) reduces osmotic stress and can slow progression',
+         'Severely affected fish rarely recover — remove and destroy to prevent spread',
+         'Autopsy the fish: pus-filled organs confirm Aeromonas; report persistent outbreaks to fisheries']),
+      _K('White Spot Disease (Ich)', Icons.healing_outlined, const Color(0xFF059669),
+        'Ichthyophthirius multifiliis parasite. Highly contagious — can wipe out entire pond stock within days. Introduced through infected fish, equipment, or water. Prevention is critical.',
+        ['Symptoms: white salt-grain sized spots on fins and body, fish rubbing against walls and substrate',
+         'Life cycle: parasite detaches from fish to reproduce freely in water — only vulnerable at free-swimming stage',
+         'Treatment window: act within first 48–72 hours or losses become severe',
+         'Raise water temperature to 30°C for 3 days if possible — speeds up parasite life cycle making it vulnerable',
+         'Formalin bath: 25 ml/m³ for 1 hour (use with caution, can suffocate fish)',
+         'Salt: 3 g/L as long-term bath (7 days) reduces parasite load significantly',
+         'CRITICAL: quarantine all new fish for minimum 2 weeks before introducing to main pond']),
+      _K('Nutritional Deficiencies', Icons.healing_outlined, const Color(0xFF1565C0),
+        'Non-infectious diseases caused by inadequate diet. Often misdiagnosed as infectious disease. More common when using cheap or old feed, or when fish are underfed.',
+        ['Vitamin C deficiency: scoliosis (spinal deformity), hemorrhaging at fin bases — supplement with vitamin C',
+         'Vitamin D deficiency: soft bones, poor growth, skeletal abnormalities in fry and fingerlings',
+         'Lipid imbalance (rancid feed): liver damage, erratic swimming, high mortality in young fish',
+         'Solution: always use fresh, certified feed from reputable manufacturer',
+         'Protein deficiency: stunted growth, thin body, pale coloration — increase protein percentage',
+         'Diagnosis: improved condition within 1–2 weeks of feed change confirms nutritional cause']),
     ],
-    // ── HARVEST ───────────────────────────────────────────────────────────────
+
+    // ── HARVEST ──────────────────────────────────────────────────────────────
     [
-      _KCard('When to Harvest',
-          Icons.agriculture_outlined, const Color(0xFF059669),
-          'Harvest when fish reach target market weight. For most species, this is 10–18 months after stocking.',
-          [
-            'Rohu/Catla: harvest at 1–1.5 kg (12–15 months)',
-            'Tilapia: harvest at 400–600 g (5–6 months)',
-            'Shrimp: harvest at 15–20 g (90–120 days)',
-            'Monitor weight monthly using seine net sampling',
-            'Harvest in morning when temperatures are cool to reduce mortality',
-          ]),
-      _KCard('Partial Harvest Strategy',
-          Icons.agriculture_outlined, const Color(0xFF0097A7),
-          'Selectively remove large fish while leaving smaller ones to grow. Maintains stocking density and reduces competition.',
-          [
-            'Use graded nets to harvest only market-size fish',
-            'Partial harvest every 2–3 months improves overall yield',
-            'Restock smaller fish after each partial harvest',
-            'Reduces feeding cost while maintaining continuous income',
-          ]),
-      _KCard('Pre-Harvest Preparation',
-          Icons.agriculture_outlined, const Color(0xFFD97706),
-          'Proper preparation 2–3 days before harvest improves fish quality and price.',
-          [
-            'Stop feeding 24–48 hours before harvest to empty gut',
-            'Test water quality — harvest only if parameters are normal',
-            'Arrange transport containers with ice or aeration',
-            'Contact buyers 3–5 days in advance to confirm price',
-            'Plan harvest in early morning (5–8 AM) for best quality',
-          ]),
+      _K('When & How to Harvest', Icons.agriculture_outlined, const Color(0xFF059669),
+        'Timing your harvest correctly maximizes profit. The goal is to harvest at market-preferred sizes, during periods of high demand, and when water temperature minimizes fish mortality.',
+        ['Rohu/Catla: harvest at 1–1.5 kg (12–15 months) — smaller fish fetch lower price/kg',
+         'Tilapia: harvest at 400–600g (5–6 months); monosex tilapia grow uniformly',
+         'Shrimp: harvest at 15–20g in 90–120 days; waiting longer risks disease and weight loss',
+         'Pangasius: harvest at 1 kg (5–6 months); processors pay premium for uniform sizes',
+         'Always harvest in early morning (5–8 AM) when temperatures are cool — reduces fish stress and mortality',
+         'Stop feeding 24–48 hours before harvest to empty gut — fish stay fresh longer and weigh more accurately',
+         'Seine net sampling monthly: weigh 30 fish to estimate average weight and total stock biomass']),
+      _K('Partial Harvest Strategy', Icons.agriculture_outlined, const Color(0xFF0097A7),
+        'Partial harvesting removes market-ready fish while smaller fish continue growing. Maintains optimal stocking density and provides regular income rather than one large annual harvest.',
+        ['Grade nets with 4–6 cm mesh let undersized fish escape while capturing market-size fish',
+         'Partial harvest every 2–3 months — provides monthly/quarterly income stream for farmers',
+         'After removing large fish, restock with fingerlings to maintain production cycle continuously',
+         'Reduces competition for feed and space — remaining fish grow faster after partial harvest',
+         'Ideal for polyculture ponds where different species reach market size at different times',
+         'Record each partial harvest weight, species, and price received to track seasonal price trends']),
+      _K('Pre-Harvest Preparation', Icons.agriculture_outlined, const Color(0xFFD97706),
+        'Proper preparation 3–5 days before harvest significantly improves fish quality, reduces mortality, and enables you to negotiate better prices with buyers.',
+        ['Contact buyers 5–7 days in advance — advance booking ensures fair price and immediate payment',
+         'Test water quality the day before harvest — abnormal parameters increase transport mortality',
+         'Stop feeding 24–48 hours before harvest — empty gut fish have longer shelf life',
+         'Prepare harvest equipment: seine nets, oxygen tanks/aerators for transport, ice, weighing scale',
+         'Check all nets for damage — torn nets during harvest cause fish escape and injury',
+         'Harvest in morning, transport before 10 AM to destination to avoid heat buildup in containers',
+         'Maintain live fish transport at 15–18°C with aeration — mortality below 2% is achievable']),
+      _K('Posting Harvest Listings on BlueFarm', Icons.storefront_outlined, const Color(0xFF1565C0),
+        'The Harvest tab lets you post your available fish stock directly to buyers on the platform. Buyers can see your listing, contact you, and place purchase requests.',
+        ['Go to Harvest tab → Add Harvest → Fill in species, quantity, average weight, price per kg',
+         'Add notes about quality (e.g., "fresh harvest today", "live fish available", "minimum order 50 kg")',
+         'Your listing appears immediately on the Buyer marketplace',
+         'Buyers will contact you through the app — negotiate delivery/pickup arrangement directly',
+         'Update your listing status to "Sold" once transaction is complete',
+         'Post listings 2–3 days before harvest to get advance orders and secure a buyer beforehand',
+         'Accurate weight and price information builds buyer trust and repeat business']),
     ],
-    // ── BREEDING ──────────────────────────────────────────────────────────────
+
+    // ── BREEDING ─────────────────────────────────────────────────────────────
     [
-      _KCard('Natural Breeding Triggers',
-          Icons.favorite_outline, const Color(0xFF1565C0),
-          'Most freshwater fish breed during monsoon. Temperature rise, fresh water inflow, and longer daylight trigger spawning.',
-          [
-            'Rohu/Catla: breed June–August at 27–30°C',
-            'Catfish: breed May–July when temperature rises above 26°C',
-            'Provide clean fresh water inflow to trigger spawning',
-            'Spawning ratio: 1 male : 2–3 females for best results',
-          ]),
-      _KCard('Induced Breeding (Hormonal)',
-          Icons.favorite_outline, const Color(0xFF7C3AED),
-          'Hormone injection allows controlled breeding outside natural season. Used in hatcheries for year-round seed production.',
-          [
-            'Ovaprim (0.5 mL/kg body weight) is most commonly used',
-            'Female injected first, male follows 6 hours later',
-            'Eggs hatch in 18–24 hours at 28°C',
-            'Fry require rotifers and zooplankton as first feed',
-          ]),
-      _KCard('Broodstock Selection',
-          Icons.favorite_outline, const Color(0xFF059669),
-          'Quality breeding stock is critical for disease-free, fast-growing offspring.',
-          [
-            'Select broodstock from disease-free certified hatcheries',
-            'Choose fish with good body shape, no deformities',
-            'Minimum age: 2 years for females, 1 year for males',
-            'Feed broodstock high-protein diet (30–35%) for 3 months before breeding',
-          ]),
+      _K('Natural Breeding — Triggers & Conditions', Icons.favorite_outline, const Color(0xFF1565C0),
+        'Understanding natural breeding cycles helps farmers plan stocking, manage pond populations, and avoid unexpected breeding that leads to overcrowding and stunted growth.',
+        ['Rohu, Catla, Mrigal: natural breeding triggered by monsoon onset (June–August) at 27–30°C',
+         'Trigger factors: rising temperature, fresh water inflow, turbid water, longer daylight',
+         'Provide spawning substrate: aquatic vegetation or synthetic fiber spawning mops in breeding ponds',
+         'Brood ratio: 1 male : 2–3 females gives best fertilization rate for carp species',
+         'Catfish (Magur): breed April–June when temperature exceeds 26°C; build nests in shallow areas',
+         'Tilapia: breed year-round in warm weather — avoid in production ponds unless monosex culture',
+         'Separate breeding pond from production pond — juvenile fish are vulnerable to predation by adults']),
+      _K('Induced Breeding with Hormones', Icons.favorite_outline, const Color(0xFF7C3AED),
+        'Hormone-induced breeding allows controlled seed production independent of seasonal cycles. Widely used in government and private hatcheries across India for year-round fingerling supply.',
+        ['Ovaprim injection: 0.5 mL/kg body weight for females; 0.2 mL/kg for males',
+         'Inject female first; male is injected 6 hours later when female shows spawning readiness',
+         'Eggs are fertilized in a dry container — add milt (sperm) and mix gently with a feather',
+         'Transfer fertilized eggs to hatching troughs with clean aerated water at 28°C',
+         'Eggs hatch in 18–24 hours at 28°C; 12–14 hours at 30°C; slower at lower temperatures',
+         'Newly hatched larvae (sac fry) live off yolk sac for 48–72 hours — no external feeding needed',
+         'After yolk absorption: feed rotifers, Artemia nauplii, or commercial micro-pellets (200–400 micron)']),
+      _K('Broodstock Selection & Nutrition', Icons.favorite_outline, const Color(0xFF059669),
+        'High-quality broodstock is the foundation of profitable hatchery operations. Genetic quality, health status, and pre-spawning nutrition directly determine seed quality, survival, and growth rate.',
+        ['Select broodstock from certified disease-free hatcheries with documented breeding records',
+         'Physical criteria: uniform body shape, no deformities, bright eyes, intact fins, active behavior',
+         'Minimum age: females 2–3 years, males 1–2 years for Indian major carps',
+         'Pre-spawning conditioning: feed high-protein diet (30–35%) for 2–3 months before breeding season',
+         'Vitamin E supplementation: 200 mg/kg feed improves egg quality and fertilization rate',
+         'Maintain broodstock separate from production fish — avoid stress from handling or seining',
+         'Replace broodstock every 3–4 years to maintain genetic diversity and breeding performance']),
     ],
-    // ── WEATHER ───────────────────────────────────────────────────────────────
+
+    // ── WEATHER ──────────────────────────────────────────────────────────────
     [
-      _KCard('Monsoon Management',
-          Icons.wb_cloudy_outlined, const Color(0xFF1565C0),
-          'Heavy rain dilutes pond water, lowers temperature, and increases turbidity. Disease risk rises significantly.',
-          [
-            'Check pH daily — heavy rain can drop pH to dangerous levels',
-            'Apply lime (50–100 kg/ha) after every heavy rain',
-            'Reduce feeding by 50% during prolonged cloudy weather',
-            'Watch for EUS disease symptoms — most common in monsoon',
-            'Ensure pond bunds are strong to prevent overflow and fish escape',
-          ]),
-      _KCard('Summer Heat Management',
-          Icons.wb_sunny_outlined, const Color(0xFFD97706),
-          'High temperatures reduce dissolved oxygen and accelerate ammonia buildup. Critical for fish survival.',
-          [
-            'Run aerators 24 hours during peak summer (April–June)',
-            'Increase water level to maximum depth for thermal buffer',
-            'Reduce stocking density if DO consistently falls below 5 mg/L',
-            'Feed in early morning only — afternoon feeding spoils quickly',
-            'Use shade nets over 30% of pond area to reduce evaporation',
-          ]),
-      _KCard('Winter Management',
-          Icons.ac_unit_outlined, const Color(0xFF0097A7),
-          'Fish metabolism slows below 20°C. Overfeeding in winter leads to water fouling and disease.',
-          [
-            'Reduce feeding to once daily when temperature drops below 22°C',
-            'Stop feeding entirely below 15°C for carps',
-            'Harvest early if temperatures are expected to drop severely',
-            'Maintain water depth above 1.5 m for thermal insulation',
-          ]),
+      _K('Monsoon Management (June–September)', Icons.wb_cloudy_outlined, const Color(0xFF1565C0),
+        'Monsoon is the highest-risk period for fish diseases and pond management problems. Heavy rain dilutes pond water, lowers temperature suddenly, raises turbidity, and creates conditions for EUS and other diseases.',
+        ['Check pH daily during monsoon — heavy rain can drop pH to 5.5–6.0 within hours',
+         'Apply agricultural lime (100–150 kg/ha) after every significant rainfall to maintain pH 7.5+',
+         'Reduce feeding by 50% during heavy rain or prolonged cloudy weather — fish metabolism slows',
+         'Inspect pond bunds daily — soft soil + heavy rain can cause bund collapse and fish escape',
+         'Monitor for EUS symptoms (ulcers) weekly — onset is rapid in monsoon conditions',
+         'Avoid stocking new fish during active monsoon — fingerlings are most vulnerable',
+         'Drain excess water through screened outlet to maintain optimal water level']),
+      _K('Summer Heat Management (March–June)', Icons.wb_sunny_outlined, const Color(0xFFD97706),
+        'High summer temperatures reduce dissolved oxygen, accelerate ammonia production, and stress fish. Shallow ponds are most vulnerable. Mortality can occur within hours if action is not taken.',
+        ['Run aerators 24 hours/day during April–June when temperatures regularly exceed 32°C',
+         'Maintain maximum water depth — deep water provides thermal buffer (keep above 1.5 m)',
+         'Feed only in early morning (6–8 AM) before temperature peaks — afternoon feed spoils quickly',
+         'Reduce stocking density if DO consistently falls below 4 mg/L despite aeration',
+         'Use shade nets over 20–30% of pond area to reduce direct solar heating',
+         'Increase water exchange rate during heat waves — bring in cooler groundwater if available',
+         'Stock summer-tolerant species like Tilapia or Pangasius if experiencing recurrent summer kills']),
+      _K('Winter Management (November–February)', Icons.ac_unit_outlined, const Color(0xFF0097A7),
+        'Fish are cold-blooded — metabolism, appetite, and immune function all slow in cold water. Overfeeding in winter is one of the most common causes of water quality crashes and disease outbreaks.',
+        ['Reduce feeding to once daily when water temperature drops below 22°C',
+         'Stop feeding entirely when temperature falls below 15°C for carps — they enter torpor state',
+         'Catfish (Magur, Singhi) can be fed lightly even at 12°C — they are more cold-tolerant than carps',
+         'Maintain water depth above 1.5–2 m to insulate fish from surface cold',
+         'Winter is ideal harvest time in many regions — fish have high fat content and excellent texture',
+         'Avoid handling or seining fish in very cold water — cold-stressed fish have high mortality',
+         'Check for Saprolegnia (white cotton fungus) growth in winter — common in stressed cold fish']),
+      _K('Weather & Disease Risk Calendar', Icons.calendar_month_outlined, const Color(0xFFDC2626),
+        'Different seasons bring different disease risks. Knowing what to watch for each month helps farmers take preventive action before outbreaks become catastrophic.',
+        ['January–February: Saprolegnia fungus, slow growth — watch for white cotton patches on fish body',
+         'March–April: temperature rise — watch for Aeromoniasis (Dropsy) in stressed fish',
+         'May–June: peak heat — dissolved oxygen drops, gill disease and ammonia toxicity most likely',
+         'July–August: EUS season peak — apply lime preventively, inspect fish weekly for ulcers',
+         'September–October: post-monsoon recovery — good growth period, restock if needed',
+         'November–December: water cooling — reduce feed, prepare for possible Saprolegnia outbreaks',
+         'Year-round: maintain feeding records, water quality logs, and fish health observations']),
     ],
   ];
 
   @override
   Widget build(BuildContext context) {
+    final cats = _cats;
     return Column(children: [
-      // ── Category tabs ──────────────────────────────────────────────────────
+      // ── Category tabs ────────────────────────────────────────────────────
       Container(
         height: 50,
         margin: const EdgeInsets.only(top: 4),
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 14),
-          itemCount: _categories.length,
-          itemBuilder: (ctx, i) {
-            final (label, icon) = _categories[i];
-            final active = i == _selectedCategory;
+          itemCount: cats.length,
+          itemBuilder: (_, i) {
+            final (label, icon) = cats[i];
+            final active = i == _sel;
             return GestureDetector(
-              onTap: () => setState(() => _selectedCategory = i),
+              onTap: () => setState(() => _sel = i),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.only(right: 8),
@@ -258,59 +292,51 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                       color: active ? AppTheme.lightAccent : AppTheme.lightAccent.withOpacity(0.3)),
                 ),
                 child: Row(children: [
-                  Icon(icon, size: 15,
-                      color: active ? Colors.white : AppTheme.lightAccent),
+                  Icon(icon, size: 15, color: active ? Colors.white : AppTheme.lightAccent),
                   const SizedBox(width: 5),
-                  Text(label,
-                      style: TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700,
-                          color: active ? Colors.white : AppTheme.lightAccent)),
+                  Text(label, style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700,
+                      color: active ? Colors.white : AppTheme.lightAccent)),
                 ]),
               ),
             );
           },
         ),
       ),
-
-      // ── Cards ──────────────────────────────────────────────────────────────
       Expanded(
         child: ListView.builder(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 100),
-          itemCount: _content[_selectedCategory].length,
-          itemBuilder: (ctx, i) =>
-              _KnowledgeCardWidget(card: _content[_selectedCategory][i]),
+          itemCount: _content[_sel].length,
+          itemBuilder: (_, i) => _CardWidget(card: _content[_sel][i]),
         ),
       ),
     ]);
   }
 }
 
-// ── Data model ────────────────────────────────────────────────────────────────
-class _KCard {
+class _K {
   final String title, body;
   final IconData icon;
   final Color color;
   final List<String> bullets;
-  const _KCard(this.title, this.icon, this.color, this.body, this.bullets);
+  const _K(this.title, this.icon, this.color, this.body, this.bullets);
 }
 
-// ── Card widget ───────────────────────────────────────────────────────────────
-class _KnowledgeCardWidget extends StatefulWidget {
-  final _KCard card;
-  const _KnowledgeCardWidget({super.key, required this.card});
-
+class _CardWidget extends StatefulWidget {
+  final _K card;
+  const _CardWidget({super.key, required this.card});
   @override
-  State<_KnowledgeCardWidget> createState() => _KnowledgeCardWidgetState();
+  State<_CardWidget> createState() => _CardWidgetState();
 }
 
-class _KnowledgeCardWidgetState extends State<_KnowledgeCardWidget> {
-  bool _expanded = false;
+class _CardWidgetState extends State<_CardWidget> {
+  bool _open = false;
 
   @override
   Widget build(BuildContext context) {
     final c = widget.card;
     return GestureDetector(
-      onTap: () => setState(() => _expanded = !_expanded),
+      onTap: () => setState(() => _open = !_open),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         margin: const EdgeInsets.only(bottom: 12),
@@ -329,28 +355,25 @@ class _KnowledgeCardWidgetState extends State<_KnowledgeCardWidget> {
               const SizedBox(width: 12),
               Expanded(child: Text(c.title,
                   style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
-              Icon(_expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              Icon(_open ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
                   color: Theme.of(context).textTheme.bodySmall!.color!),
             ]),
           ),
-          if (_expanded) ...[
+          if (_open) ...[
             Divider(height: 1, color: Theme.of(context).dividerColor),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(c.body,
-                    style: TextStyle(fontSize: 13, height: 1.5,
-                        color: Theme.of(context).textTheme.bodyMedium!.color!)),
+                Text(c.body, style: TextStyle(fontSize: 13, height: 1.55,
+                    color: Theme.of(context).textTheme.bodyMedium!.color!)),
                 const SizedBox(height: 12),
                 ...c.bullets.map((b) => Padding(
-                  padding: const EdgeInsets.only(bottom: 7),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Container(
-                      width: 6, height: 6, margin: const EdgeInsets.only(top: 5, right: 10),
-                      decoration: BoxDecoration(color: c.color, shape: BoxShape.circle),
-                    ),
-                    Expanded(child: Text(b,
-                        style: const TextStyle(fontSize: 13, height: 1.4))),
+                    Container(width: 6, height: 6,
+                        margin: const EdgeInsets.only(top: 5, right: 10),
+                        decoration: BoxDecoration(color: c.color, shape: BoxShape.circle)),
+                    Expanded(child: Text(b, style: const TextStyle(fontSize: 13, height: 1.45))),
                   ]),
                 )),
               ]),

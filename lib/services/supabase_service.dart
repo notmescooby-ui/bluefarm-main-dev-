@@ -50,7 +50,7 @@ class SupabaseService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return null;
       final data = await _client
-          .from('user_profiles')
+          .from('profiles')
           .select()
           .eq('id', userId)
           .maybeSingle();
@@ -65,7 +65,7 @@ class SupabaseService {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) return;
       await _client
-          .from('user_profiles')
+          .from('profiles')
           .upsert({...updates, 'id': userId});
     } catch (e) {
       rethrow;

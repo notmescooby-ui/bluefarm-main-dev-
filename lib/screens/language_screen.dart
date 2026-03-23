@@ -248,7 +248,8 @@ class _LanguageScreenState extends State<LanguageScreen>
                     )),
                     child: BounceButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
+                        AppTranslations.setLanguage(selectedLanguage);
+          Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
                             transitionDuration:

@@ -5,6 +5,7 @@ import '../providers/app_provider.dart';
 import '../models/sensor_data.dart';
 import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
+import '../localization/app_translations.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  INSIGHTS SCREEN
@@ -118,9 +119,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('Pond Health Summary',
+                    Text(AppTranslations.get('pond_health'),
                         style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text('AI analysis of today\'s data',
+                    Text(AppTranslations.get('ai_analysis'),
                         style: TextStyle(fontSize: 11,
                             color: Theme.of(context).textTheme.bodySmall!.color!)),
                   ])),
@@ -136,7 +137,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                         SizedBox(width: 16, height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.lightAccent)),
                         SizedBox(width: 10),
-                        Text('Generating analysis…', style: TextStyle(fontSize: 13)),
+                        Text(AppTranslations.get('generating'), style: TextStyle(fontSize: 13)),
                       ])
                     : Text(_summary, style: const TextStyle(fontSize: 13.5, height: 1.6)),
               ]),
@@ -201,7 +202,7 @@ class _ChartCard extends StatelessWidget {
         SizedBox(
           height: 160,
           child: readings.isEmpty
-              ? Center(child: Text('No data yet',
+              ? Center(child: Text(AppTranslations.get('no_data'),
                   style: TextStyle(color: Theme.of(context).textTheme.bodySmall!.color!)))
               : LineChart(LineChartData(
                   gridData: FlGridData(

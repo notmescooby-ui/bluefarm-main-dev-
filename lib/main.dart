@@ -48,18 +48,25 @@ class _BlueFarmAppState extends State<BlueFarmApp> {
           data.session != null) {
         final user = data.session!.user;
 
-        // Check if user has already completed registration
+        // Check if user already completed registration
         final profile = await Supabase.instance.client
             .from('profiles')
             .select('role, full_name')
             .eq('id', user.id)
             .maybeSingle();
 
-        if (!mounted) return;
-
-        if (profile == null ||
-            (profile['full_name'] as String?)?.isEmpty != false) {
-          // New user — go to FarmerInfoScreen which has role selection inside
+        if (profile != null &&
+            (profile['full_name'] as String?)?.isNotEmpty == true) {
+          // Returning user — go directly to their dashboard
+          final role = profile['role'] as String? ?? 'farmer';
+          final Widget home =
+              role == 'buyer' ? BuyerShell() : const MainShell();
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => home),
+            (route) => false,
+          );
+        } else {
+          // New user — go to role selection + registration
           navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (_) => FarmerInfoScreen(
@@ -67,16 +74,6 @@ class _BlueFarmAppState extends State<BlueFarmApp> {
                 email: user.email,
               ),
             ),
-            (route) => false,
-          );
-        } else {
-          // Returning user — route straight to their dashboard
-          final role = profile['role'] as String? ?? 'farmer';
-          Widget home =
-              role == 'buyer' ? BuyerShell() : const MainShell();
-
-          navigatorKey.currentState?.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => home),
             (route) => false,
           );
         }
