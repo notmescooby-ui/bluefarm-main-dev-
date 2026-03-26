@@ -180,18 +180,20 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
 
                   const SizedBox(height: 40),
 
-                  // OTP digit boxes
+                  // OTP digit boxes — Expanded so they always fit any screen width
                   FadeTransition(
                     opacity: _fadAt(0.2, 0.7),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(6, (i) {
-                        return AnimatedContainer(
+                        return Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            child: AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeOutCubic,
-                          width: 46,
-                          height: 56,
-                          margin: const EdgeInsets.symmetric(horizontal: 5),
+                          height: 52,
+                          margin: EdgeInsets.zero,
                           decoration: BoxDecoration(
                             color: _digitCtrls[i].text.isNotEmpty
                                 ? AppTheme.neonBlue.withValues(alpha: 0.1)
@@ -243,6 +245,8 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                               }
                               if (_otp.length == 6) _verify();
                             },
+                          ),
+                        ),
                           ),
                         );
                       }),
