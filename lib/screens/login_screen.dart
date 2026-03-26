@@ -103,6 +103,19 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         );
       }
+    } on AuthApiException catch (e) {
+      if (mounted) {
+        final errorText = e.message.toLowerCase();
+        final friendlyMessage =
+            errorText.contains('temporarily blocked by twilio') ||
+                    errorText.contains('sms_send_failed') ||
+                    errorText.contains('fraudulent')
+                ? 'OTP could not be sent to this number right now because the SMS provider has temporarily blocked it. Please try a different phone number or use Google Sign-In.'
+                : 'Failed to send OTP: ${e.message}';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(friendlyMessage)),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

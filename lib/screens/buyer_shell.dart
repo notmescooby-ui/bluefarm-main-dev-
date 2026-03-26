@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/auth_redirect_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  BUYER SHELL — Quick-commerce fish marketplace
@@ -145,6 +146,10 @@ class _BuyerShellState extends State<BuyerShell> {
         ),
       ),
     );
+  }
+
+  Future<void> _signOut() async {
+    await AuthRedirectService.signOutToRoleChooser(context);
   }
 
   @override
@@ -1541,6 +1546,13 @@ class _BillingPageState extends State<BillingPage>
 
   double get _grand => widget.total + 50;
 
+  bool _isUuid(String value) {
+    final uuid = RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
+    );
+    return uuid.hasMatch(value);
+  }
+
   Future<void> _placeOrderCod() async {
     if (_addressCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -1553,10 +1565,8 @@ class _BillingPageState extends State<BillingPage>
       final uid = _client.auth.currentUser?.id;
       if (uid != null) {
         for (final item in widget.cart) {
-          await _client.from('orders').insert({
-            'listing_id':       item.listingId,
+          final orderData = {
             'buyer_id':         uid,
-            'farmer_id':        item.farmerId,
             'species':          item.species,
             'farm_name':        item.farmName,
             'quantity_kg':      item.quantityKg,
@@ -1565,7 +1575,14 @@ class _BillingPageState extends State<BillingPage>
             'delivery_address': '${_addressCtrl.text.trim()}, ${_cityCtrl.text.trim()}',
             'payment_method':   'cod',
             'status':           'confirmed',
-          });
+          };
+          if (_isUuid(item.listingId)) {
+            orderData['listing_id'] = item.listingId;
+          }
+          if (_isUuid(item.farmerId)) {
+            orderData['farmer_id'] = item.farmerId;
+          }
+          await _client.from('orders').insert(orderData);
         }
       }
       setState(() { _placing = false; _placed = true; });
@@ -2201,6 +2218,10 @@ class _ProfileTabState extends State<_ProfileTab> {
   final _client = Supabase.instance.client;
   Map<String, dynamic>? _profile;
 
+  Future<void> _signOut() async {
+    await AuthRedirectService.signOutToRoleChooser(context);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -2334,7 +2355,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                     side: BorderSide(color: Colors.red.shade300),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12))),
-                onPressed: () => _client.auth.signOut(),
+                onPressed: _signOut,
               ),
             ),
             const SizedBox(height: 80),

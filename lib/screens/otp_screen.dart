@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../theme/legacy_theme.dart';
 import '../widgets/animated_bg.dart';
 import '../widgets/bounce_button.dart';
-import 'farmer_info_screen.dart';
-import 'main_shell.dart';
-import 'buyer_shell.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' as supa;
+import 'role_selection_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phone;
+
   const OtpScreen({super.key, required this.phone});
 
   @override
@@ -49,10 +48,10 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
   void dispose() {
     _entryCtrl.dispose();
     _successCtrl.dispose();
-    for (var c in _digitCtrls) {
+    for (final c in _digitCtrls) {
       c.dispose();
     }
-    for (var f in _focusNodes) {
+    for (final f in _focusNodes) {
       f.dispose();
     }
     super.dispose();
@@ -70,58 +69,33 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
         token: _otp,
         type: OtpType.sms,
       );
+
       if (res.session != null && mounted) {
         setState(() => _verified = true);
         _successCtrl.forward();
 
         await Future.delayed(const Duration(seconds: 1));
-        if (mounted) {
-          // Check if this user already completed registration
-          final profile = await supa.Supabase.instance.client
-              .from('profiles')
-              .select('role, full_name')
-              .eq('id', res.session!.user.id)
-              .maybeSingle();
+        if (!mounted) return;
 
-          if (!context.mounted) return;
-
-          if (profile != null &&
-              (profile['full_name'] as String?)?.isNotEmpty == true) {
-            // Returning user — go straight to dashboard
-            final role = profile['role'] as String? ?? 'farmer';
-            final dest = role == 'buyer' ? BuyerShell() : const MainShell();
-            Navigator.pushAndRemoveUntil(
-              context,
-              PageRouteBuilder(
-                transitionDuration: const Duration(milliseconds: 600),
-                pageBuilder: (_, __, ___) => dest,
-                transitionsBuilder: (_, anim, __, child) =>
-                    FadeTransition(opacity: anim, child: child),
-              ),
-              (route) => false,
-            );
-          } else {
-            // New user — go to registration
-            Navigator.pushReplacement(
-              context,
-              PageRouteBuilder(
-                transitionDuration: const Duration(milliseconds: 600),
-                pageBuilder: (_, __, ___) =>
-                    FarmerInfoScreen(phone: widget.phone),
-                transitionsBuilder: (_, anim, __, child) =>
-                    FadeTransition(opacity: anim, child: child),
-              ),
-            );
-          }
-        }
+        Navigator.pushAndRemoveUntil(
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 600),
+            pageBuilder: (_, __, ___) => const RoleSelectionScreen(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+          ),
+          (route) => false,
+        );
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Invalid OTP")),
+          const SnackBar(content: Text('Invalid OTP')),
         );
       }
     }
+
     if (mounted) setState(() => _loading = false);
   }
 
@@ -140,11 +114,10 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Verify OTP"),
+        title: const Text('Verify OTP'),
       ),
       body: AnimatedBackground(
         child: Center(
@@ -159,17 +132,18 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                     child: ShaderMask(
                       shaderCallback: (b) =>
                           AppTheme.primaryGradient.createShader(b),
-                      child: const Icon(Icons.shield_rounded,
-                          size: 56, color: Colors.white),
+                      child: const Icon(
+                        Icons.shield_rounded,
+                        size: 56,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   FadeTransition(
                     opacity: _fadAt(0.1, 0.5),
                     child: Text(
-                      "Enter code sent to ${widget.phone}",
+                      'Enter code sent to ${widget.phone}',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 15,
@@ -177,10 +151,7 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                       textAlign: TextAlign.center,
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // OTP digit boxes — Expanded so they always fit any screen width
                   FadeTransition(
                     opacity: _fadAt(0.2, 0.7),
                     child: Row(
@@ -190,72 +161,68 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                           child: Container(
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutCubic,
-                          height: 52,
-                          margin: EdgeInsets.zero,
-                          decoration: BoxDecoration(
-                            color: _digitCtrls[i].text.isNotEmpty
-                                ? AppTheme.neonBlue.withValues(alpha: 0.1)
-                                : Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: _focusNodes[i].hasFocus
-                                  ? AppTheme.neonBlue
-                                  : _digitCtrls[i].text.isNotEmpty
-                                      ? AppTheme.neonCyan
-                                          .withValues(alpha: 0.4)
-                                      : AppTheme.glassBorder,
-                              width: _focusNodes[i].hasFocus ? 2 : 1,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: _digitCtrls[i].text.isNotEmpty
+                                    ? AppTheme.neonBlue.withValues(alpha: 0.1)
+                                    : Colors.white.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: _focusNodes[i].hasFocus
+                                      ? AppTheme.neonBlue
+                                      : _digitCtrls[i].text.isNotEmpty
+                                          ? AppTheme.neonCyan
+                                              .withValues(alpha: 0.4)
+                                          : AppTheme.glassBorder,
+                                  width: _focusNodes[i].hasFocus ? 2 : 1,
+                                ),
+                                boxShadow: _focusNodes[i].hasFocus
+                                    ? [
+                                        BoxShadow(
+                                          color: AppTheme.neonBlue
+                                              .withValues(alpha: 0.2),
+                                          blurRadius: 12,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: TextField(
+                                controller: _digitCtrls[i],
+                                focusNode: _focusNodes[i],
+                                maxLength: 1,
+                                keyboardType: TextInputType.number,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                decoration: const InputDecoration(
+                                  counterText: '',
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                ),
+                                onChanged: (v) {
+                                  setState(() {});
+                                  if (v.isNotEmpty && i < 5) {
+                                    _focusNodes[i + 1].requestFocus();
+                                  }
+                                  if (v.isEmpty && i > 0) {
+                                    _focusNodes[i - 1].requestFocus();
+                                  }
+                                  if (_otp.length == 6) _verify();
+                                },
+                              ),
                             ),
-                            boxShadow: _focusNodes[i].hasFocus
-                                ? [
-                                    BoxShadow(
-                                      color: AppTheme.neonBlue
-                                          .withValues(alpha: 0.2),
-                                      blurRadius: 12,
-                                    )
-                                  ]
-                                : null,
-                          ),
-                          child: TextField(
-                            controller: _digitCtrls[i],
-                            focusNode: _focusNodes[i],
-                            maxLength: 1,
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            decoration: const InputDecoration(
-                              counterText: "",
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                            ),
-                            onChanged: (v) {
-                              setState(() {});
-                              if (v.isNotEmpty && i < 5) {
-                                _focusNodes[i + 1].requestFocus();
-                              }
-                              if (v.isEmpty && i > 0) {
-                                _focusNodes[i - 1].requestFocus();
-                              }
-                              if (_otp.length == 6) _verify();
-                            },
-                          ),
-                        ),
                           ),
                         );
                       }),
                     ),
                   ),
-
                   const SizedBox(height: 36),
-
-                  // Verify button
                   FadeTransition(
                     opacity: _fadAt(0.4, 0.9),
                     child: BounceButton(
@@ -268,8 +235,7 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  AppTheme.neonBlue.withValues(alpha: 0.35),
+                              color: AppTheme.neonBlue.withValues(alpha: 0.35),
                               blurRadius: 18,
                               offset: const Offset(0, 5),
                             ),
@@ -286,7 +252,7 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                                   ),
                                 )
                               : const Text(
-                                  "Verify",
+                                  'Verify',
                                   style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
@@ -297,10 +263,7 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 30),
-
-                  // Success animation
                   if (_verified)
                     ScaleTransition(
                       scale: _successScale,
@@ -320,8 +283,11 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.check_rounded,
-                            size: 40, color: Colors.white),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          size: 40,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                 ],

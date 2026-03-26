@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
+import '../services/auth_redirect_service.dart';
 import '../theme/app_theme.dart';
-import '../services/supabase_service.dart';
 import '../localization/app_translations.dart';
 import 'home_screen.dart';
 import 'knowledge_screen.dart';
@@ -31,6 +31,21 @@ class _MainShellState extends State<MainShell> {
     'Farm Camera',
   ];
 
+  String _shortLocation(dynamic value) {
+    final text = (value as String?)?.trim() ?? '';
+    if (text.isEmpty) return 'Navi Mumbai';
+    return text.split(',').first.trim();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<AppProvider>().loadAllData();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,12 +54,15 @@ class _MainShellState extends State<MainShell> {
         children: [
           IndexedStack(
             index: _currentIndex,
-            children: const [
+            children: [
               HomeScreen(),
-              KnowledgeScreen(),
+              Padding(
+                padding: const EdgeInsets.only(top: 68),
+                child: KnowledgeScreen(),
+              ),
               InsightsScreen(),
               HarvestScreen(),
-              CameraScreen(),
+              const CameraScreen(),
             ],
           ),
 
@@ -100,8 +118,10 @@ class _MainShellState extends State<MainShell> {
                                 maxLines: 1,
                               ),
                               Text(
-                                provider.userProfile['region'] as String? ??
-                                    provider.userProfile['location'] as String? ?? 'Navi Mumbai',
+                                _shortLocation(
+                                  provider.userProfile['region'] ??
+                                      provider.userProfile['location'],
+                                ),
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: Colors.grey.shade500,
@@ -522,16 +542,22 @@ class _SidebarWidgetState extends State<SidebarWidget> {
   final _locationController = TextEditingController();
   final _pondController = TextEditingController();
 
+  String _shortLocation(dynamic value) {
+    final text = (value as String?)?.trim() ?? '';
+    if (text.isEmpty) return 'Navi Mumbai';
+    return text.split(',').first.trim();
+  }
+
   @override
   void initState() {
     super.initState();
     final p = context.read<AppProvider>().userProfile;
-    _nameController.text = p['name'] ?? '';
+    _nameController.text = p['full_name'] ?? p['name'] ?? '';
     _farmController.text = p['farm_name'] ?? '';
     _emailController.text = p['email'] ?? '';
     _phoneController.text = p['phone'] ?? '';
     _speciesController.text = p['fish_species'] ?? '';
-    _locationController.text = p['location'] ?? '';
+    _locationController.text = p['region'] ?? p['location'] ?? '';
     _pondController.text = p['pond_size'] ?? '';
   }
 
@@ -547,20 +573,42 @@ class _SidebarWidgetState extends State<SidebarWidget> {
     super.dispose();
   }
 
-  void _saveProfile() {
-    context.read<AppProvider>().updateProfile({
-      'name': _nameController.text,
-      'farm_name': _farmController.text,
-      'email': _emailController.text,
-      'phone': _phoneController.text,
-      'fish_species': _speciesController.text,
-      'location': _locationController.text,
-      'pond_size': _pondController.text,
-    });
-    setState(() => _saved = true);
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _saved = false);
-    });
+  Future<void> _saveProfile() async {
+    try {
+      await context.read<AppProvider>().updateProfile({
+        'full_name': _nameController.text.trim(),
+        'name': _nameController.text.trim(),
+        'farm_name': _farmController.text.trim(),
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'fish_species': _speciesController.text.trim(),
+        'region': _locationController.text.trim(),
+        'pond_size': _pondController.text.trim(),
+      });
+      if (!mounted) return;
+      setState(() => _saved = true);
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _saved = false);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not save profile: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _signOut() async {
+    await AuthRedirectService.signOutToRoleChooser(context);
   }
 
   Widget _menuRow({required IconData icon, required String label, required String subtitle, required VoidCallback onTap}) {
@@ -607,7 +655,13 @@ class _SidebarWidgetState extends State<SidebarWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label.toUpperCase(), style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w700)),
+          SizedBox(
+            width: 88,
+            child: Text(
+              label.toUpperCase(),
+              style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w700),
+            ),
+          ),
           const SizedBox(height: 5),
           TextFormField(
             controller: controller,
@@ -672,9 +726,13 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                           child: const Icon(Icons.person_outline, color: Colors.white, size: 24),
                         ),
                         const SizedBox(width: 12),
-                        Column(
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 34),
+                            child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Consumer<AppProvider>(
                               builder: (context, p, _) => Text(
@@ -704,6 +762,8 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                             ),
                           ],
                         ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -783,7 +843,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                               minimumSize: const Size(double.infinity, 45),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
                             ),
-                            onPressed: () => SupabaseService().signOut(),
+                            onPressed: _signOut,
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -817,19 +877,25 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 child: Consumer<AppProvider>(
                                   builder: (context, p, _) => Column(
                                     children: [
-                                      _profileRow('Name', p.userProfile['full_name'] as String? ?? p.userProfile['name'] as String?),
+                                      _profileRowCompact('Name', p.userProfile['full_name'] as String? ?? p.userProfile['name'] as String?),
                                       const Divider(),
-                                      _profileRow('Farm Name', p.userProfile['farm_name']),
+                                      _profileRowCompact('Farm Name', p.userProfile['farm_name']),
                                       const Divider(),
-                                      _profileRow('Email', p.userProfile['email']),
+                                      _profileRowCompact('Email', p.userProfile['email']),
                                       const Divider(),
-                                      _profileRow('Phone', p.userProfile['phone']),
+                                      _profileRowCompact('Phone', p.userProfile['phone']),
                                       const Divider(),
-                                      _profileRow('Species', p.userProfile['fish_species']),
+                                      _profileRowCompact('Species', p.userProfile['fish_species']),
                                       const Divider(),
-                                      _profileRow('Location', p.userProfile['location']),
+                                      _profileRowCompact(
+                                        'Location',
+                                        _shortLocation(
+                                          p.userProfile['region'] ??
+                                              p.userProfile['location'],
+                                        ),
+                                      ),
                                       const Divider(),
-                                      _profileRow('Pond Size', p.userProfile['pond_size']),
+                                      _profileRowCompact('Pond Size', p.userProfile['pond_size']),
                                     ],
                                   ),
                                 ),
@@ -948,10 +1014,41 @@ class _SidebarWidgetState extends State<SidebarWidget> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label.toUpperCase(), style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w700)),
           Text(value ?? '—', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileRowCompact(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 88,
+            child: Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value ?? '-',
+              textAlign: TextAlign.right,
+              softWrap: true,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+            ),
+          ),
         ],
       ),
     );
@@ -1129,5 +1226,3 @@ class _AadhaarSheetState extends State<AadhaarSheet> with SingleTickerProviderSt
     );
   }
 }
-
-

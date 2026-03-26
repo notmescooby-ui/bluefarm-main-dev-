@@ -39,20 +39,34 @@ class SensorData {
     'device_id': deviceId,
   };
 
-  // Status helpers
-  bool get phIsNormal => ph >= 6.5 && ph <= 8.5;
-  bool get tempIsNormal => temperature >= 24 && temperature <= 30;
-  bool get turbIsNormal => turbidity >= 1 && turbidity <= 5;
-  String get phStatus => phIsNormal ? 'Normal' : 'Caution';
-  String get tempStatus => tempIsNormal ? 'Normal' : 'Caution';
-  String get turbStatus => turbIsNormal ? 'Normal' : 'Caution';
+  // ─── Status helpers ─────────────────────────────────────────────────────────
 
-  // Progress percentage (0.0 to 1.0)
-  double get phProgress => ((ph - 6.5) / (8.5 - 6.5)).clamp(0.0, 1.0);
+  bool get phIsNormal     => ph >= 6.5 && ph <= 8.5;
+  bool get tempIsNormal   => temperature >= 24 && temperature <= 30;
+
+  // Turbidity: safe range is 1–100 NTU.
+  // 0.0 means sensor not connected / no reading — show as "No Signal",
+  // not "Caution", so it doesn't trigger a false alert.
+  bool get turbIsNormal   => turbidity >= 1 && turbidity <= 100;
+  bool get turbNoSignal   => turbidity == 0.0;
+
+  String get phStatus   => phIsNormal   ? 'Normal'    : 'Caution';
+  String get tempStatus => tempIsNormal ? 'Normal'    : 'Caution';
+  String get turbStatus {
+    if (turbNoSignal) return 'No Signal';
+    return turbIsNormal ? 'Normal' : 'Caution';
+  }
+
+  // Progress bars (0.0 – 1.0)
+  double get phProgress   => ((ph - 6.5) / (8.5 - 6.5)).clamp(0.0, 1.0);
   double get tempProgress => ((temperature - 24) / (30 - 24)).clamp(0.0, 1.0);
-  double get turbProgress => ((turbidity - 1) / (5 - 1)).clamp(0.0, 1.0);
 
-  // Fallback with demo data for when Supabase has no rows yet
+  // Turbidity progress over 0–100 NTU range; 0.0 (no signal) shows empty bar
+  double get turbProgress => turbNoSignal
+      ? 0.0
+      : (turbidity / 100).clamp(0.0, 1.0);
+
+  // ─── Demo fallback ───────────────────────────────────────────────────────────
   static SensorData get demo => SensorData(
     createdAt: DateTime.now(),
     ph: 7.2,

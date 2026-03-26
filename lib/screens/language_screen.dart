@@ -3,7 +3,7 @@ import '../theme/legacy_theme.dart';
 import '../widgets/animated_bg.dart';
 import '../widgets/bounce_button.dart';
 import '../localization/app_translations.dart';
-import 'login_screen.dart';
+import 'role_selection_screen.dart';
 
 class LanguageScreen extends StatefulWidget {
   const LanguageScreen({super.key});
@@ -254,7 +254,8 @@ class _LanguageScreenState extends State<LanguageScreen>
                           PageRouteBuilder(
                             transitionDuration:
                                 const Duration(milliseconds: 600),
-                            pageBuilder: (_, __, ___) => const LoginScreen(),
+                            pageBuilder: (_, __, ___) =>
+                                const RoleSelectionScreen(),
                             transitionsBuilder: (_, anim, __, child) {
                               return FadeTransition(
                                 opacity: anim,

@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'main_shell.dart';
 import 'buyer_shell.dart';
 import 'device_connect_screen.dart';
+import 'role_selection_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  CONFIG
@@ -453,10 +454,18 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     setState(() => _submitting = true);
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        if (!mounted) return;
+        _showSnack('Your session has expired. Please log in again to continue.');
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+          (route) => false,
+        );
+        return;
+      }
 
       if (_role == 'farmer') {
-        await Supabase.instance.client.from('profiles').upsert({
+        final payload = {
           'id':                user.id,
           'farm_name':         _farmNameCtrl.text.trim(),
           'full_name':         _farmerNameCtrl.text.trim(),
@@ -478,11 +487,29 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           'secondary_species': _secondaryCtrl.text.trim().isNotEmpty
               ? _secondaryCtrl.text.trim() : null,
           'account_status':    'active',
-        });
+        };
+
+        try {
+          await Supabase.instance.client.from('profiles').upsert(payload);
+        } on PostgrestException catch (_) {
+          await Supabase.instance.client.from('profiles').upsert({
+            'id':               user.id,
+            'farm_name':        _farmNameCtrl.text.trim(),
+            'full_name':        _farmerNameCtrl.text.trim(),
+            'phone':            widget.phone.isNotEmpty ? widget.phone : null,
+            'email':            widget.email ?? user.email,
+            'role':             'farmer',
+            'aadhaar_verified': true,
+            'pincode':          _pincodeCtrl.text.trim(),
+            'region':           _region,
+            'gps_address':      _gpsCtrl.text.trim(),
+            'fish_species':     _primarySpecies,
+            'account_status':   'active',
+          });
+        }
 
         if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 600),
             pageBuilder: (_, __, ___) => const DeviceConnectScreen(),
@@ -514,20 +541,20 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         });
 
         if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 600),
-            pageBuilder: (_, __, ___) => BuyerShell(),
-            transitionsBuilder: (_, anim, __, child) => FadeTransition(
-              opacity: anim,
-              child: ScaleTransition(
-                scale: Tween(begin: 0.96, end: 1.0).animate(
-                    CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
-                child: child,
-              ),
-            ),
-          ),
+        final savedProfile = await Supabase.instance.client
+            .from('profiles')
+            .select('role, full_name')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (!mounted) return;
+        if (savedProfile == null || savedProfile['role'] != 'buyer') {
+          _showSnack('Buyer profile could not be created. Please try again.');
+          return;
+        }
+
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const BuyerShell()),
           (route) => false,
         );
       }
@@ -1344,6 +1371,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
+      isExpanded: true,
       value: value,
       onChanged: (v) { onChanged(v); setState(() {}); },
       decoration: InputDecoration(
@@ -1354,7 +1382,28 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         fillColor: Colors.white,
       ),
       items: items
-          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+          .map(
+            (e) => DropdownMenuItem(
+              value: e,
+              child: Text(
+                e,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
+          .toList(),
+      selectedItemBuilder: (context) => items
+          .map(
+            (e) => Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                e,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
           .toList(),
     );
   }
