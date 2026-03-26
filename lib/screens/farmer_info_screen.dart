@@ -238,36 +238,70 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     });
     try {
       bool svcEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!svcEnabled) { _showSnack('Location services are disabled.'); return; }
+      if (!svcEnabled) {
+        _showSnack('Location services are disabled. Please enable GPS in Settings.');
+        return;
+      }
       LocationPermission perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
-        if (perm == LocationPermission.denied) { _showSnack('Permission denied.'); return; }
+        if (perm == LocationPermission.denied) {
+          _showSnack('Location permission denied. Please allow it to auto-detect location.');
+          return;
+        }
+      }
+      if (perm == LocationPermission.deniedForever) {
+        _showSnack('Location permission permanently denied. Please enable it in App Settings.');
+        await Geolocator.openAppSettings();
+        return;
       }
       final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 15));
 
-      // Reverse geocode to get a readable address
+      // Reverse geocode via Nominatim — extract both display name and district/state
       String address;
+      String? detectedRegion;
       try {
         final res = await http.get(
           Uri.parse(
             'https://nominatim.openstreetmap.org/reverse'
             '?format=json&lat=${pos.latitude}&lon=${pos.longitude}&zoom=18&addressdetails=1',
           ),
-          headers: {'User-Agent': 'BlueFarm/1.0'},
+          headers: {'User-Agent': 'BlueFarm/1.0 (bluefarm@app)'},
         );
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         address = data['display_name'] as String? ??
             '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
+
+        // Extract district + state for the region field (e.g. "Thane, Maharashtra, India")
+        final addr = data['address'] as Map<String, dynamic>?;
+        if (addr != null) {
+          final district = addr['county'] as String? ??
+              addr['city_district'] as String? ??
+              addr['city'] as String? ??
+              addr['town'] as String? ??
+              addr['village'] as String?;
+          final state = addr['state'] as String?;
+          if (district != null && state != null) {
+            detectedRegion = '$district, $state, India';
+          } else if (state != null) {
+            detectedRegion = '$state, India';
+          }
+        }
       } catch (_) {
         // Fallback to coordinates if reverse geocode fails
         address = '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
       }
 
       setState(() {
-        if (isBuyer) _buyerGpsCtrl.text = address;
-        else _gpsCtrl.text = address;
+        if (isBuyer) {
+          _buyerGpsCtrl.text = address;
+          if (detectedRegion != null) _buyerRegion = detectedRegion;
+        } else {
+          _gpsCtrl.text = address;
+          if (detectedRegion != null) _region = detectedRegion;
+        }
       });
     } catch (e) {
       _showSnack('Could not get location: $e');

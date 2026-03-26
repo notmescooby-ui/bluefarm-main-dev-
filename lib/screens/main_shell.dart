@@ -15,7 +15,6 @@ import 'hardware_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
-
   @override
   State<MainShell> createState() => _MainShellState();
 }
@@ -24,21 +23,20 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   bool _sidebarOpen = false;
 
-  List<String> get _titles => [
+  final List<String> _titles = [
     'Water Quality Dashboard',
     'Knowledge Center',
     'Insights & Trends',
     'Harvest & Market',
     'Farm Camera',
-    'Hardware Controls',
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Content
           IndexedStack(
             index: _currentIndex,
             children: const [
@@ -47,133 +45,129 @@ class _MainShellState extends State<MainShell> {
               InsightsScreen(),
               HarvestScreen(),
               CameraScreen(),
-              HardwareScreen(),
             ],
           ),
 
-          // Header — thin strip
+          // ── Ultra-thin white header ────────────────────────────────────────
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: AppTheme.headerGradient,
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => setState(() => _sidebarOpen = true),
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.17),
-                                    borderRadius: BorderRadius.circular(11),
-                                  ),
-                                  child: const Icon(Icons.person_outline, color: Colors.white, size: 18),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Consumer<AppProvider>(
-                                builder: (context, provider, _) => Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      provider.userProfile['farm_name'] as String? ??
-                                          provider.userProfile['full_name'] as String? ?? 'BlueFarm',
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            color: Colors.white, fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      '${DateFormat('HH:mm').format(DateTime.now())}  ·  '
-                                      '${provider.userProfile['region'] as String? ?? provider.userProfile['location'] as String? ?? 'Navi Mumbai'}',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: Colors.white.withOpacity(0.65), fontSize: 10),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              const LiveBadgeWidget(),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () => setState(() => _sidebarOpen = true),
-                                child: Container(
-                                  width: 34,
-                                  height: 34,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(Icons.settings_outlined, color: Colors.white, size: 16),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        _titles[_currentIndex],
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withOpacity(0.72),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 11,
+            top: 0, left: 0, right: 0,
+            child: Consumer<AppProvider>(
+              builder: (context, provider, _) => Container(
+                color: Colors.white,
+                child: SafeArea(
+                  bottom: false,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => setState(() => _sidebarOpen = true),
+                          child: Container(
+                            width: 30, height: 30,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1565C0).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                      ),
-                    ],
+                            child: const Icon(Icons.person_outline,
+                                color: Color(0xFF1565C0), size: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                provider.userProfile['full_name'] as String? ??
+                                    provider.userProfile['farm_name'] as String? ?? 'BlueFarm',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF0D1F3C),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                              Text(
+                                provider.userProfile['region'] as String? ??
+                                    provider.userProfile['location'] as String? ?? 'Navi Mumbai',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey.shade500,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const LiveBadgeWidget(),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => setState(() => _sidebarOpen = true),
+                          child: Container(
+                            width: 30, height: 30,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1565C0).withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.settings_outlined,
+                                color: Color(0xFF1565C0), size: 16),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
 
-          // Dock — 5 tabs: Home, Learn, Insights, Harvest, Camera
+          // ── Dock — 5 tabs ──────────────────────────────────────────────────
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
+            bottom: 0, left: 0, right: 0,
             child: Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 13),
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom + 10),
               child: Center(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(28),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF0A1628).withOpacity(0.88)
-                            : Colors.white.withOpacity(0.83),
-                        borderRadius: BorderRadius.circular(30),
+                            ? const Color(0xFF0A1628).withOpacity(0.92)
+                            : Colors.white.withOpacity(0.88),
+                        borderRadius: BorderRadius.circular(28),
                         border: Border.all(
                           color: Colors.white.withOpacity(
-                              Theme.of(context).brightness == Brightness.dark ? 0.1 : 0.55),
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? 0.1
+                                  : 0.6),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF1565C0).withOpacity(0.12),
-                            blurRadius: 28,
-                            offset: const Offset(0, -4),
+                            color: const Color(0xFF1565C0).withOpacity(0.10),
+                            blurRadius: 24,
+                            offset: const Offset(0, -3),
                           )
                         ],
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 9),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -208,10 +202,10 @@ class _MainShellState extends State<MainShell> {
                           ),
                           DockItemWidget(
                             index: 4,
-                            icon: Icons.camera_alt_outlined,
-                            label: AppTranslations.get('camera'),
+                            icon: Icons.settings_outlined,
+                            label: 'Settings',
                             isActive: _currentIndex == 4,
-                            onTap: () => setState(() => _currentIndex = 4),
+                            onTap: () => setState(() => _sidebarOpen = true),
                           ),
                         ],
                       ),
@@ -222,7 +216,7 @@ class _MainShellState extends State<MainShell> {
             ),
           ),
 
-          // Sidebar
+          // ── Sidebar ────────────────────────────────────────────────────────
           if (_sidebarOpen)
             Stack(
               children: [
@@ -237,11 +231,9 @@ class _MainShellState extends State<MainShell> {
                   ),
                 ),
                 Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 305,
-                  child: SidebarWidget(onClose: () => setState(() => _sidebarOpen = false)),
+                  left: 0, top: 0, bottom: 0, width: 305,
+                  child: SidebarWidget(
+                      onClose: () => setState(() => _sidebarOpen = false)),
                 ),
               ],
             ),
@@ -1137,3 +1129,5 @@ class _AadhaarSheetState extends State<AadhaarSheet> with SingleTickerProviderSt
     );
   }
 }
+
+

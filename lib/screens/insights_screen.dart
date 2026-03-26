@@ -7,12 +7,8 @@ import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
 import '../localization/app_translations.dart';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  INSIGHTS SCREEN
-// ═══════════════════════════════════════════════════════════════════════════════
 class InsightsScreen extends StatefulWidget {
   const InsightsScreen({super.key});
-
   @override
   State<InsightsScreen> createState() => _InsightsScreenState();
 }
@@ -22,10 +18,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
   bool _summaryLoading = true;
 
   @override
-  void initState() {
-    super.initState();
-    _loadSummary();
-  }
+  void initState() { super.initState(); _loadSummary(); }
 
   Future<void> _loadSummary() async {
     if (!mounted) return;
@@ -34,20 +27,29 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final readings = provider.todayReadings;
 
     if (readings.isEmpty) {
-      setState(() { _summary = 'Not enough data yet. Connect your device to start collecting readings.'; _summaryLoading = false; });
+      setState(() {
+        _summary = 'Not enough historical data yet. Connect your device to start collecting readings.';
+        _summaryLoading = false;
+      });
       return;
     }
 
-    final avgPh   = readings.map((r) => r.ph).reduce((a, b) => a + b) / readings.length;
-    final avgTemp = readings.map((r) => r.temperature).reduce((a, b) => a + b) / readings.length;
-    final avgTurb = readings.map((r) => r.turbidity).reduce((a, b) => a + b) / readings.length;
-    final maxPh   = readings.map((r) => r.ph).reduce((a, b) => a > b ? a : b);
-    final minPh   = readings.map((r) => r.ph).reduce((a, b) => a < b ? a : b);
+    double avg(List<double> vals) => vals.reduce((a, b) => a + b) / vals.length;
+    double mn(List<double> vals) => vals.reduce((a, b) => a < b ? a : b);
+    double mx(List<double> vals) => vals.reduce((a, b) => a > b ? a : b);
 
-    final prompt = 'Pond sensor data summary for today (${readings.length} readings): '
-        'Avg pH ${avgPh.toStringAsFixed(2)} (range ${minPh.toStringAsFixed(1)}–${maxPh.toStringAsFixed(1)}), '
-        'Avg Temperature ${avgTemp.toStringAsFixed(1)}°C, Avg Turbidity ${avgTurb.toStringAsFixed(1)} NTU. '
-        'Write a 3-sentence pond health summary: 1) Overall assessment, 2) Key pattern or risk detected, 3) One actionable recommendation.';
+    final phVals   = readings.map((r) => r.ph).toList();
+    final tmpVals  = readings.map((r) => r.temperature).toList();
+    final trbVals  = readings.map((r) => r.turbidity).toList();
+
+    final prompt =
+        'Historical pond data from today (${readings.length} readings): '
+        'pH avg ${avg(phVals).toStringAsFixed(2)} range ${mn(phVals).toStringAsFixed(1)}–${mx(phVals).toStringAsFixed(1)}, '
+        'Temperature avg ${avg(tmpVals).toStringAsFixed(1)}°C range ${mn(tmpVals).toStringAsFixed(1)}–${mx(tmpVals).toStringAsFixed(1)}, '
+        'Turbidity avg ${avg(trbVals).toStringAsFixed(1)} NTU range ${mn(trbVals).toStringAsFixed(1)}–${mx(trbVals).toStringAsFixed(1)}. '
+        'Write a 3-sentence pond health summary based on historical trends: '
+        '1) Overall day assessment, 2) Most significant pattern or risk detected from the data, '
+        '3) One actionable recommendation for tomorrow.';
 
     final reply = await AIService().askClaude(prompt, provider.latestReading);
     if (mounted) setState(() { _summary = reply; _summaryLoading = false; });
@@ -59,87 +61,75 @@ class _InsightsScreenState extends State<InsightsScreen> {
       builder: (context, provider, _) {
         final readings = provider.todayReadings;
         return SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 14, left: 14, right: 14, bottom: 100),
+          padding: const EdgeInsets.only(top: 10, left: 14, right: 14, bottom: 110),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // ── pH chart ────────────────────────────────────────────────────
+            // ── pH ───────────────────────────────────────────────────────────
             _ChartCard(
-              title: 'pH Level',
-              unit: 'pH',
+              title: 'pH Level', unit: 'pH',
               color: const Color(0xFF059669),
-              readings: readings,
-              getValue: (r) => r.ph,
-              minY: 5,
-              maxY: 10,
-              safeMin: 6.5,
-              safeMax: 8.5,
+              readings: readings, getValue: (r) => r.ph,
+              minY: 4.0, maxY: 10.0, safeMin: 6.5, safeMax: 8.5,
             ),
-            const SizedBox(height: 14),
-
-            // ── Temperature chart ────────────────────────────────────────────
+            const SizedBox(height: 12),
+            // ── Temperature ──────────────────────────────────────────────────
             _ChartCard(
-              title: 'Temperature',
-              unit: '°C',
+              title: 'Temperature', unit: '°C',
               color: const Color(0xFFD97706),
-              readings: readings,
-              getValue: (r) => r.temperature,
-              minY: 15,
-              maxY: 38,
-              safeMin: 24,
-              safeMax: 30,
+              readings: readings, getValue: (r) => r.temperature,
+              minY: 18.0, maxY: 40.0, safeMin: 24.0, safeMax: 30.0,
             ),
-            const SizedBox(height: 14),
-
-            // ── Turbidity chart ──────────────────────────────────────────────
+            const SizedBox(height: 12),
+            // ── Turbidity ────────────────────────────────────────────────────
             _ChartCard(
-              title: 'Turbidity',
-              unit: 'NTU',
+              title: 'Turbidity', unit: 'NTU',
               color: const Color(0xFF0097A7),
-              readings: readings,
-              getValue: (r) => r.turbidity,
-              minY: 0,
-              maxY: 12,
-              safeMin: 1,
-              safeMax: 5,
+              readings: readings, getValue: (r) => r.turbidity,
+              minY: 0.0, maxY: 15.0, safeMin: 1.0, safeMax: 5.0,
             ),
-            const SizedBox(height: 20),
-
+            const SizedBox(height: 18),
             // ── AI Summary ───────────────────────────────────────────────────
             Container(
               decoration: AppTheme.cardDecoration(context),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Container(
-                    width: 38, height: 38,
+                    width: 36, height: 36,
                     decoration: BoxDecoration(
                         gradient: const LinearGradient(
                             colors: [AppTheme.lightPrimaryMid, AppTheme.lightAccent]),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.summarize_outlined, color: Colors.white, size: 20),
+                        borderRadius: BorderRadius.circular(11)),
+                    child: const Icon(Icons.summarize_outlined,
+                        color: Colors.white, size: 18),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const SizedBox(width: 10),
+                  Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(AppTranslations.get('pond_health'),
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 14)),
                     Text(AppTranslations.get('ai_analysis'),
-                        style: TextStyle(fontSize: 11,
+                        style: TextStyle(fontSize: 10,
                             color: Theme.of(context).textTheme.bodySmall!.color!)),
                   ])),
                   IconButton(
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    icon: const Icon(Icons.refresh_rounded, size: 16),
                     onPressed: _loadSummary,
                     color: Theme.of(context).textTheme.bodySmall!.color!,
                   ),
                 ]),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 _summaryLoading
-                    ? const Row(children: [
-                        SizedBox(width: 16, height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.lightAccent)),
-                        SizedBox(width: 10),
-                        Text(AppTranslations.get('generating'), style: TextStyle(fontSize: 13)),
+                    ? Row(children: [
+                        const SizedBox(width: 14, height: 14,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: AppTheme.lightAccent)),
+                        const SizedBox(width: 8),
+                        Text(AppTranslations.get('generating'),
+                            style: const TextStyle(fontSize: 12)),
                       ])
-                    : Text(_summary, style: const TextStyle(fontSize: 13.5, height: 1.6)),
+                    : Text(_summary,
+                        style: const TextStyle(fontSize: 13, height: 1.6)),
               ]),
             ),
           ]),
@@ -149,7 +139,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
   }
 }
 
-// ── Individual chart card ──────────────────────────────────────────────────────
 class _ChartCard extends StatelessWidget {
   final String title, unit;
   final Color color;
@@ -166,7 +155,6 @@ class _ChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Stats
     double? avg, min, max;
     if (readings.isNotEmpty) {
       final vals = readings.map(getValue).toList();
@@ -175,97 +163,153 @@ class _ChartCard extends StatelessWidget {
       max = vals.reduce((a, b) => a > b ? a : b);
     }
 
+    // Compute tight Y bounds from data if we have readings
+    double chartMin = minY;
+    double chartMax = maxY;
+    if (readings.isNotEmpty && avg != null) {
+      // Add a 10% margin around the actual data range
+      final dataMin = min!;
+      final dataMax = max!;
+      final margin = (dataMax - dataMin).clamp(1.0, double.infinity) * 0.3;
+      chartMin = (dataMin - margin).clamp(minY, safeMin - 0.5);
+      chartMax = (dataMax + margin).clamp(safeMax + 0.5, maxY);
+    }
+
     return Container(
       decoration: AppTheme.cardDecoration(context),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Header
         Row(children: [
-          Container(
-            width: 10, height: 10,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
+          Container(width: 10, height: 10,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 8),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          Text(title, style: const TextStyle(
+              fontWeight: FontWeight.w800, fontSize: 14)),
           const Spacer(),
           if (avg != null) ...[
-            _statChip('Avg', avg.toStringAsFixed(1), color),
-            const SizedBox(width: 6),
-            _statChip('Min', min!.toStringAsFixed(1), const Color(0xFF059669)),
-            const SizedBox(width: 6),
-            _statChip('Max', max!.toStringAsFixed(1), const Color(0xFFDC2626)),
+            _chip('Avg', avg.toStringAsFixed(1), color),
+            const SizedBox(width: 5),
+            _chip('Min', min!.toStringAsFixed(1), const Color(0xFF059669)),
+            const SizedBox(width: 5),
+            _chip('Max', max!.toStringAsFixed(1), const Color(0xFFDC2626)),
           ],
         ]),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
 
-        // Chart
         SizedBox(
-          height: 160,
+          height: 150,
           child: readings.isEmpty
               ? Center(child: Text(AppTranslations.get('no_data'),
-                  style: TextStyle(color: Theme.of(context).textTheme.bodySmall!.color!)))
+                  style: TextStyle(
+                      color: Theme.of(context).textTheme.bodySmall!.color!)))
               : LineChart(LineChartData(
+                  clipData: const FlClipData.all(),
                   gridData: FlGridData(
-                    show: true, drawVerticalLine: false,
-                    horizontalInterval: (maxY - minY) / 4,
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: (chartMax - chartMin) / 4,
                     getDrawingHorizontalLine: (_) => FlLine(
-                        color: Theme.of(context).dividerColor, strokeWidth: 1),
+                        color: Theme.of(context).dividerColor.withOpacity(0.5),
+                        strokeWidth: 1),
                   ),
                   titlesData: FlTitlesData(
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(sideTitles: SideTitles(
-                      showTitles: true, reservedSize: 22, interval: 1,
-                      getTitlesWidget: (value, _) {
-                        final idx = value.toInt();
-                        if (idx % (readings.length ~/ 4).clamp(1, 99) != 0 || idx >= readings.length) {
-                          return const SizedBox.shrink();
-                        }
-                        final t = readings[idx].createdAt;
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 5),
-                          child: Text('${t.hour.toString().padLeft(2,'0')}:${t.minute.toString().padLeft(2,'0')}',
-                              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).textTheme.bodySmall!.color!)),
-                        );
-                      },
-                    )),
-                    leftTitles: AxisTitles(sideTitles: SideTitles(
-                      showTitles: true, reservedSize: 30,
-                      getTitlesWidget: (value, _) => Text(value.toStringAsFixed(0),
-                          style: TextStyle(fontSize: 9,
-                              color: Theme.of(context).textTheme.bodySmall!.color!)),
-                    )),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 20,
+                        interval: (readings.length / 4).ceil().toDouble()
+                            .clamp(1, double.infinity),
+                        getTitlesWidget: (value, _) {
+                          final idx = value.toInt();
+                          if (idx < 0 || idx >= readings.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final t = readings[idx].createdAt;
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(fontSize: 8,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context)
+                                      .textTheme.bodySmall!.color!),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 32,
+                        getTitlesWidget: (value, _) => Text(
+                          value.toStringAsFixed(1),
+                          style: TextStyle(fontSize: 8,
+                              color: Theme.of(context)
+                                  .textTheme.bodySmall!.color!),
+                        ),
+                      ),
+                    ),
                   ),
                   borderData: FlBorderData(show: false),
-                  minX: 0, maxX: (readings.length - 1).toDouble().clamp(0, double.infinity),
-                  minY: minY, maxY: maxY,
-                  // Safe zone band
-                  rangeAnnotations: RangeAnnotations(horizontalRangeAnnotations: [
-                    HorizontalRangeAnnotation(
-                        y1: safeMin, y2: safeMax,
-                        color: color.withOpacity(0.07)),
-                  ]),
-                  lineBarsData: [LineChartBarData(
-                    spots: readings.asMap().entries
-                        .map((e) => FlSpot(e.key.toDouble(), getValue(e.value)))
-                        .toList(),
-                    isCurved: true, curveSmoothness: 0.3,
-                    color: color, barWidth: 2.5,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(show: true,
+                  minX: 0,
+                  maxX: (readings.length - 1).toDouble().clamp(1, double.infinity),
+                  minY: chartMin,
+                  maxY: chartMax,
+                  rangeAnnotations: RangeAnnotations(
+                    horizontalRangeAnnotations: [
+                      HorizontalRangeAnnotation(
+                          y1: safeMin, y2: safeMax,
+                          color: color.withOpacity(0.08)),
+                    ],
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: readings.asMap().entries
+                          .map((e) => FlSpot(e.key.toDouble(),
+                              getValue(e.value)))
+                          .toList(),
+                      isCurved: true,
+                      curveSmoothness: 0.25,
+                      color: color,
+                      barWidth: 2.5,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(
+                        show: readings.length < 20,
+                        getDotPainter: (spot, _, __, ___) =>
+                            FlDotCirclePainter(
+                              radius: 2.5,
+                              color: color,
+                              strokeWidth: 0,
+                            ),
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
                         gradient: LinearGradient(
-                            colors: [color.withOpacity(0.25), color.withOpacity(0.0)],
-                            begin: Alignment.topCenter, end: Alignment.bottomCenter)),
-                  )],
+                          colors: [
+                            color.withOpacity(0.2),
+                            color.withOpacity(0.0)
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ],
                 )),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Row(children: [
-          Container(width: 12, height: 3, color: color.withOpacity(0.3)),
+          Container(width: 14, height: 3,
+              decoration: BoxDecoration(
+                  color: color.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(2))),
           const SizedBox(width: 5),
-          Text('Safe zone: $safeMin – $safeMax $unit',
+          Text('${AppTranslations.get('safe_zone')}: $safeMin – $safeMax $unit',
               style: TextStyle(fontSize: 10,
                   color: Theme.of(context).textTheme.bodySmall!.color!)),
         ]),
@@ -273,15 +317,15 @@ class _ChartCard extends StatelessWidget {
     );
   }
 
-  Widget _statChip(String label, String value, Color c) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-          color: c.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-      child: Column(children: [
-        Text(label, style: TextStyle(fontSize: 8, color: c, fontWeight: FontWeight.w600)),
-        Text(value, style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.w800)),
-      ]),
-    );
-  }
+  Widget _chip(String label, String value, Color c) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+    decoration: BoxDecoration(
+        color: c.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+    child: Column(mainAxisSize: MainAxisSize.min, children: [
+      Text(label, style: TextStyle(
+          fontSize: 8, color: c, fontWeight: FontWeight.w600)),
+      Text(value, style: TextStyle(
+          fontSize: 11, color: c, fontWeight: FontWeight.w800)),
+    ]),
+  );
 }

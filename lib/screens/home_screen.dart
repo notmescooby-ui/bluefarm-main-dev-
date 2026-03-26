@@ -7,9 +7,6 @@ import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
 import '../localization/app_translations.dart';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  HOME SCREEN
-// ═══════════════════════════════════════════════════════════════════════════════
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -18,80 +15,66 @@ class HomeScreen extends StatelessWidget {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
         final r = provider.latestReading ?? SensorData.demo;
+        // top padding accounts for the white header (~72px)
         return SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 100, left: 14, right: 14, bottom: 100),
+          padding: const EdgeInsets.only(top: 82, left: 14, right: 14, bottom: 110),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Live Parameters ────────────────────────────────────────────
               Text(AppTranslations.get('live_params'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 12),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 10),
 
               _FlippableCard(
-                label: 'pH Level',
-                value: r.ph,
-                unit: 'pH',
-                icon: Icons.science_outlined,
-                color: const Color(0xFF059669),
-                status: r.phStatus,
-                isNormal: r.phIsNormal,
-                progress: r.phProgress,
-                safeRange: '6.5 – 8.5',
-                detail: _phDetail,
-                sensorData: r,
+                label: 'pH Level', value: r.ph, unit: 'pH',
+                icon: Icons.science_outlined, color: const Color(0xFF059669),
+                status: r.phStatus, isNormal: r.phIsNormal,
+                progress: r.phProgress, safeRange: '6.5 – 8.5',
+                detail: _phDetail, sensorData: r,
               ),
-              const SizedBox(height: 12),
-
+              const SizedBox(height: 10),
               _FlippableCard(
-                label: 'Temperature',
-                value: r.temperature,
-                unit: '°C',
-                icon: Icons.thermostat_outlined,
-                color: const Color(0xFFD97706),
-                status: r.tempStatus,
-                isNormal: r.tempIsNormal,
-                progress: r.tempProgress,
-                safeRange: '24 – 30 °C',
-                detail: _tempDetail,
-                sensorData: r,
+                label: 'Temperature', value: r.temperature, unit: '°C',
+                icon: Icons.thermostat_outlined, color: const Color(0xFFD97706),
+                status: r.tempStatus, isNormal: r.tempIsNormal,
+                progress: r.tempProgress, safeRange: '24 – 30 °C',
+                detail: _tempDetail, sensorData: r,
               ),
-              const SizedBox(height: 12),
-
+              const SizedBox(height: 10),
               _FlippableCard(
-                label: 'Turbidity',
-                value: r.turbidity,
-                unit: 'NTU',
-                icon: Icons.water_drop_outlined,
-                color: const Color(0xFF0097A7),
-                status: r.turbStatus,
-                isNormal: r.turbIsNormal,
-                progress: r.turbProgress,
-                safeRange: '1 – 5 NTU',
-                detail: _turbDetail,
-                sensorData: r,
+                label: 'Turbidity', value: r.turbidity, unit: 'NTU',
+                icon: Icons.water_drop_outlined, color: const Color(0xFF0097A7),
+                status: r.turbStatus, isNormal: r.turbIsNormal,
+                progress: r.turbProgress, safeRange: '1 – 5 NTU',
+                detail: _turbDetail, sensorData: r,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // ── Smart Recommendations ──────────────────────────────────────
+              // ── Smart Recommendations (live data) ──────────────────────────
               Text(AppTranslations.get('smart_rec'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
               const SizedBox(height: 10),
               _SmartRecommendation(reading: r),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // ── AquaBot status ─────────────────────────────────────────────
+              // ── AquaBot Status ─────────────────────────────────────────────
               Text(AppTranslations.get('aquabot_status'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
               const SizedBox(height: 10),
               Row(children: [
-                Expanded(child: _StatusMini(label: AppTranslations.get('battery'), value: '78%', icon: Icons.battery_5_bar)),
+                Expanded(child: _StatusMini(
+                    label: AppTranslations.get('battery'),
+                    value: '78%', icon: Icons.battery_5_bar)),
                 const SizedBox(width: 9),
-                Expanded(child: _StatusMini(label: AppTranslations.get('signal'), value: 'Strong', icon: Icons.wifi)),
+                Expanded(child: _StatusMini(
+                    label: AppTranslations.get('signal'),
+                    value: 'Strong', icon: Icons.wifi)),
                 const SizedBox(width: 9),
                 Expanded(child: _StatusMini(
                   label: AppTranslations.get('motor'),
-                  value: provider.motorASpeed > 0 || provider.motorBSpeed > 0 ? AppTranslations.get('running') : AppTranslations.get('idle'),
+                  value: provider.motorASpeed > 0 || provider.motorBSpeed > 0
+                      ? AppTranslations.get('running')
+                      : AppTranslations.get('idle'),
                   icon: Icons.settings_outlined,
                 )),
               ]),
@@ -138,7 +121,7 @@ class _FlippableCardState extends State<_FlippableCard>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 520));
+        vsync: this, duration: const Duration(milliseconds: 500));
     _anim = Tween<double>(begin: 0, end: math.pi).animate(
         CurvedAnimation(parent: _ctrl, curve: Curves.easeInOutCubic));
   }
@@ -150,17 +133,15 @@ class _FlippableCardState extends State<_FlippableCard>
     if (!_flipped) {
       if (_aiText.isEmpty) {
         setState(() => _aiLoading = true);
-        final q = 'My pond ${widget.label} is ${widget.value.toStringAsFixed(1)} ${widget.unit}. '
-            'In 5 bullet points explain: why this matters for fish, how climate affects it, '
-            'what happens too low, too high, and how to stabilize each case. Be very concise.';
+        final q = 'My fish pond ${widget.label} is ${widget.value.toStringAsFixed(1)} ${widget.unit}. '
+            'In 5 short bullet points explain: why this matters for fish, how climate affects it, '
+            'what happens when too low, too high, and how to stabilize each. Be concise.';
         final reply = await AIService().askClaude(q, widget.sensorData);
         if (mounted) setState(() { _aiText = reply; _aiLoading = false; });
       }
-      _ctrl.forward();
-      setState(() => _flipped = true);
+      _ctrl.forward(); setState(() => _flipped = true);
     } else {
-      _ctrl.reverse();
-      setState(() => _flipped = false);
+      _ctrl.reverse(); setState(() => _flipped = false);
     }
   }
 
@@ -178,11 +159,9 @@ class _FlippableCardState extends State<_FlippableCard>
               ..setEntry(3, 2, 0.001)
               ..rotateY(_anim.value),
             child: showBack
-                ? Transform(
-                    alignment: Alignment.center,
+                ? Transform(alignment: Alignment.center,
                     transform: Matrix4.identity()..rotateY(math.pi),
-                    child: _buildBack(),
-                  )
+                    child: _buildBack())
                 : _buildFront(),
           );
         },
@@ -194,77 +173,74 @@ class _FlippableCardState extends State<_FlippableCard>
     return Container(
       width: double.infinity,
       decoration: AppTheme.cardDecoration(context),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(
-            width: 44, height: 44,
+            width: 42, height: 42,
             decoration: BoxDecoration(
               color: widget.color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(widget.icon, color: widget.color, size: 22),
+            child: Icon(widget.icon, color: widget.color, size: 20),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(widget.label.toUpperCase(),
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
                     color: Theme.of(context).textTheme.bodySmall!.color!)),
-            const SizedBox(height: 3),
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text(widget.value.toStringAsFixed(1),
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800)),
-              const SizedBox(width: 4),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(widget.unit,
-                    style: TextStyle(fontSize: 13,
-                        color: Theme.of(context).textTheme.bodySmall!.color!)),
-              ),
+                  style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
+              const SizedBox(width: 3),
+              Padding(padding: const EdgeInsets.only(bottom: 3),
+                child: Text(widget.unit, style: TextStyle(fontSize: 12,
+                    color: Theme.of(context).textTheme.bodySmall!.color!))),
             ]),
           ])),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: (widget.isNormal ? AppTheme.lightSuccess : AppTheme.lightWarning).withOpacity(0.14),
+                color: (widget.isNormal ? AppTheme.lightSuccess : AppTheme.lightWarning)
+                    .withOpacity(0.14),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(widget.status,
-                  style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w800,
-                      color: widget.isNormal ? AppTheme.lightSuccess : AppTheme.lightWarning)),
+              child: Text(widget.status, style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w800,
+                  color: widget.isNormal ? AppTheme.lightSuccess : AppTheme.lightWarning)),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text('Safe: ${widget.safeRange}',
-                style: TextStyle(fontSize: 10,
+                style: TextStyle(fontSize: 9,
                     color: Theme.of(context).textTheme.bodySmall!.color!)),
           ]),
         ]),
-        const SizedBox(height: 14),
-        LayoutBuilder(builder: (ctx, constraints) => Column(children: [
+        const SizedBox(height: 12),
+        LayoutBuilder(builder: (_, constraints) => Column(children: [
           Stack(children: [
-            Container(width: double.infinity, height: 7,
+            Container(width: double.infinity, height: 6,
                 decoration: BoxDecoration(
                     color: Theme.of(context).scaffoldBackgroundColor,
                     borderRadius: BorderRadius.circular(99))),
             AnimatedContainer(
                 duration: const Duration(milliseconds: 1200),
                 curve: Curves.easeOutQuart,
-                width: constraints.maxWidth * widget.progress,
-                height: 7,
+                width: constraints.maxWidth * widget.progress, height: 6,
                 decoration: BoxDecoration(
                     gradient: LinearGradient(
                         colors: [widget.color.withOpacity(0.5), widget.color]),
                     borderRadius: BorderRadius.circular(99))),
           ]),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(AppTranslations.get('tap_details'),
-                style: TextStyle(fontSize: 10,
-                    color: Theme.of(context).textTheme.bodySmall!.color!.withOpacity(0.6))),
-            Icon(Icons.touch_app_rounded, size: 14,
-                color: Theme.of(context).textTheme.bodySmall!.color!.withOpacity(0.5)),
+                style: TextStyle(fontSize: 9,
+                    color: Theme.of(context).textTheme.bodySmall!.color!
+                        .withOpacity(0.6))),
+            Icon(Icons.touch_app_rounded, size: 12,
+                color: Theme.of(context).textTheme.bodySmall!.color!
+                    .withOpacity(0.4)),
           ]),
         ])),
       ]),
@@ -274,67 +250,60 @@ class _FlippableCardState extends State<_FlippableCard>
   Widget _buildBack() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-            colors: [widget.color, widget.color.withOpacity(0.75)],
+            colors: [widget.color, widget.color.withOpacity(0.78)],
             begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(
-            color: widget.color.withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 6))],
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [BoxShadow(color: widget.color.withOpacity(0.3),
+            blurRadius: 18, offset: const Offset(0, 5))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text('About ${widget.label}',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-          GestureDetector(
-            onTap: _flip,
-            child: Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.close_rounded, color: Colors.white, size: 16),
-            ),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+          GestureDetector(onTap: _flip,
+            child: Container(padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(7)),
+              child: const Icon(Icons.close_rounded, color: Colors.white, size: 15)),
           ),
         ]),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         if (_aiLoading)
-          const Center(child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-          ))
+          const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20),
+            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)))
         else if (_aiText.isNotEmpty)
-          Text(_aiText,
-              style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.55))
+          Text(_aiText, style: const TextStyle(color: Colors.white, fontSize: 12.5, height: 1.55))
         else
           ...widget.detail.entries.map((e) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 7),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Container(width: 5, height: 5, margin: const EdgeInsets.only(top: 6, right: 8),
+              Container(width: 5, height: 5, margin: const EdgeInsets.only(top: 5, right: 8),
                   decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
               Expanded(child: RichText(text: TextSpan(children: [
-                TextSpan(text: '${e.key}: ',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                TextSpan(text: e.value,
-                    style: TextStyle(color: Colors.white.withOpacity(0.88), fontSize: 12, height: 1.4)),
+                TextSpan(text: '${e.key}: ', style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                TextSpan(text: e.value, style: TextStyle(
+                    color: Colors.white.withOpacity(0.88), fontSize: 12, height: 1.4)),
               ]))),
             ]),
           )),
         const SizedBox(height: 6),
-        Text(AppTranslations.get('tap_close'), style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 10)),
+        Text(AppTranslations.get('tap_close'),
+            style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 9)),
       ]),
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  SMART RECOMMENDATION
+//  SMART RECOMMENDATION  — powered by live sensor data
 // ═══════════════════════════════════════════════════════════════════════════════
 class _SmartRecommendation extends StatefulWidget {
   final SensorData reading;
   const _SmartRecommendation({required this.reading});
-
   @override
   State<_SmartRecommendation> createState() => _SmartRecommendationState();
 }
@@ -358,15 +327,15 @@ class _SmartRecommendationState extends State<_SmartRecommendation> {
     setState(() => _loading = true);
     final r = widget.reading;
     final alerts = <String>[];
-    if (!r.phIsNormal) alerts.add('pH ${r.ph} (safe: 6.5–8.5)');
-    if (!r.tempIsNormal) alerts.add('Temperature ${r.temperature}°C (safe: 24–30)');
-    if (!r.turbIsNormal) alerts.add('Turbidity ${r.turbidity} NTU (safe: 1–5)');
+    if (!r.phIsNormal) alerts.add('pH ${r.ph} (safe 6.5–8.5)');
+    if (!r.tempIsNormal) alerts.add('Temp ${r.temperature}°C (safe 24–30)');
+    if (!r.turbIsNormal) alerts.add('Turbidity ${r.turbidity} NTU (safe 1–5)');
     _isAlert = alerts.isNotEmpty;
     final prompt = _isAlert
-        ? 'ALERT: These fish pond parameters are out of range: ${alerts.join(', ')}. '
-          'In 3 bullet points: 1) Why each is out of range, 2) Immediate actions, 3) Prevention. Be concise.'
-        : 'All pond parameters are normal (pH ${r.ph}, Temp ${r.temperature}°C, Turbidity ${r.turbidity} NTU). '
-          'Give one positive observation and one preventive tip in 2 short sentences.';
+        ? 'LIVE ALERT: Fish pond parameters out of safe range: ${alerts.join(', ')}. '
+          'Give 3 bullet points: 1) Why each is out of range right now, 2) Immediate action to take, 3) Prevention tip. Keep it short and practical.'
+        : 'All live pond parameters are normal: pH ${r.ph}, Temp ${r.temperature}°C, Turbidity ${r.turbidity} NTU. '
+          'Give one positive observation and one tip to maintain this. Two sentences maximum.';
     final reply = await AIService().askClaude(prompt, r);
     if (mounted) setState(() { _text = reply; _loading = false; });
   }
@@ -377,55 +346,54 @@ class _SmartRecommendationState extends State<_SmartRecommendation> {
       decoration: _isAlert
           ? BoxDecoration(
               color: AppTheme.lightWarning.withOpacity(0.07),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppTheme.lightWarning.withOpacity(0.3)))
           : AppTheme.cardDecoration(context),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(
-            width: 38, height: 38,
+            width: 36, height: 36,
             decoration: BoxDecoration(
               gradient: _isAlert
                   ? LinearGradient(colors: [AppTheme.lightWarning, AppTheme.lightWarning.withOpacity(0.7)])
                   : const LinearGradient(colors: [AppTheme.lightPrimaryMid, AppTheme.lightAccent]),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(11),
             ),
             child: Icon(_isAlert ? Icons.warning_amber_rounded : Icons.psychology_outlined,
-                color: Colors.white, size: 20),
+                color: Colors.white, size: 18),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(_isAlert ? AppTranslations.get('action_required') : AppTranslations.get('all_clear'),
-                style: TextStyle(
-                    fontWeight: FontWeight.w800, fontSize: 15,
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14,
                     color: _isAlert ? AppTheme.lightWarning : AppTheme.lightSuccess)),
-            Text(AppTranslations.get('decision_engine'), style: TextStyle(fontSize: 11,
-                color: Theme.of(context).textTheme.bodySmall!.color!)),
+            Text(AppTranslations.get('decision_engine'),
+                style: TextStyle(fontSize: 10,
+                    color: Theme.of(context).textTheme.bodySmall!.color!)),
           ])),
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, size: 18),
-            onPressed: _load,
-            color: Theme.of(context).textTheme.bodySmall!.color!,
-          ),
+          IconButton(icon: const Icon(Icons.refresh_rounded, size: 16),
+              onPressed: _load,
+              color: Theme.of(context).textTheme.bodySmall!.color!),
         ]),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _loading
             ? Row(children: [
-                SizedBox(width: 16, height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2,
-                        color: _isAlert ? AppTheme.lightWarning : AppTheme.lightAccent)),
-                const SizedBox(width: 10),
-                Text(AppTranslations.get('analysing'), style: TextStyle(fontSize: 13)),
+                SizedBox(width: 14, height: 14, child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _isAlert ? AppTheme.lightWarning : AppTheme.lightAccent)),
+                const SizedBox(width: 8),
+                Text(AppTranslations.get('analysing'),
+                    style: const TextStyle(fontSize: 12)),
               ])
-            : Text(_text, style: const TextStyle(fontSize: 13.5, height: 1.55)),
+            : Text(_text, style: const TextStyle(fontSize: 13, height: 1.55)),
       ]),
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  STATUS MINI CARD
+//  STATUS MINI
 // ═══════════════════════════════════════════════════════════════════════════════
 class _StatusMini extends StatelessWidget {
   final String label, value;
@@ -437,46 +405,45 @@ class _StatusMini extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: AppTheme.cardDecoration(context),
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(12),
       child: Column(children: [
         Container(
-          width: 28, height: 28,
+          width: 26, height: 26,
           decoration: BoxDecoration(
             color: isDark ? Colors.white.withOpacity(0.05) : AppTheme.lightAccent.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 15, color: AppTheme.lightAccent),
+          child: Icon(icon, size: 14, color: AppTheme.lightAccent),
         ),
-        const SizedBox(height: 7),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-        Text(label, style: TextStyle(fontSize: 10,
-            color: Theme.of(context).textTheme.bodySmall!.color!, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+        Text(label, style: TextStyle(fontSize: 9,
+            color: Theme.of(context).textTheme.bodySmall!.color!,
+            fontWeight: FontWeight.w600)),
       ]),
     );
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  STATIC DETAIL INFO (shown before AI loads)
-// ═══════════════════════════════════════════════════════════════════════════════
+// ── Static detail fallback ────────────────────────────────────────────────────
 const _phDetail = {
   'Why it matters': 'Controls enzyme activity and oxygen availability for fish.',
   'Climate effect': 'Rain lowers pH; heat + algae raises it.',
-  'Too low (<6.5)': 'Fish stress, reduced immunity, acidosis.',
+  'Too low (<6.5)': 'Fish stress, reduced immunity, acidosis risk.',
   'Too high (>8.5)': 'Ammonia toxicity, gill damage.',
   'Stabilize': 'Low → add lime. High → water change, reduce feeding.',
 };
 const _tempDetail = {
   'Why it matters': 'Governs metabolism, feeding rate, dissolved oxygen.',
-  'Climate effect': 'Ambient temperature directly heats/cools shallow ponds.',
-  'Too low (<24°C)': 'Sluggish fish, stop feeding, immune weakness.',
-  'Too high (>30°C)': 'DO drops, stress, disease risk rises.',
+  'Climate effect': 'Ambient temp directly heats/cools shallow ponds.',
+  'Too low (<24°C)': 'Sluggish fish, immune weakness, stop feeding.',
+  'Too high (>30°C)': 'DO drops, disease risk rises sharply.',
   'Stabilize': 'High → aerate heavily, partial water exchange.',
 };
 const _turbDetail = {
-  'Why it matters': 'Indicates clarity, plankton levels, organic load.',
+  'Why it matters': 'Indicates water clarity, plankton load, organic load.',
   'Climate effect': 'Rain stirs sediment; heat drives algae blooms.',
-  'Too low (<1 NTU)': 'Fish feel exposed, UV penetration increases.',
+  'Too low (<1 NTU)': 'Fish feel exposed, UV penetration rises.',
   'Too high (>5 NTU)': 'Blocks sunlight, lowers DO, gill irritation.',
   'Stabilize': 'High → reduce feed 20%, partial water change, check filter.',
 };
