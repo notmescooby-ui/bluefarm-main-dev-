@@ -175,15 +175,15 @@ Widget build(BuildContext context) {
                     ]),
                     const SizedBox(height: 10),
                     _summaryLoading
-                        ? Row(children: const [
-                            SizedBox(
+                        ? Row(children: [
+                            const SizedBox(
                               width: 14,
                               height: 14,
                               child: CircularProgressIndicator(
                                   strokeWidth: 2),
                             ),
-                            SizedBox(width: 8),
-                            Text('Generating...')
+                            const SizedBox(width: 8),
+                            const Text('Generating...'),
                           ])
                         : Text(_summary,
                             style: const TextStyle(
@@ -197,5 +197,250 @@ Widget build(BuildContext context) {
       },
     ),
   );
-},
+}
+}
+
+class _ChartCard extends StatelessWidget {
+  final String title;
+  final String unit;
+  final Color color;
+  final List<SensorData> readings;
+  final double Function(SensorData reading) getValue;
+  final double minY;
+  final double maxY;
+  final double safeMin;
+  final double safeMax;
+
+  const _ChartCard({
+    required this.title,
+    required this.unit,
+    required this.color,
+    required this.readings,
+    required this.getValue,
+    required this.minY,
+    required this.maxY,
+    required this.safeMin,
+    required this.safeMax,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sortedReadings = List<SensorData>.from(readings)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final hasData = sortedReadings.isNotEmpty;
+
+    return Container(
+      decoration: AppTheme.cardDecoration(context),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.18),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 210,
+            child: hasData
+                ? LineChart(_buildChartData(context, sortedReadings))
+                : Center(
+                    child: Text(
+                      'No data yet',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                  ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Safe zone: ${safeMin.toStringAsFixed(1)} - ${safeMax.toStringAsFixed(1)} $unit',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  LineChartData _buildChartData(
+    BuildContext context,
+    List<SensorData> sortedReadings,
+  ) {
+    final spots = <FlSpot>[];
+    for (var i = 0; i < sortedReadings.length; i++) {
+      spots.add(FlSpot(i.toDouble(), getValue(sortedReadings[i])));
+    }
+
+    return LineChartData(
+      minX: 0,
+      maxX: sortedReadings.length > 1 ? (sortedReadings.length - 1).toDouble() : 1,
+      minY: minY,
+      maxY: maxY,
+      clipData: const FlClipData.all(),
+      rangeAnnotations: RangeAnnotations(
+        horizontalRangeAnnotations: [
+          HorizontalRangeAnnotation(
+            y1: safeMin,
+            y2: safeMax,
+            color: color.withOpacity(0.08),
+          ),
+        ],
+      ),
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: false,
+        horizontalInterval: (maxY - minY) / 4,
+        getDrawingHorizontalLine: (_) => FlLine(
+          color: Theme.of(context).dividerColor.withOpacity(0.12),
+          strokeWidth: 1,
+        ),
+      ),
+      borderData: FlBorderData(show: false),
+      titlesData: FlTitlesData(
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 34,
+            interval: (maxY - minY) / 4,
+            getTitlesWidget: (value, meta) => Text(
+              value.toStringAsFixed(0),
+              style: TextStyle(
+                fontSize: 10,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 26,
+            interval: _bottomInterval(sortedReadings.length),
+            getTitlesWidget: (value, meta) {
+              final index = value.round();
+              if (index < 0 || index >= sortedReadings.length) {
+                return const SizedBox.shrink();
+              }
+
+              final timestamp = sortedReadings[index].createdAt;
+              final label =
+                  '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
+
+              return Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+      lineTouchData: LineTouchData(
+        touchTooltipData: LineTouchTooltipData(
+          tooltipRoundedRadius: 12,
+          tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          getTooltipColor: (_) => Theme.of(context).cardColor.withOpacity(0.96),
+          getTooltipItems: (touchedSpots) {
+            return touchedSpots.map((spot) {
+              return LineTooltipItem(
+                '${spot.y.toStringAsFixed(1)} $unit',
+                TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              );
+            }).toList();
+          },
+        ),
+      ),
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          color: color,
+          barWidth: 3,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: spots.length <= 8,
+            getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+              radius: 3.3,
+              color: color,
+              strokeWidth: 2,
+              strokeColor: Colors.white,
+            ),
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                color.withOpacity(0.18),
+                color.withOpacity(0.02),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  double _bottomInterval(int count) {
+    if (count <= 2) return 1;
+    if (count <= 4) return 1;
+    if (count <= 8) return 2;
+    if (count <= 12) return 3;
+    return (count / 4).ceilToDouble();
+  }
 }
