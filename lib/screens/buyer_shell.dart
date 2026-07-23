@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart';
+import 'package:bluefarm/services/supabase_compatibility.dart' hide LaunchMode;
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_redirect_service.dart';
 

@@ -331,6 +331,10 @@ class PostgrestFilterBuilder implements Future<dynamic> {
       ? 'users'
       : (_table == 'listings' ? 'harvest_listings' : _table);
 
+  PostgrestFilterBuilder select([String? columns]) {
+    return this;
+  }
+
   PostgrestFilterBuilder eq(String column, dynamic value) {
     _filters.add(QueryFilter(column, value, QueryFilterType.eq));
     return this;
