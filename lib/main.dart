@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bluefarm/services/supabase_compatibility.dart';
 
 import 'providers/app_provider.dart';
 import 'screens/role_selection_screen.dart';

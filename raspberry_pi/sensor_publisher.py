@@ -35,9 +35,8 @@ import requests
 import spidev
 
 # ── CONFIGURATION ────────────────────────────────────────────
-SUPABASE_URL   = "https://ttipwqpiwqwejvxtzqqn.supabase.co"
-SUPABASE_KEY   = "YOUR_SUPABASE_ANON_KEY"   # ← Replace with your anon key
-TABLE_ENDPOINT = f"{SUPABASE_URL}/rest/v1/sensor_readings"
+FIREBASE_PROJECT_ID = "YOUR_FIREBASE_PROJECT_ID"  # ← Replace with your Firebase Project ID
+FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT_ID}/databases/(default)/documents"
 
 SEND_INTERVAL  = 5      # seconds between readings
 PH_CHANNEL     = 0      # MCP3008 channel for pH sensor
@@ -176,30 +175,71 @@ def read_turbidity() -> float:
         log.error(f"Turbidity read error: {e}")
         return 2.5
 
-# ── SUPABASE SENDER ──────────────────────────────────────────
+# ── FIREBASE/FIRESTORE SENDER ─────────────────────────────────
 HEADERS = {
-    "Content-Type":  "application/json",
-    "apikey":        SUPABASE_KEY,
-    "Authorization": f"Bearer {SUPABASE_KEY}",
-    "Prefer":        "return=minimal"
+    "Content-Type": "application/json"
 }
 
-def send_to_supabase(payload: dict) -> bool:
-    """POST sensor reading to Supabase."""
+def to_firestore_val(v):
+    if isinstance(v, float):
+        return {"doubleValue": v}
+    elif isinstance(v, int):
+        return {"integerValue": str(v)}
+    elif isinstance(v, bool):
+        return {"booleanValue": v}
+    elif isinstance(v, str):
+        return {"stringValue": v}
+    elif isinstance(v, dict):
+        return {"mapValue": {"fields": {k: to_firestore_val(val) for k, val in v.items()}}}
+    elif isinstance(v, list):
+        return {"arrayValue": {"values": [to_firestore_val(val) for val in v]}}
+    elif v is None:
+        return {"nullValue": None}
+    else:
+        return {"stringValue": str(v)}
+
+def from_firestore_val(f_val):
+    if "doubleValue" in f_val:
+        return float(f_val["doubleValue"])
+    elif "integerValue" in f_val:
+        return int(f_val["integerValue"])
+    elif "booleanValue" in f_val:
+        return f_val["booleanValue"]
+    elif "stringValue" in f_val:
+        return f_val["stringValue"]
+    elif "mapValue" in f_val:
+        fields = f_val["mapValue"].get("fields", {})
+        return {k: from_firestore_val(v) for k, v in fields.items()}
+    elif "arrayValue" in f_val:
+        values = f_val["arrayValue"].get("values", [])
+        return [from_firestore_val(v) for v in values]
+    elif "nullValue" in f_val:
+        return None
+    return None
+
+def send_to_firebase(payload: dict) -> bool:
+    """POST sensor reading to Firestore."""
     try:
+        # Add created_at field in ISO format with timezone if not present
+        payload_copy = payload.copy()
+        payload_copy["created_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        firestore_payload = {
+            "fields": {k: to_firestore_val(v) for k, v in payload_copy.items()}
+        }
+        url = f"{FIRESTORE_URL}/sensor_readings"
         response = requests.post(
-            TABLE_ENDPOINT,
+            url,
             headers=HEADERS,
-            data=json.dumps(payload),
+            data=json.dumps(firestore_payload),
             timeout=10
         )
-        if response.status_code == 201:
+        if response.status_code in [200, 201]:
             return True
         else:
-            log.error(f"Supabase error {response.status_code}: {response.text}")
+            log.error(f"Firestore error {response.status_code}: {response.text}")
             return False
     except requests.exceptions.ConnectionError:
-        log.error("Network error — cannot reach Supabase. Check WiFi.")
+        log.error("Network error — cannot reach Firestore. Check WiFi.")
         return False
     except requests.exceptions.Timeout:
         log.error("Request timeout.")
@@ -222,31 +262,64 @@ except ImportError:
     log.warning("RPi.GPIO not available. Relay control disabled.")
 
 def poll_relay_commands():
-    """Check Supabase for pending relay commands."""
+    """Check Firestore for pending relay commands."""
     if not HAS_GPIO:
         return
     try:
-        resp = requests.get(
-            f"{SUPABASE_URL}/rest/v1/relay_commands",
-            headers={**HEADERS, 'Authorization': f'Bearer {SUPABASE_KEY}'},
-            params={'executed': 'eq.false', 'order': 'created_at.desc', 'limit': '10'},
+        query_payload = {
+            "structuredQuery": {
+                "from": [{"collectionId": "relay_commands"}],
+                "where": {
+                    "fieldFilter": {
+                        "field": {"fieldPath": "executed"},
+                        "op": "EQUAL",
+                        "value": {"booleanValue": False}
+                    }
+                },
+                "orderBy": [
+                    {
+                        "field": {"fieldPath": "created_at"},
+                        "direction": "DESCENDING"
+                    }
+                ],
+                "limit": 10
+            }
+        }
+        url = f"{FIRESTORE_URL}:runQuery"
+        resp = requests.post(
+            url,
+            headers=HEADERS,
+            data=json.dumps(query_payload),
             timeout=5
         )
         if resp.status_code == 200:
-            commands = resp.json()
-            for cmd in commands:
-                relay = cmd.get('relay_id')
-                state = cmd.get('state')
-                cmd_id = cmd.get('id')
+            results = resp.json()
+            for item in results:
+                doc = item.get("document")
+                if not doc:
+                    continue
+                doc_name = doc.get("name")  # format: projects/{project_id}/databases/(default)/documents/relay_commands/{document_id}
+                fields = doc.get("fields", {})
+                
+                relay = from_firestore_val(fields.get("relay_id", {}))
+                state = from_firestore_val(fields.get("state", {}))
+                
                 if relay in RELAY_PINS:
                     # Active-LOW: ON=GPIO.LOW, OFF=GPIO.HIGH
                     GPIO.output(RELAY_PINS[relay], GPIO.LOW if state else GPIO.HIGH)
                     log.info(f"Relay {relay} → {'ON' if state else 'OFF'}")
                     # Mark as executed
+                    patch_payload = {
+                        "fields": {
+                            "executed": {"booleanValue": True}
+                        }
+                    }
+                    # doc_name is the complete resource path we can PATCH to directly
+                    patch_url = f"https://firestore.googleapis.com/v1/{doc_name}?updateMask.fieldPaths=executed"
                     requests.patch(
-                        f"{SUPABASE_URL}/rest/v1/relay_commands?id=eq.{cmd_id}",
+                        patch_url,
                         headers=HEADERS,
-                        data=json.dumps({'executed': True}),
+                        data=json.dumps(patch_payload),
                         timeout=5
                     )
     except Exception as e:
@@ -283,7 +356,7 @@ def apply_auto_relays(ph: float, turbidity: float, temperature: float):
 def main():
     log.info("=" * 55)
     log.info("  BlueFarm Sensor Publisher — Raspberry Pi 3")
-    log.info("  Sending data to Supabase every 5 seconds")
+    log.info("  Sending data to Firestore every 5 seconds")
     log.info("=" * 55)
 
     consecutive_failures = 0
@@ -316,10 +389,10 @@ def main():
             # Apply auto relay rules
             apply_auto_relays(ph, turbidity, temperature)
 
-            # Send to Supabase
-            success = send_to_supabase(payload)
+            # Send to Firebase
+            success = send_to_firebase(payload)
             if success:
-                log.info("✓ Sent to Supabase")
+                log.info("✓ Sent to Firestore")
                 consecutive_failures = 0
             else:
                 consecutive_failures += 1

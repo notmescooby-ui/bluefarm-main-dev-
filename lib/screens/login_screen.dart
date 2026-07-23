@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bluefarm/services/supabase_compatibility.dart';
 import '../theme/legacy_theme.dart';
 import '../widgets/animated_bg.dart';
 import '../widgets/glass_card.dart';

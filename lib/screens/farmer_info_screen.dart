@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bluefarm/services/supabase_compatibility.dart';
 import 'main_shell.dart';
 import 'buyer_shell.dart';
 import 'device_connect_screen.dart';

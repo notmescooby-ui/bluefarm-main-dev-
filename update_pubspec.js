@@ -17,7 +17,9 @@ if (depIndex !== -1 && devDepIndex !== -1 && devDepIndex > depIndex) {
 dependencies:
   flutter:
     sdk: flutter
-  supabase_flutter: ^2.3.0
+  firebase_core: ^2.32.0
+  firebase_auth: ^4.20.0
+  cloud_firestore: ^4.17.5
   fl_chart: ^0.68.0
   camera: ^0.11.0
   http: ^1.2.0

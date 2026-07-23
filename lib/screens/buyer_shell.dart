@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bluefarm/services/supabase_compatibility.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_redirect_service.dart';
 

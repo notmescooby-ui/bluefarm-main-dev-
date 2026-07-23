@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bluefarm/services/supabase_compatibility.dart';
 import '../models/sensor_data.dart';
 
 class SupabaseService {
