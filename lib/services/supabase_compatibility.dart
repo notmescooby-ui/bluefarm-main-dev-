@@ -236,6 +236,10 @@ class SupabaseStreamBuilder extends Stream<List<Map<String, dynamic>>> {
 
   SupabaseStreamBuilder(this._table);
 
+  String get _mappedTable => _table == 'profiles'
+      ? 'users'
+      : (_table == 'listings' ? 'harvest_listings' : _table);
+
   SupabaseStreamBuilder eq(String column, dynamic value) {
     _filters.add(QueryFilter(column, value, QueryFilterType.eq));
     return this;
@@ -254,7 +258,7 @@ class SupabaseStreamBuilder extends Stream<List<Map<String, dynamic>>> {
 
   Stream<List<Map<String, dynamic>>> _buildStream() {
     final firestore = FirebaseFirestore.instance;
-    Query query = firestore.collection(_table);
+    Query query = firestore.collection(_mappedTable);
 
     for (final filter in _filters) {
       if (filter.field == 'id') {
@@ -322,6 +326,10 @@ class PostgrestFilterBuilder implements Future<dynamic> {
   bool _isDelete = false;
 
   PostgrestFilterBuilder(this._table, {String? columns}) : _columns = columns;
+
+  String get _mappedTable => _table == 'profiles'
+      ? 'users'
+      : (_table == 'listings' ? 'harvest_listings' : _table);
 
   PostgrestFilterBuilder eq(String column, dynamic value) {
     _filters.add(QueryFilter(column, value, QueryFilterType.eq));
@@ -454,8 +462,8 @@ class PostgrestFilterBuilder implements Future<dynamic> {
         }
 
         final docRef = docId != null
-            ? firestore.collection(_table).doc(docId)
-            : firestore.collection(_table).doc();
+            ? firestore.collection(_mappedTable).doc(docId)
+            : firestore.collection(_mappedTable).doc();
 
         final data = Map<String, dynamic>.from(item);
         if (data['id'] == null) {
@@ -498,7 +506,7 @@ class PostgrestFilterBuilder implements Future<dynamic> {
           .toSet();
       final profilesMap = <String, Map<String, dynamic>>{};
       for (final uid in userIds) {
-        final profDoc = await firestore.collection('profiles').doc(uid).get();
+        final profDoc = await firestore.collection('users').doc(uid).get();
         if (profDoc.exists) {
           final pData = profDoc.data()!;
           pData['id'] = uid;
@@ -521,7 +529,7 @@ class PostgrestFilterBuilder implements Future<dynamic> {
   }
 
   Query _buildQuery(FirebaseFirestore firestore) {
-    Query query = firestore.collection(_table);
+    Query query = firestore.collection(_mappedTable);
 
     for (final filter in _filters) {
       if (filter.field == 'id') {

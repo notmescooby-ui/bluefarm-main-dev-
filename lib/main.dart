@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bluefarm/services/supabase_compatibility.dart';
 
+import 'package:bluefarm/services/firebase_service.dart';
+
 import 'providers/app_provider.dart';
 import 'screens/role_selection_screen.dart';
 import 'screens/splash_screen.dart';
@@ -14,10 +16,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(
-    url: 'https://ttipwqpiwqwejvxtzqqn.supabase.co',
-    anonKey: 'sb_publishable_2cW0EppUpaTpRhuumLGzMA_0JS00vKw',
-  );
+  await FirebaseService.initialize();
 
   runApp(
     ChangeNotifierProvider(
