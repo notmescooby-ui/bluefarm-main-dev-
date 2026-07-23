@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "52765421109",
+    "project_id": "bluefarm-96355",
+    "storage_bucket": "bluefarm-96355.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:52765421109:android:3ecdbca43237ffa94f8b7c",
+        "android_client_info": {
+          "package_name": "com.example.bluefarm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "52765421109-t0dtnt8b7ksicb9ndkaehjfpm6f3dgn0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQvaq9r5eiDZxcsbRk-yjKOPNMm7OE6ko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "52765421109-t0dtnt8b7ksicb9ndkaehjfpm6f3dgn0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
