@@ -32,10 +32,11 @@ import glob
 import json
 import logging
 import requests
+# pyrefly: ignore [missing-import]
 import spidev
 
 # ── CONFIGURATION ────────────────────────────────────────────
-FIREBASE_PROJECT_ID = "YOUR_FIREBASE_PROJECT_ID"  # ← Replace with your Firebase Project ID
+FIREBASE_PROJECT_ID = "bluefarm-96355"  # ← Replace with your Firebase Project ID
 FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT_ID}/databases/(default)/documents"
 
 SEND_INTERVAL  = 5      # seconds between readings
