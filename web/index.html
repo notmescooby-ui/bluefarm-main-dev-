@@ -33,14 +33,26 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+  <!-- Firebase App & Analytics SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtaLefYYgsGHf7kvLS3N9cNz0fT-k2iSA",
+      authDomain: "bluefarm-96355.firebaseapp.com",
+      databaseURL: "https://bluefarm-96355-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bluefarm-96355",
+      storageBucket: "bluefarm-96355.firebasestorage.app",
+      messagingSenderId: "52765421109",
+      appId: "1:52765421109:web:28b43b4e9d4966d94f8b7c",
+      measurementId: "G-7E1Y7H769P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
