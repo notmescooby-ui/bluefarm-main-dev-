@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/sensor_data.dart';
 import '../services/supabase_service.dart';
 
@@ -7,6 +8,7 @@ class AppProvider extends ChangeNotifier {
   final _supabase = SupabaseService();
 
   bool isDarkMode = false;
+  bool isDeviceConnected = false;
   SensorData? latestReading;
   List<SensorData> todayReadings = [];
   Map<String, dynamic> userProfile = {
@@ -30,9 +32,19 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setDeviceConnected(bool connected) async {
+    isDeviceConnected = connected;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_device_connected', connected);
+    notifyListeners();
+  }
+
   Future<void> loadAllData() async {
     isLoading = true;
     notifyListeners();
+
+    final prefs = await SharedPreferences.getInstance();
+    isDeviceConnected = prefs.getBool('is_device_connected') ?? false;
 
     final results = await Future.wait([
       _supabase.getLatestReading(),
@@ -90,3 +102,4 @@ class AppProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+

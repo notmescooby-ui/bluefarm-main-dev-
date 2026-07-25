@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../theme/legacy_theme.dart';
+import '../theme/app_theme.dart';
 import 'language_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,45 +13,34 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  late AnimationController _pulseCtrl;
-  late AnimationController _fadeCtrl;
-  late AnimationController _waveCtrl;
-  late Animation<double> _pulse;
-  late Animation<double> _fade;
-  late Animation<double> _titleSlide;
+  late AnimationController _waveFillCtrl;
+  late AnimationController _waveMoveCtrl;
+  late Animation<double> _waveFill;
 
   @override
   void initState() {
     super.initState();
 
-    _pulseCtrl = AnimationController(
+    // Wave rising from 0.0 (bottom) to 0.65 (carrying to center/upper middle)
+    _waveFillCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _pulse = Tween(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+      duration: const Duration(milliseconds: 2500),
     );
 
-    _waveCtrl = AnimationController(
+    _waveFill = CurvedAnimation(
+      parent: _waveFillCtrl,
+      curve: Curves.easeOutCubic,
+    );
+
+    // Wave horizontal movement
+    _waveMoveCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 6),
+      duration: const Duration(seconds: 4),
     )..repeat();
 
-    _fadeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..forward();
+    _waveFillCtrl.forward();
 
-    _fade = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
-
-    _titleSlide = Tween(begin: 40.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _fadeCtrl,
-        curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
-      ),
-    );
-
+    // Navigate to LanguageScreen after 4 seconds
     Timer(const Duration(seconds: 4), () {
       if (mounted) {
         Navigator.pushReplacement(
@@ -73,176 +62,179 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _pulseCtrl.dispose();
-    _fadeCtrl.dispose();
-    _waveCtrl.dispose();
+    _waveFillCtrl.dispose();
+    _waveMoveCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.deepOcean,
-      body: Stack(
-        children: [
-          // Animated wave
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _waveCtrl,
-              builder: (context, _) {
-                return CustomPaint(
-                  painter: _WavePainter(_waveCtrl.value),
-                );
-              },
-            ),
-          ),
+    final size = MediaQuery.of(context).size;
 
-          // Content
-          Center(
-            child: FadeTransition(
-              opacity: _fade,
-              child: AnimatedBuilder(
-                animation: _titleSlide,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, _titleSlide.value),
-                    child: child,
-                  );
-                },
+    return Scaffold(
+      backgroundColor: const Color(0xFFEEF3FB), // Light ocean-sky color
+      body: AnimatedBuilder(
+        animation: Listenable.merge([_waveFillCtrl, _waveMoveCtrl]),
+        builder: (context, child) {
+          final progress = _waveFill.value;
+
+          // Logo position is carried up by the waves.
+          // It starts at size.height - 80 and rises to size.height * 0.45
+          final logoY = size.height - (size.height * 0.55 * progress) - 60;
+
+          return Stack(
+            children: [
+              // Background wave painter filling up
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _RisingWavePainter(
+                    fillProgress: progress,
+                    waveTime: _waveMoveCtrl.value,
+                  ),
+                ),
+              ),
+
+              // Logo & Tagline dragged by the wave
+              Positioned(
+                left: 0,
+                right: 0,
+                top: logoY,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Pulsing logo
-                    ScaleTransition(
-                      scale: _pulse,
-                      child: Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.neonBlue.withValues(alpha: 0.3),
-                              blurRadius: 50,
-                              spreadRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            "lib/assets/logo.png",
-                            fit: BoxFit.cover,
+                    Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF1565C0).withOpacity(0.2),
+                            blurRadius: 40,
+                            spreadRadius: 8,
                           ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          "lib/assets/logo.png",
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
+                    const SizedBox(height: 24),
 
-                    const SizedBox(height: 30),
-
-                    // Title with gradient
+                    // Title
                     ShaderMask(
                       shaderCallback: (bounds) =>
-                          AppTheme.primaryGradient.createShader(bounds),
+                          AppTheme.headerGradient.createShader(bounds),
                       child: const Text(
                         "BlueFarm",
                         style: TextStyle(
-                          fontSize: 42,
+                          fontSize: 44,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           letterSpacing: 2,
                         ),
                       ),
                     ),
+                    const SizedBox(height: 14),
 
-                    const SizedBox(height: 12),
-
+                    // Redesigned Tagline (in tow)
                     Text(
-                      "watching farms with you, for you",
+                      "Intelligence Beneath the Surface",
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppTheme.textSecondary.withValues(alpha: 0.7),
-                        letterSpacing: 1,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0D1F3C).withOpacity(0.8),
+                        letterSpacing: 0.5,
                       ),
-                    ),
-
-                    const SizedBox(height: 50),
-
-                    // Loading dots
-                    SizedBox(
-                      width: 60,
-                      child: _LoadingDots(animation: _waveCtrl),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-        ],
+
+              // Small loading dots at the bottom
+              Positioned(
+                bottom: 40,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(3, (i) {
+                      final offset = sin((_waveMoveCtrl.value * 2 * pi) + (i * pi / 3)) * 6;
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Transform.translate(
+                          offset: Offset(0, offset),
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00B4CC).withOpacity(0.8),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class _LoadingDots extends StatelessWidget {
-  final AnimationController animation;
-  const _LoadingDots({required this.animation});
+class _RisingWavePainter extends CustomPainter {
+  final double fillProgress;
+  final double waveTime;
 
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, _) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(3, (i) {
-            final offset =
-                sin((animation.value * 2 * pi) + (i * pi / 3)) * 6;
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              child: Transform.translate(
-                offset: Offset(0, offset),
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: AppTheme.neonCyan.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.neonCyan.withValues(alpha: 0.4),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-        );
-      },
-    );
-  }
-}
-
-class _WavePainter extends CustomPainter {
-  final double t;
-  _WavePainter(this.t);
+  _RisingWavePainter({required this.fillProgress, required this.waveTime});
 
   @override
   void paint(Canvas canvas, Size size) {
+    // We draw three layered waves rising from the bottom
+    final waveHeight = size.height * fillProgress;
+    final baseLine = size.height - waveHeight;
+
+    final rect = Offset.zero & size;
+    final bgGradient = const LinearGradient(
+      colors: [Color(0xFFEEF3FB), Color(0xFFC7DFFC)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    ).createShader(rect);
+
+    final bgPaint = Paint()..shader = bgGradient;
+    canvas.drawRect(rect, bgPaint);
+
     for (int i = 0; i < 3; i++) {
+      final waveGradient = LinearGradient(
+        colors: [
+          const Color(0xFF00B4CC).withOpacity(0.25 - i * 0.05),
+          const Color(0xFF1565C0).withOpacity(0.5 - i * 0.1),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(rect);
+
       final paint = Paint()
-        ..color = AppTheme.neonBlue.withValues(alpha: 0.04 - i * 0.012)
+        ..shader = waveGradient
         ..style = PaintingStyle.fill;
 
       final path = Path();
       path.moveTo(0, size.height);
 
-      for (double x = 0; x <= size.width; x += 4) {
-        final y = size.height * 0.65 +
-            sin((x / size.width * 4 * pi) + (t * 2 * pi) + (i * 0.8)) * 20 +
-            sin((x / size.width * 2 * pi) + (t * 2 * pi * 0.7)) * 12;
-        path.lineTo(x, y);
+      for (double x = 0; x <= size.width; x += 6) {
+        final relX = x / size.width;
+        final sineWave = sin((relX * 2.5 * pi) + (waveTime * 2 * pi) + (i * 0.9)) * 14 * (1.1 - fillProgress);
+        final y = baseLine + sineWave;
+        path.lineTo(x, y.clamp(0.0, size.height));
       }
       path.lineTo(size.width, size.height);
       path.close();
@@ -251,5 +243,6 @@ class _WavePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _WavePainter old) => true;
+  bool shouldRepaint(covariant _RisingWavePainter old) =>
+      old.fillProgress != fillProgress || old.waveTime != waveTime;
 }

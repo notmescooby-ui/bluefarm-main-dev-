@@ -15,54 +15,71 @@ class _HardwareScreenState extends State<HardwareScreen> {
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (context, provider, _) => SingleChildScrollView(
-        padding: const EdgeInsets.only(top: 90, left: 14, right: 14, bottom: 100),
+        padding: const EdgeInsets.only(top: 100, left: 14, right: 14, bottom: 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Motor Controls', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
+            const Text(
+              'Motor Controls',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0D1F3C)),
+            ),
+            const SizedBox(height: 12),
             _motorCard(context, 'Aerator Motor A', 'GPIO13 - PWM', provider.motorASpeed, provider.updateMotorA),
             _motorCard(context, 'Pump Motor B', 'GPIO12 - PWM', provider.motorBSpeed, provider.updateMotorB),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
 
-            const Text('Feeder Gate', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
+            const Text(
+              'Feeder Gate',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0D1F3C)),
+            ),
+            const SizedBox(height: 12),
             Container(
               decoration: AppTheme.cardDecoration(context),
-              padding: const EdgeInsets.all(13),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Gate Angle: ${provider.servoAngle} deg', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                      Text(
+                        'Gate Angle: ${provider.servoAngle} deg',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF0D1F3C)),
+                      ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: (provider.servoAngle > 0 ? AppTheme.lightSuccess : Theme.of(context).textTheme.bodySmall!.color!).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
+                          color: (provider.servoAngle > 0
+                                  ? AppTheme.lightSuccess
+                                  : (Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey))
+                              .withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           provider.servoAngle > 0 ? 'OPEN' : 'CLOSED',
                           style: TextStyle(
-                            fontSize: 9,
+                            fontSize: 10,
                             fontWeight: FontWeight.w800,
-                            color: provider.servoAngle > 0 ? AppTheme.lightSuccess : Theme.of(context).textTheme.bodySmall?.color,
+                            color: provider.servoAngle > 0
+                                ? AppTheme.lightSuccess
+                                : Colors.grey.shade600,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
-                  Text('GPIO19 - 50Hz PWM', style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color)),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
+                  Text(
+                    'GPIO19 - 50Hz PWM',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 14),
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: AppTheme.lightAccent,
-                      inactiveTrackColor: AppTheme.lightAccent.withOpacity(0.2),
+                      activeTrackColor: const Color(0xFF1565C0),
+                      inactiveTrackColor: const Color(0xFF1565C0).withOpacity(0.15),
                       thumbColor: Colors.white,
-                      overlayColor: AppTheme.lightAccent.withOpacity(0.2),
+                      overlayColor: const Color(0xFF1565C0).withOpacity(0.15),
                       trackHeight: 6,
                     ),
                     child: Slider(
@@ -73,25 +90,36 @@ class _HardwareScreenState extends State<HardwareScreen> {
                       onChanged: (v) => provider.updateServo(v.toInt()),
                     ),
                   ),
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => provider.updateServo(90),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.lightAccent,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                            backgroundColor: const Color(0xFF1565C0),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          child: const Text('Feed Now', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                          child: const Text(
+                            'Feed Now',
+                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => provider.updateServo(0),
-                          style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))),
-                          child: const Text('Close Gate', style: TextStyle(fontSize: 12)),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFF1565C0)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text(
+                            'Close Gate',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+                          ),
                         ),
                       ),
                     ],
@@ -99,15 +127,18 @@ class _HardwareScreenState extends State<HardwareScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
 
-            const Text('Component Status', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
+            const Text(
+              'Component Status',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0D1F3C)),
+            ),
+            const SizedBox(height: 12),
             GridView.count(
               crossAxisCount: 2,
-              childAspectRatio: 1.5,
-              crossAxisSpacing: 9,
-              mainAxisSpacing: 9,
+              childAspectRatio: 1.4,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: [
@@ -135,7 +166,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: AppTheme.cardDecoration(context),
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -145,34 +176,38 @@ class _HardwareScreenState extends State<HardwareScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                  Text(gpio, style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color)),
+                  Text(name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF0D1F3C))),
+                  const SizedBox(height: 2),
+                  Text(gpio, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (speed > 0 ? AppTheme.lightSuccess : Theme.of(context).textTheme.bodySmall!.color!).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(6),
+                  color: (speed > 0
+                          ? AppTheme.lightSuccess
+                          : (Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey))
+                      .withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   speed > 0 ? '$speed%' : 'Idle',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: speed > 0 ? AppTheme.lightSuccess : Theme.of(context).textTheme.bodySmall?.color,
+                    color: speed > 0 ? AppTheme.lightSuccess : Colors.grey.shade600,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppTheme.lightAccent,
-              inactiveTrackColor: AppTheme.lightAccent.withOpacity(0.2),
+              activeTrackColor: const Color(0xFF1565C0),
+              inactiveTrackColor: const Color(0xFF1565C0).withOpacity(0.15),
               thumbColor: Colors.white,
-              overlayColor: AppTheme.lightAccent.withOpacity(0.2),
+              overlayColor: const Color(0xFF1565C0).withOpacity(0.15),
               trackHeight: 6,
             ),
             child: Slider(
@@ -183,33 +218,42 @@ class _HardwareScreenState extends State<HardwareScreen> {
               onChanged: (v) => update(v.toInt()),
             ),
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton(
                   onPressed: () => update(100),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.lightAccent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                    backgroundColor: const Color(0xFF1565C0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  child: const Text('Full Speed', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+                  child: const Text('Full Speed', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(width: 7),
+              const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => update(50),
-                  style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))),
-                  child: const Text('Half', style: TextStyle(fontSize: 11)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFF1565C0)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text('Half Speed', style: TextStyle(fontSize: 11, color: Color(0xFF1565C0), fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(width: 7),
+              const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => update(0),
-                  style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))),
-                  child: const Text('Stop', style: TextStyle(fontSize: 11)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text('Stop', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -236,19 +280,35 @@ class _HardwareScreenState extends State<HardwareScreen> {
             ),
             child: Icon(icon, size: 16, color: color),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF0D1F3C)),
+                ),
                 const SizedBox(height: 2),
-                Text(detail, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, height: 1.4)),
-                const SizedBox(height: 5),
+                Text(
+                  detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 9, color: Colors.grey.shade600, height: 1.3),
+                ),
+                const SizedBox(height: 6),
                 Container(
-                  decoration: BoxDecoration(color: AppTheme.lightSuccess.withOpacity(isDark ? 0.2 : 0.1), borderRadius: BorderRadius.circular(99)),
+                  decoration: BoxDecoration(
+                    color: AppTheme.lightSuccess.withOpacity(isDark ? 0.2 : 0.1),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  child: const Text('Online', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.lightSuccess)),
+                  child: const Text(
+                    'Online',
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppTheme.lightSuccess),
+                  ),
                 ),
               ],
             ),

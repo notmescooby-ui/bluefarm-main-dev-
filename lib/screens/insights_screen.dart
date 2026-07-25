@@ -69,135 +69,295 @@ class _InsightsScreenState extends State<InsightsScreen> {
     }
   }
 
- // ONLY build() FUNCTION FIXED — rest unchanged
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Consumer<AppProvider>(
+        builder: (context, provider, _) {
+          final readings = provider.todayReadings;
 
-@override
-Widget build(BuildContext context) {
-  return SafeArea( // ✅ FIX
-    child: Consumer<AppProvider>(
-      builder: (context, provider, _) {
-        final readings = provider.todayReadings;
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(14, 20, 14, 110), // ✅ spacing
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              Text(AppTranslations.get('parameter_trends'),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(14, 20, 14, 110),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppTranslations.get('parameter_trends'),
                   style: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 12),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0D1F3C),
+                  ),
+                ),
+                const SizedBox(height: 12),
 
-              _ChartCard(
-                title: 'pH Level',
-                unit: 'pH',
-                color: const Color(0xFF059669),
-                readings: readings,
-                getValue: (r) => r.ph,
-                minY: 4.0,
-                maxY: 10.0,
-                safeMin: 6.5,
-                safeMax: 8.5,
-              ),
-              const SizedBox(height: 12),
+                _ChartCard(
+                  title: 'pH Level',
+                  unit: 'pH',
+                  color: const Color(0xFF059669),
+                  readings: readings,
+                  getValue: (r) => r.ph,
+                  minY: 4.0,
+                  maxY: 10.0,
+                  safeMin: 6.5,
+                  safeMax: 8.5,
+                ),
+                const SizedBox(height: 12),
 
-              _ChartCard(
-                title: 'Temperature',
-                unit: '°C',
-                color: const Color(0xFFD97706),
-                readings: readings,
-                getValue: (r) => r.temperature,
-                minY: 18.0,
-                maxY: 40.0,
-                safeMin: 24.0,
-                safeMax: 30.0,
-              ),
-              const SizedBox(height: 12),
+                _ChartCard(
+                  title: 'Temperature',
+                  unit: '°C',
+                  color: const Color(0xFFD97706),
+                  readings: readings,
+                  getValue: (r) => r.temperature,
+                  minY: 18.0,
+                  maxY: 40.0,
+                  safeMin: 24.0,
+                  safeMax: 30.0,
+                ),
+                const SizedBox(height: 12),
 
-              _ChartCard(
-                title: 'Turbidity',
-                unit: 'NTU',
-                color: const Color(0xFF0097A7),
-                readings: readings,
-                getValue: (r) => r.turbidity,
-                minY: 0.0,
-                maxY: 130.0,
-                safeMin: 1.0,
-                safeMax: 100.0,
-              ),
-              const SizedBox(height: 18),
+                _ChartCard(
+                  title: 'Turbidity',
+                  unit: 'NTU',
+                  color: const Color(0xFF0097A7),
+                  readings: readings,
+                  getValue: (r) => r.turbidity,
+                  minY: 0.0,
+                  maxY: 130.0,
+                  safeMin: 1.0,
+                  safeMax: 100.0,
+                ),
+                const SizedBox(height: 18),
 
-              Container(
-                decoration: AppTheme.cardDecoration(context),
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [
-                            AppTheme.lightPrimaryMid,
-                            AppTheme.lightAccent,
-                          ]),
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: const Icon(Icons.summarize_outlined,
-                            color: Colors.white, size: 18),
+                // AI summary block
+                Container(
+                  decoration: AppTheme.cardDecoration(context),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [
+                                Color(0xFF1565C0),
+                                Color(0xFF00B4CC),
+                              ]),
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                            child: const Icon(Icons.summarize_outlined,
+                                color: Colors.white, size: 18),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppTranslations.get('pond_health'),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                    color: Color(0xFF0D1F3C),
+                                  ),
+                                ),
+                                Text(
+                                  AppTranslations.get('ai_analysis'),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.refresh_rounded, size: 18),
+                            onPressed: _loadSummary,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
+                      const SizedBox(height: 12),
+                      _summaryLoading
+                          ? const Row(
+                              children: [
+                                SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                SizedBox(width: 8),
+                                Text('Generating...', style: TextStyle(fontSize: 13)),
+                              ],
+                            )
+                          : Text(
+                              _summary,
+                              style: const TextStyle(fontSize: 13, height: 1.6, color: Color(0xFF0D1F3C)),
+                            ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Historical log section
+                _buildHistoryLogs(context),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHistoryLogs(BuildContext context) {
+    final logs = [
+      _HistoryDayGroup(
+        day: "Today",
+        logs: [
+          _HistoryItem(time: "09:30 AM", ph: 7.2, temp: 26.5, turb: 35.0, status: "Normal", trend: Icons.trending_flat_rounded, trendColor: Colors.grey),
+          _HistoryItem(time: "07:00 AM", ph: 7.0, temp: 25.8, turb: 38.0, status: "Normal", trend: Icons.trending_flat_rounded, trendColor: Colors.grey),
+        ],
+      ),
+      _HistoryDayGroup(
+        day: "Yesterday",
+        logs: [
+          _HistoryItem(time: "06:00 PM", ph: 6.2, temp: 31.2, turb: 110.0, status: "Alert", trend: Icons.trending_up_rounded, trendColor: Colors.orange),
+          _HistoryItem(time: "12:00 PM", ph: 6.4, temp: 29.5, turb: 95.0, status: "Warning", trend: Icons.trending_up_rounded, trendColor: Colors.orange),
+          _HistoryItem(time: "08:00 AM", ph: 6.8, temp: 25.2, turb: 40.0, status: "Normal", trend: Icons.trending_down_rounded, trendColor: Colors.blue),
+        ],
+      ),
+      _HistoryDayGroup(
+        day: "2 days ago",
+        logs: [
+          _HistoryItem(time: "05:30 PM", ph: 7.5, temp: 27.2, turb: 45.0, status: "Normal", trend: Icons.trending_flat_rounded, trendColor: Colors.grey),
+          _HistoryItem(time: "09:00 AM", ph: 7.6, temp: 26.0, turb: 48.0, status: "Normal", trend: Icons.trending_flat_rounded, trendColor: Colors.grey),
+        ],
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Historical Logs",
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF0D1F3C),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...logs.map((group) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: AppTheme.cardDecoration(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  group.day.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1565C0),
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ...group.logs.map((item) {
+                  return Padding(
+                    padding: const EdgeInsets.only(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.between,
+                      children: [
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(AppTranslations.get('pond_health'),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14)),
-                            Text(AppTranslations.get('ai_analysis'),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall!
-                                      .color!,
-                                )),
+                            Text(
+                              item.time,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Color(0xFF0D1F3C),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "pH: ${item.ph}  |  Temp: ${item.temp}°C  |  Turbidity: ${item.turb} NTU",
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.refresh_rounded, size: 16),
-                        onPressed: _loadSummary,
-                      ),
-                    ]),
-                    const SizedBox(height: 10),
-                    _summaryLoading
-                        ? Row(children: [
-                            const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: item.status == "Normal"
+                                    ? const Color(0xFF059669).withOpacity(0.1)
+                                    : const Color(0xFFD97706).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                item.status,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: item.status == "Normal"
+                                      ? const Color(0xFF059669)
+                                      : const Color(0xFFD97706),
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 8),
-                            const Text('Generating...'),
-                          ])
-                        : Text(_summary,
-                            style: const TextStyle(
-                                fontSize: 13, height: 1.6)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
+                            Icon(item.trend, color: item.trendColor, size: 18),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
 }
+
+class _HistoryDayGroup {
+  final String day;
+  final List<_HistoryItem> logs;
+  _HistoryDayGroup({required this.day, required this.logs});
+}
+
+class _HistoryItem {
+  final String time;
+  final double ph;
+  final double temp;
+  final double turb;
+  final String status;
+  final IconData trend;
+  final Color trendColor;
+
+  _HistoryItem({
+    required this.time,
+    required this.ph,
+    required this.temp,
+    required this.turb,
+    required this.status,
+    required this.trend,
+    required this.trendColor,
+  });
 }
 
 class _ChartCard extends StatelessWidget {
@@ -258,6 +418,7 @@ class _ChartCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
+                  color: Color(0xFF0D1F3C),
                 ),
               ),
             ],
@@ -272,7 +433,7 @@ class _ChartCard extends StatelessWidget {
                       'No data yet',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Theme.of(context).textTheme.bodySmall?.color,
+                        color: Colors.grey.shade500,
                       ),
                     ),
                   ),
@@ -294,7 +455,7 @@ class _ChartCard extends StatelessWidget {
                   'Safe zone: ${safeMin.toStringAsFixed(1)} - ${safeMax.toStringAsFixed(1)} $unit',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Theme.of(context).textTheme.bodySmall?.color,
+                    color: Colors.grey.shade600,
                   ),
                 ),
               ),
@@ -310,13 +471,23 @@ class _ChartCard extends StatelessWidget {
     List<SensorData> sortedReadings,
   ) {
     final spots = <FlSpot>[];
-    for (var i = 0; i < sortedReadings.length; i++) {
-      spots.add(FlSpot(i.toDouble(), getValue(sortedReadings[i])));
+    if (sortedReadings.isEmpty) {
+      spots.add(const FlSpot(0, 0));
+    } else if (sortedReadings.length == 1) {
+      // Safe double-point fallback for single measurements to prevent FLChart curves from glitching
+      spots.add(FlSpot(0, getValue(sortedReadings[0])));
+      spots.add(FlSpot(1, getValue(sortedReadings[0])));
+    } else {
+      for (var i = 0; i < sortedReadings.length; i++) {
+        spots.add(FlSpot(i.toDouble(), getValue(sortedReadings[i])));
+      }
     }
+
+    final maxRange = sortedReadings.length > 1 ? (sortedReadings.length - 1).toDouble() : 1.0;
 
     return LineChartData(
       minX: 0,
-      maxX: sortedReadings.length > 1 ? (sortedReadings.length - 1).toDouble() : 1,
+      maxX: maxRange,
       minY: minY,
       maxY: maxY,
       clipData: const FlClipData.all(),
@@ -334,7 +505,7 @@ class _ChartCard extends StatelessWidget {
         drawVerticalLine: false,
         horizontalInterval: (maxY - minY) / 4,
         getDrawingHorizontalLine: (_) => FlLine(
-          color: Theme.of(context).dividerColor.withOpacity(0.12),
+          color: Theme.of(context).dividerColor.withOpacity(0.08),
           strokeWidth: 1,
         ),
       ),
@@ -349,9 +520,9 @@ class _ChartCard extends StatelessWidget {
             interval: (maxY - minY) / 4,
             getTitlesWidget: (value, meta) => Text(
               value.toStringAsFixed(0),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10,
-                color: Theme.of(context).textTheme.bodySmall?.color,
+                color: Colors.grey,
               ),
             ),
           ),
@@ -375,9 +546,9 @@ class _ChartCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
-                    color: Theme.of(context).textTheme.bodySmall?.color,
+                    color: Colors.grey,
                   ),
                 ),
               );
@@ -407,7 +578,7 @@ class _ChartCard extends StatelessWidget {
       lineBarsData: [
         LineChartBarData(
           spots: spots,
-          isCurved: true,
+          isCurved: sortedReadings.length > 1, // Only curve if multiple distinct spots
           color: color,
           barWidth: 3,
           isStrokeCapRound: true,

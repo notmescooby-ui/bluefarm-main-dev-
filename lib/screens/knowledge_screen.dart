@@ -340,11 +340,11 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   Widget build(BuildContext context) {
     final cats = _cats;
     return Column(children: [
-  const SizedBox(height: 16), // 👈 ADD THIS LINE (controls gap)
-      // ── Category tabs — top alignment fixed with consistent padding ────────
+      const SizedBox(height: 12),
+      // ── Category tabs ──
       Container(
-  height: 50,
-  margin: const EdgeInsets.only(top: 16), // 👈 main fix
+        height: 50,
+        margin: const EdgeInsets.only(top: 8),
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -358,31 +358,41 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
+                    horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: active
-                      ? AppTheme.lightAccent
-                      : Colors.transparent,
+                      ? const Color(0xFF1565C0)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: active
-                          ? AppTheme.lightAccent
-                          : AppTheme.lightAccent.withOpacity(0.3)),
+                    color: active
+                        ? const Color(0xFF1565C0)
+                        : Colors.grey.shade300,
+                  ),
+                  boxShadow: active
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF1565C0).withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          )
+                        ]
+                      : [],
                 ),
                 child: Row(children: [
                   Icon(icon,
                       size: 15,
                       color: active
                           ? Colors.white
-                          : AppTheme.lightAccent),
-                  const SizedBox(width: 5),
+                          : const Color(0xFF1565C0)),
+                  const SizedBox(width: 6),
                   Text(label,
                       style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.bold,
                           color: active
                               ? Colors.white
-                              : AppTheme.lightAccent)),
+                              : const Color(0xFF1565C0))),
                 ]),
               ),
             );
@@ -393,7 +403,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
       // ── Content list ──────────────────────────────────────────────────────
       Expanded(
         child: ListView.builder(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 100),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 110),
           itemCount: _content[_sel].length,
           itemBuilder: (_, i) =>
               _CardWidget(card: _content[_sel][i]),

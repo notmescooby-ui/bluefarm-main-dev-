@@ -169,20 +169,19 @@ class _MainShellState extends State<MainShell> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF0A1628).withOpacity(0.92)
-                            : Colors.white.withOpacity(0.88),
+                            ? Colors.black.withOpacity(0.25)
+                            : Colors.white.withOpacity(0.25),
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
-                          color: Colors.white.withOpacity(
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? 0.1
-                                  : 0.6),
+                          color: Colors.white.withOpacity(0.35),
+                          width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF1565C0).withOpacity(0.10),
+                            color: const Color(0xFF00B4CC).withOpacity(0.12),
                             blurRadius: 24,
-                            offset: const Offset(0, -3),
+                            spreadRadius: 2,
+                            offset: const Offset(0, 4),
                           )
                         ],
                       ),
@@ -372,7 +371,10 @@ class _DockItemWidgetState extends State<DockItemWidget> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.isActive ? AppTheme.lightAccent : Theme.of(context).textTheme.bodySmall?.color;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = widget.isActive
+        ? (isDark ? const Color(0xFF22D3EE) : const Color(0xFF1565C0))
+        : (isDark ? Colors.white.withOpacity(0.6) : const Color(0xFF0D1F3C).withOpacity(0.6));
 
     return GestureDetector(
       onTap: _handleTap,

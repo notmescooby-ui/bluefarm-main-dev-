@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:bluefarm/services/supabase_compatibility.dart';
-import '../theme/legacy_theme.dart';
-import '../widgets/animated_bg.dart';
-import '../widgets/glass_card.dart';
+import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
 import 'otp_screen.dart';
 
@@ -25,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen>
     super.initState();
     _entryCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1000),
     )..forward();
   }
 
@@ -36,17 +34,17 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  Animation<double> _fadAt(double start, double end) {
+  Animation<double> _fadeAt(double start, double end) {
     return Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _entryCtrl,
-        curve: Interval(start, end, curve: Curves.easeOutCubic),
+        curve: Interval(start, end, curve: Curves.easeOut),
       ),
     );
   }
 
   Animation<Offset> _slideAt(double start, double end) {
-    return Tween(begin: const Offset(0, 0.25), end: Offset.zero).animate(
+    return Tween(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(
         parent: _entryCtrl,
         curve: Interval(start, end, curve: Curves.easeOutCubic),
@@ -110,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen>
             errorText.contains('temporarily blocked by twilio') ||
                     errorText.contains('sms_send_failed') ||
                     errorText.contains('fraudulent')
-                ? 'OTP could not be sent to this number right now because the SMS provider has temporarily blocked it. Please try a different phone number or use Google Sign-In.'
+                ? 'OTP could not be sent. Please use Google Sign-In or try again later.'
                 : 'Failed to send OTP: ${e.message}';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(friendlyMessage)),
@@ -129,234 +127,291 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedBackground(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(28),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Logo
-                  FadeTransition(
-                    opacity: _fadAt(0.0, 0.4),
-                    child: SlideTransition(
-                      position: _slideAt(0.0, 0.4),
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.neonBlue.withValues(alpha: 0.25),
-                              blurRadius: 40,
-                              spreadRadius: 5,
+      body: Container(
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: AppTheme.oceanGradient,
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Enlarged Logo
+                    FadeTransition(
+                      opacity: _fadeAt(0.0, 0.4),
+                      child: SlideTransition(
+                        position: _slideAt(0.0, 0.4),
+                        child: Container(
+                          width: 130,
+                          height: 130,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.12),
+                                blurRadius: 40,
+                                spreadRadius: 6,
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              "lib/assets/logo.png",
+                              fit: BoxFit.cover,
                             ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Image.asset("lib/assets/logo.png",
-                              fit: BoxFit.cover),
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
-                  FadeTransition(
-                    opacity: _fadAt(0.1, 0.5),
-                    child: ShaderMask(
-                      shaderCallback: (b) =>
-                          AppTheme.primaryGradient.createShader(b),
+                    FadeTransition(
+                      opacity: _fadeAt(0.1, 0.5),
                       child: const Text(
                         "BlueFarm",
                         style: TextStyle(
-                          fontSize: 36,
+                          fontSize: 38,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          letterSpacing: 1.5,
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 6),
+                    const SizedBox(height: 6),
 
-                  FadeTransition(
-                    opacity: _fadAt(0.15, 0.55),
-                    child: const Text(
-                      "Your aquaculture companion",
-                      style: TextStyle(
-                        color: Color(0xFF3A5A7E),
-                        fontSize: 14,
+                    FadeTransition(
+                      opacity: _fadeAt(0.15, 0.55),
+                      child: Text(
+                        "Your aquaculture companion",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: 14,
+                        ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 40),
+                    const SizedBox(height: 36),
 
-                  // Google button
-                  FadeTransition(
-                    opacity: _fadAt(0.25, 0.65),
-                    child: SlideTransition(
-                      position: _slideAt(0.25, 0.65),
-                      child: BounceButton(
-                        onPressed: _loading ? null : signInWithGoogle,
-                        child: GlassCard(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 16, horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 28,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(6),
+                    // Google button
+                    FadeTransition(
+                      opacity: _fadeAt(0.25, 0.65),
+                      child: SlideTransition(
+                        position: _slideAt(0.25, 0.65),
+                        child: BounceButton(
+                          onPressed: _loading ? null : signInWithGoogle,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.06),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 4),
                                 ),
-                                child: const Center(
-                                  child: Text("G",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF4285F4),
-                                      )),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.network(
+                                  "https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png",
+                                  width: 20,
+                                  height: 20,
+                                  errorBuilder: (_, __, ___) => const Text(
+                                    "G",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF4285F4),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 14),
-                              const Text(
-                                "Continue with Google",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF0D1F3C),
+                                const SizedBox(width: 14),
+                                const Text(
+                                  "Continue with Google",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF0D1F3C),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 28),
+                    const SizedBox(height: 20),
 
-                  // Divider
-                  FadeTransition(
-                    opacity: _fadAt(0.35, 0.7),
-                    child: const Row(
-                      children: [
-                        Expanded(
+                    // Divider
+                    FadeTransition(
+                      opacity: _fadeAt(0.35, 0.7),
+                      child: Row(
+                        children: [
+                          Expanded(
                             child: Divider(
-                                color: AppTheme.glassBorder, thickness: 1)),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text("OR",
+                              color: Colors.white.withOpacity(0.3),
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              "OR",
                               style: TextStyle(
-                                color: Color(0xFF3A5A7E),
+                                color: Colors.white.withOpacity(0.8),
                                 fontSize: 12,
                                 letterSpacing: 2,
-                              )),
-                        ),
-                        Expanded(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Expanded(
                             child: Divider(
-                                color: AppTheme.glassBorder, thickness: 1)),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // Phone input
-                  FadeTransition(
-                    opacity: _fadAt(0.4, 0.8),
-                    child: SlideTransition(
-                      position: _slideAt(0.4, 0.8),
-                      child: TextField(
-                        controller: phoneController,
-                        keyboardType: TextInputType.phone,
-                        style: const TextStyle(
-                          color: Color(0xFF0D1F3C),
-                          fontSize: 16,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "+91 XXXXXXXXXX",
-                          prefixIcon: Icon(Icons.phone_rounded,
-                              color: AppTheme.neonCyan.withValues(alpha: 0.6)),
-                        ),
+                              color: Colors.white.withOpacity(0.3),
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 22),
+                    const SizedBox(height: 20),
 
-                  // Phone button
-                  FadeTransition(
-                    opacity: _fadAt(0.5, 0.9),
-                    child: SlideTransition(
-                      position: _slideAt(0.5, 0.9),
-                      child: BounceButton(
-                        onPressed: _loading ? null : sendOtp,
+                    // Phone input card
+                    FadeTransition(
+                      opacity: _fadeAt(0.4, 0.8),
+                      child: SlideTransition(
+                        position: _slideAt(0.4, 0.8),
                         child: Container(
-                          width: double.infinity,
-                          height: 56,
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            gradient: AppTheme.primaryGradient,
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    AppTheme.neonBlue.withValues(alpha: 0.35),
-                                blurRadius: 18,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
+                            color: Colors.white.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                              width: 1.5,
+                            ),
                           ),
-                          child: Center(
-                            child: _loading
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                  )
-                                : const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.sms_rounded,
-                                          color: Color(0xFF0F172A), size: 20),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        "Continue with Phone",
-                                        style: TextStyle(
-                                          color: Color(0xFF0F172A),
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "PHONE NUMBER",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white.withOpacity(0.9),
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: phoneController,
+                                keyboardType: TextInputType.phone,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: "+91 XXXXXXXXXX",
+                                  hintStyle: TextStyle(
+                                    color: Colors.white.withOpacity(0.55),
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.phone_android_rounded,
+                                    color: Colors.white70,
+                                    size: 20,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.08),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              BounceButton(
+                                onPressed: _loading ? null : sendOtp,
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.06),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
                                       ),
                                     ],
                                   ),
+                                  child: Center(
+                                    child: _loading
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1565C0)),
+                                            ),
+                                          )
+                                        : const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.sms_rounded,
+                                                color: Color(0xFF1565C0),
+                                                size: 20,
+                                              ),
+                                              SizedBox(width: 10),
+                                              Text(
+                                                "Continue with Phone",
+                                                style: TextStyle(
+                                                  color: Color(0xFF1565C0),
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
-                  FadeTransition(
-                    opacity: _fadAt(0.6, 1.0),
-                    child: const Text(
-                      "First time here? Sign up now",
-                      style: TextStyle(color: Color(0xFF3A5A7E)),
+                    FadeTransition(
+                      opacity: _fadeAt(0.6, 1.0),
+                      child: Text(
+                        "First time here? Sign up now",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

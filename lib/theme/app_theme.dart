@@ -30,6 +30,28 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  // WATER ACCENT GRADIENTS (Fisflow styles)
+  static const LinearGradient oceanGradient = LinearGradient(
+    colors: [
+      Color(0xFF57C7D4),
+      Color(0xFF48B8C4),
+      Color(0xFF3AA0B8),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static BoxDecoration glassCardDecoration({double radius = 24, Color? color}) {
+    return BoxDecoration(
+      color: color ?? Colors.white.withOpacity(0.12),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: Colors.white.withOpacity(0.25),
+        width: 1.5,
+      ),
+    );
+  }
+
   // TEXT THEME BUILDER (DM Sans)
   static TextTheme _buildTextTheme(Color primary, Color muted) {
     return GoogleFonts.dmSansTextTheme().copyWith(

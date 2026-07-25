@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bluefarm/services/supabase_compatibility.dart';
 
-import '../theme/legacy_theme.dart';
-import '../widgets/animated_bg.dart';
+import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
 import 'buyer_shell.dart';
 import 'farmer_info_screen.dart';
@@ -83,7 +82,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final isAuthenticated = Supabase.instance.client.auth.currentUser != null;
 
     return Scaffold(
-      body: AnimatedBackground(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.oceanGradient,
+        ),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -93,13 +95,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 child: Column(
                   children: [
                     Container(
-                      width: 96,
-                      height: 96,
+                      width: 140,
+                      height: 140,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.neonBlue.withValues(alpha: 0.25),
+                            color: Colors.black.withOpacity(0.15),
                             blurRadius: 36,
                             spreadRadius: 4,
                           ),
@@ -112,13 +114,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 28),
                     const Text(
                       'Choose Your Role',
                       style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
+                        color: Colors.white,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -127,9 +129,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       isAuthenticated
                           ? 'You are signed in. Choose how you want to continue right now.'
                           : 'Choose whether you want to use BlueFarm as a farmer or as a buyer.',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.textSecondary,
+                        color: Colors.white.withOpacity(0.85),
                         height: 1.5,
                       ),
                       textAlign: TextAlign.center,
@@ -167,7 +169,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     ),
                     if (_loading) ...[
                       const SizedBox(height: 24),
-                      const CircularProgressIndicator(strokeWidth: 2.5),
+                      const CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
                     ],
                   ],
                 ),
@@ -235,7 +240,7 @@ class _RoleCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+                      color: Color(0xFF0D1F3C),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -243,7 +248,7 @@ class _RoleCard extends StatelessWidget {
                     subtitle,
                     style: const TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textSecondary,
+                      color: Color(0xFF5A789E),
                       height: 1.5,
                     ),
                   ),
@@ -254,7 +259,7 @@ class _RoleCard extends StatelessWidget {
             const Icon(
               Icons.arrow_forward_ios_rounded,
               size: 18,
-              color: AppTheme.textSecondary,
+              color: Color(0xFF5A789E),
             ),
           ],
         ),
