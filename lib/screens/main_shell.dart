@@ -6,12 +6,14 @@ import '../providers/app_provider.dart';
 import '../services/auth_redirect_service.dart';
 import '../theme/app_theme.dart';
 import '../localization/app_translations.dart';
+import '../services/supabase_compatibility.dart';
 import 'home_screen.dart';
 import 'knowledge_screen.dart';
 import 'insights_screen.dart';
 import 'harvest_screen.dart';
 import 'camera_screen.dart';
 import 'hardware_screen.dart';
+import 'device_connect_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -48,216 +50,610 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isHome = _currentIndex == 0;
+    final gradient = isHome ? AppTheme.homeScreenGradient : AppTheme.otherScreensGradient;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          IndexedStack(
-            index: _currentIndex,
-            children: [
-              HomeScreen(),
-              Padding(
-                padding: const EdgeInsets.only(top: 68),
-                child: KnowledgeScreen(),
-              ),
-              InsightsScreen(),
-              HarvestScreen(),
-              const CameraScreen(),
-            ],
-          ),
-
-          // ── Ultra-thin white header ────────────────────────────────────────
-          Positioned(
-            top: 0, left: 0, right: 0,
-            child: Consumer<AppProvider>(
-              builder: (context, provider, _) => Container(
-                color: Colors.white,
-                child: SafeArea(
-                  bottom: false,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => setState(() => _sidebarOpen = true),
-                          child: Container(
-                            width: 30, height: 30,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1565C0).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.person_outline,
-                                color: Color(0xFF1565C0), size: 16),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                provider.userProfile['full_name'] as String? ??
-                                    provider.userProfile['farm_name'] as String? ?? 'BlueFarm',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0D1F3C),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                              Text(
-                                _shortLocation(
-                                  provider.userProfile['region'] ??
-                                      provider.userProfile['location'],
-                                ),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey.shade500,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const LiveBadgeWidget(),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => setState(() => _sidebarOpen = true),
-                          child: Container(
-                            width: 30, height: 30,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1565C0).withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.settings_outlined,
-                                color: Color(0xFF1565C0), size: 16),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // ── Dock — 5 tabs ──────────────────────────────────────────────────
-          Positioned(
-            bottom: 0, left: 0, right: 0,
-            child: Padding(
-              padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).padding.bottom + 10),
-              child: Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.black.withOpacity(0.25)
-                            : Colors.white.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.35),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF00B4CC).withOpacity(0.12),
-                            blurRadius: 24,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 9),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          DockItemWidget(
-                            index: 0,
-                            icon: Icons.home_outlined,
-                            label: AppTranslations.get('home'),
-                            isActive: _currentIndex == 0,
-                            onTap: () => setState(() => _currentIndex = 0),
-                          ),
-                          DockItemWidget(
-                            index: 1,
-                            icon: Icons.menu_book_outlined,
-                            label: AppTranslations.get('learn'),
-                            isActive: _currentIndex == 1,
-                            onTap: () => setState(() => _currentIndex = 1),
-                          ),
-                          DockItemWidget(
-                            index: 2,
-                            icon: Icons.insights_outlined,
-                            label: AppTranslations.get('insights'),
-                            isActive: _currentIndex == 2,
-                            onTap: () => setState(() => _currentIndex = 2),
-                          ),
-                          DockItemWidget(
-                            index: 3,
-                            icon: Icons.storefront_outlined,
-                            label: AppTranslations.get('harvest'),
-                            isActive: _currentIndex == 3,
-                            onTap: () => setState(() => _currentIndex = 3),
-                          ),
-                          DockItemWidget(
-                            index: 4,
-                            icon: Icons.settings_outlined,
-                            label: 'Settings',
-                            isActive: _currentIndex == 4,
-                            onTap: () => setState(() => _sidebarOpen = true),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // ── Sidebar ────────────────────────────────────────────────────────
-          if (_sidebarOpen)
-            Stack(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: gradient,
+        ),
+        child: Stack(
+          children: [
+            IndexedStack(
+              index: _currentIndex,
               children: [
-                GestureDetector(
-                  onTap: () => setState(() => _sidebarOpen = false),
-                  child: Container(
-                    color: Colors.black.withOpacity(0.42),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                      child: Container(color: Colors.transparent),
-                    ),
-                  ),
+                HomeScreen(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 68),
+                  child: KnowledgeScreen(),
                 ),
-                Positioned(
-                  left: 0, top: 0, bottom: 0, width: 305,
-                  child: SidebarWidget(
-                      onClose: () => setState(() => _sidebarOpen = false)),
-                ),
+                InsightsScreen(),
+                HarvestScreen(),
+                const CameraScreen(),
               ],
             ),
-        ],
+
+            // ── Ultra-thin white header (hidden on Dashboard/HomeScreen) ──────────────────
+            if (!isHome)
+              Positioned(
+                top: 0, left: 0, right: 0,
+                child: Consumer<AppProvider>(
+                  builder: (context, provider, _) => Container(
+                    color: Colors.white,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => setState(() => _sidebarOpen = true),
+                              child: Container(
+                                width: 30, height: 30,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1565C0).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.person_outline,
+                                    color: Color(0xFF1565C0), size: 16),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    provider.userProfile['full_name'] as String? ??
+                                        provider.userProfile['farm_name'] as String? ?? 'BlueFarm',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF0D1F3C),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    _shortLocation(
+                                      provider.userProfile['region'] ??
+                                          provider.userProfile['location'],
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey.shade500,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const LiveBadgeWidget(),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => setState(() => _sidebarOpen = true),
+                              child: Container(
+                                width: 30, height: 30,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1565C0).withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.settings_outlined,
+                                    color: Color(0xFF1565C0), size: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            // ── Floating Glassmorphic Bottom Navigation Bar (Fisflow Style) ──────────────────
+            Positioned(
+              bottom: 16 + MediaQuery.of(context).padding.bottom,
+              left: 16,
+              right: 16,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(40),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildNavItem(
+                              icon: Icons.home_outlined,
+                              label: 'Dashboard',
+                              isActive: _currentIndex == 0,
+                              onTap: () => setState(() => _currentIndex = 0),
+                            ),
+                            _buildNavItem(
+                              icon: Icons.insights_outlined,
+                              label: 'Insights',
+                              isActive: _currentIndex == 2,
+                              onTap: () => setState(() => _currentIndex = 2),
+                            ),
+                            _buildCenterAddButton(),
+                            _buildNavItem(
+                              icon: Icons.storefront_outlined,
+                              label: 'Market',
+                              isActive: _currentIndex == 3,
+                              onTap: () => setState(() => _currentIndex = 3),
+                            ),
+                            _buildNavItem(
+                              icon: Icons.settings_outlined,
+                              label: 'Settings',
+                              isActive: _sidebarOpen,
+                              onTap: () => setState(() => _sidebarOpen = true),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Sidebar ────────────────────────────────────────────────────────
+            if (_sidebarOpen)
+              Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _sidebarOpen = false),
+                    child: Container(
+                      color: Colors.black.withOpacity(0.42),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(color: Colors.transparent),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 0, top: 0, bottom: 0, width: 305,
+                    child: SidebarWidget(
+                        onClose: () => setState(() => _sidebarOpen = false)),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    final color = isActive ? Colors.white : Colors.white.withOpacity(0.6);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white.withOpacity(0.18) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCenterAddButton() {
+    return GestureDetector(
+      onTap: _showAddActionSheet,
+      child: Transform.translate(
+        offset: const Offset(0, -18),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF22D3EE).withOpacity(0.4),
+                    blurRadius: 16,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF22D3EE), Color(0xFF2563EB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                border: Border.all(
+                  color: const Color(0xFF002B5B),
+                  width: 4,
+                ),
+              ),
+              child: const Icon(
+                Icons.add_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddActionSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF0A1628).withOpacity(0.9),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Quick Actions",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Add data manually or connect options",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  _buildActionOption(
+                    icon: Icons.edit_note_rounded,
+                    title: "Manual Sensor Reading",
+                    subtitle: "Manually input current pH, Temp, Turbidity",
+                    color: const Color(0xFF22D3EE),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showManualEntryDialog();
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildActionOption(
+                    icon: Icons.wifi_find_rounded,
+                    title: "Connect AquaBot Device",
+                    subtitle: "Pair and setup real-time telemetry",
+                    color: const Color(0xFF2563EB),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const DeviceConnectScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildActionOption(
+                    icon: Icons.camera_alt_outlined,
+                    title: "Analyze via Camera",
+                    subtitle: "Perform AI diagnostics via photo scan",
+                    color: const Color(0xFF10B981),
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() => _currentIndex = 4);
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.4), size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showManualEntryDialog() {
+    final phCtrl = TextEditingController(text: "7.2");
+    final tempCtrl = TextEditingController(text: "28.5");
+    final turbCtrl = TextEditingController(text: "2.5");
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D1F3C).withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.15),
+                    width: 1,
+                  ),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Add Sensor Reading",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Enter current water measurements manually.",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildDialogField("pH Level (e.g. 7.2)", phCtrl, TextInputType.number),
+                    const SizedBox(height: 14),
+                    _buildDialogField("Temperature (°C) (e.g. 28.5)", tempCtrl, TextInputType.number),
+                    const SizedBox(height: 14),
+                    _buildDialogField("Turbidity (NTU) (e.g. 2.5)", turbCtrl, TextInputType.number),
+                    const SizedBox(height: 28),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF22D3EE),
+                            foregroundColor: const Color(0xFF0D1F3C),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          ),
+                          onPressed: () async {
+                            final phVal = double.tryParse(phCtrl.text) ?? 7.2;
+                            final tempVal = double.tryParse(tempCtrl.text) ?? 28.5;
+                            final turbVal = double.tryParse(turbCtrl.text) ?? 2.5;
+
+                            try {
+                              await Supabase.instance.client.from('sensor_readings').insert({
+                                'created_at': DateTime.now().toIso8601String(),
+                                'ph': phVal,
+                                'temperature': tempVal,
+                                'turbidity': turbVal,
+                                'device_id': 'manual-entry',
+                              });
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Reading saved successfully!"),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Failed to save reading: $e"),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text(
+                            "Save Reading",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogField(String label, TextEditingController ctrl, TextInputType type) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            color: Colors.white.withOpacity(0.5),
+            letterSpacing: 1.1,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: ctrl,
+          keyboardType: type,
+          style: const TextStyle(color: Colors.white, fontSize: 14),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white.withOpacity(0.06),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF22D3EE)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -613,38 +1009,72 @@ class _SidebarWidgetState extends State<SidebarWidget> {
     await AuthRedirectService.signOutToRoleChooser(context);
   }
 
-  Widget _menuRow({required IconData icon, required String label, required String subtitle, required VoidCallback onTap}) {
+  Widget _menuRow({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color iconColor,
+    required Color iconBgColor,
+    required VoidCallback onTap,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 9),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          padding: const EdgeInsets.all(13),
-          decoration: AppTheme.cardDecoration(context),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppTheme.lightAccent.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(11),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 20),
                 ),
-                child: Icon(icon, color: AppTheme.lightAccent, size: 20),
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                    Text(subtitle, style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color)),
-                  ],
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          color: Color(0xFF0F2B5B),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right, size: 16, color: Theme.of(context).textTheme.bodySmall?.color),
-            ],
+                const Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey),
+              ],
+            ),
           ),
         ),
       ),
@@ -693,96 +1123,144 @@ class _SidebarWidgetState extends State<SidebarWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFFF0F9FF),
+            Color(0xFFE0F2FE),
+            Color(0xFFBAE6FD),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
       child: SafeArea(
+        top: false,
         child: Column(
           children: [
-            // Header
+            // Mockup Styled Header
             Container(
-              height: 140,
-              decoration: const BoxDecoration(gradient: AppTheme.headerGradient),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -25,
-                    right: -25,
-                    child: Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.07)),
-                    ),
+              height: 210,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(
+                    "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600&auto=format&fit=crop",
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(17.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                         Container(
-                          width: 54,
-                          height: 54,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(colors: [AppTheme.lightAccent, Color(0xFF6D28D9)]),
-                            border: Border.all(color: Colors.white.withOpacity(0.32), width: 3),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Container(
+                color: const Color(0xFF0F2B5B).withOpacity(0.65),
+                child: Stack(
+                  children: [
+                    // Profile Info Box
+                    Positioned(
+                      bottom: 24,
+                      left: 18,
+                      right: 18,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF22D3EE), Color(0xFF2563EB), Color(0xFF7C3AED)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(3),
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFF1565C0),
+                              ),
+                              child: const Icon(Icons.person_outline, color: Colors.white, size: 30),
+                            ),
                           ),
-                          child: const Icon(Icons.person_outline, color: Colors.white, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 34),
+                          const SizedBox(width: 14),
+                          Expanded(
                             child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Consumer<AppProvider>(
-                              builder: (context, p, _) => Text(
-                                p.userProfile['full_name'] as String? ?? p.userProfile['name'] as String? ?? '',
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                            Consumer<AppProvider>(
-                              builder: (context, p, _) => Text(
-                                '${p.userProfile['role'] as String? ?? 'Farmer'}  ·  ${p.userProfile['region'] as String? ?? p.userProfile['location'] as String? ?? 'Navi Mumbai'}',
-                                style: const TextStyle(fontSize: 10, color: Colors.white70),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppTheme.lightSuccess.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: AppTheme.lightSuccess),
-                              ),
-                              child: const Text('Verified', style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w800)),
-                            ),
-                          ],
-                        ),
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Consumer<AppProvider>(
+                                  builder: (context, p, _) => Text(
+                                    p.userProfile['full_name'] as String? ?? p.userProfile['name'] as String? ?? 'prasuna',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Consumer<AppProvider>(
+                                  builder: (context, p, _) => Text(
+                                    '${p.userProfile['role'] as String? ?? 'farmer'} · ${_shortLocation(p.userProfile['region'] ?? p.userProfile['location'])}, Maharashtra',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF059669).withOpacity(0.24),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFF059669), width: 1),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.check_rounded, color: Color(0xFF34D399), size: 10),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Verified',
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    top: 13,
-                    right: 13,
-                    child: GestureDetector(
-                      onTap: widget.onClose,
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.17)),
-                        child: const Icon(Icons.close, color: Colors.white, size: 15),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      top: 40,
+                      right: 14,
+                      child: GestureDetector(
+                        onTap: widget.onClose,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.2),
+                          ),
+                          child: const Icon(Icons.close, color: Colors.white, size: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -793,40 +1271,62 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                       child: Column(
                         children: [
                           _menuRow(
-                            icon: Icons.person_outline,
+                            icon: Icons.person_outline_rounded,
                             label: 'View and Edit Profile',
                             subtitle: 'Personal info, farm details',
+                            iconColor: const Color(0xFF0284C7),
+                            iconBgColor: const Color(0xFFE0F2FE),
                             onTap: () => setState(() => _view = 'profile'),
                           ),
                           _menuRow(
-                            icon: Icons.notifications_outlined,
+                            icon: Icons.notifications_none_rounded,
                             label: 'Preferences',
                             subtitle: 'Notifications and alerts',
+                            iconColor: const Color(0xFF0284C7),
+                            iconBgColor: const Color(0xFFE0F2FE),
                             onTap: () => setState(() => _view = 'prefs'),
                           ),
                           Container(
-                            padding: const EdgeInsets.all(13),
-                            decoration: AppTheme.cardDecoration(context),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Row(
                                   children: [
                                     Container(
-                                      width: 38,
-                                      height: 38,
+                                      width: 40,
+                                      height: 40,
                                       decoration: BoxDecoration(
-                                        color: Colors.orange.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(11),
+                                        color: const Color(0xFFFEF3C7),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: const Icon(Icons.light_mode_outlined, color: Colors.orange, size: 20),
+                                      child: const Icon(Icons.wb_sunny_rounded, color: Color(0xFFD97706), size: 20),
                                     ),
-                                    const SizedBox(width: 11),
-                                    Column(
+                                    const SizedBox(width: 14),
+                                    const Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Text('Theme', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                                        Text('Light / Dark Mode', style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color)),
+                                        Text(
+                                          'Theme',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                            color: Color(0xFF0F2B5B),
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text('Light / Dark Mode', style: TextStyle(fontSize: 11, color: Colors.grey)),
                                       ],
                                     ),
                                   ],
@@ -834,24 +1334,36 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 Switch(
                                   value: context.watch<AppProvider>().isDarkMode,
                                   onChanged: (_) => context.read<AppProvider>().toggleDarkMode(),
-                                  activeThumbColor: AppTheme.lightAccent,
+                                  activeColor: const Color(0xFF0F2B5B),
+                                  activeTrackColor: const Color(0xFFBAE6FD),
+                                  inactiveThumbColor: Colors.grey.shade400,
+                                  inactiveTrackColor: Colors.grey.shade200,
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 24),
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 45),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                              minimumSize: const Size(double.infinity, 48),
+                              side: const BorderSide(color: Color(0xFF2563EB), width: 1.2),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              backgroundColor: Colors.white.withOpacity(0.2),
+                              foregroundColor: const Color(0xFF2563EB),
                             ),
                             onPressed: _signOut,
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.logout, size: 18),
+                                Icon(Icons.logout_rounded, size: 18),
                                 SizedBox(width: 8),
-                                Text('Sign Out'),
+                                Text(
+                                  'Sign Out',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ],
                             ),
                           ),

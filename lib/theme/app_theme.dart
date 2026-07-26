@@ -30,6 +30,34 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  // FISFLOW SCREEN GRADIENTS
+  static const LinearGradient homeScreenGradient = LinearGradient(
+    colors: [
+      Color(0xFFA5D8FF),
+      Color(0xFF7BBEE8),
+      Color(0xFF5DA7DB),
+      Color(0xFF1E5A8F),
+      Color(0xFF002B5B),
+      Color(0xFF001B3D),
+    ],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient otherScreensGradient = LinearGradient(
+    colors: [
+      Color(0xFFFFFFFF),
+      Color(0xFFF7F9FA),
+      Color(0xFFEBF1F5),
+      Color(0xFFCFE2F0),
+      Color(0xFF4DA3E0),
+      Color(0xFF1B5E99),
+      Color(0xFF0C3C63),
+    ],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
   // WATER ACCENT GRADIENTS (Fisflow styles)
   static const LinearGradient oceanGradient = LinearGradient(
     colors: [

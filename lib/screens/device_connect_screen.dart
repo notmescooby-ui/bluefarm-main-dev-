@@ -465,7 +465,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
             color: Color(0xFF059669),
             boxShadow: [
               BoxShadow(
-                color: Colors.black25,
+                color: const Color(0x40000000),
                 blurRadius: 20,
               ),
             ],

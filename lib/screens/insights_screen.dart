@@ -271,30 +271,33 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 const SizedBox(height: 10),
                 ...group.logs.map((item) {
                   return Padding(
-                    padding: const EdgeInsets.only(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.between,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.time,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: Color(0xFF0D1F3C),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.time,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: Color(0xFF0D1F3C),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              "pH: ${item.ph}  |  Temp: ${item.temp}°C  |  Turbidity: ${item.turb} NTU",
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade600,
+                              const SizedBox(height: 2),
+                              Text(
+                                "pH: ${item.ph}  |  Temp: ${item.temp}°C  |  Turbidity: ${item.turb} NTU",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         Row(
                           children: [

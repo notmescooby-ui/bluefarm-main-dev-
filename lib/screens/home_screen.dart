@@ -6,6 +6,7 @@ import '../models/sensor_data.dart';
 import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
 import '../localization/app_translations.dart';
+import '../widgets/bounce_button.dart';
 import 'device_connect_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -32,60 +33,101 @@ class _HomeScreenState extends State<HomeScreen> {
         final isConnected = provider.isDeviceConnected;
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 100, left: 14, right: 14, bottom: 120),
+          padding: const EdgeInsets.only(top: 80, left: 14, right: 14, bottom: 120),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Welcome greeting header section
               Row(
-                mainAxisAlignment: MainAxisAlignment.between,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Namaste, ${provider.userProfile['full_name'] ?? provider.userProfile['name'] ?? 'Farmer'}",
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0D1F3C),
+                        "AQUACULTURE · LIVE",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white.withOpacity(0.8),
+                          letterSpacing: 2.8,
                         ),
                       ),
-                      Text(
-                        "Here is your farm status overview",
+                      const SizedBox(height: 4),
+                      const Text(
+                        "BlueFarm",
                         style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Playfair Display',
+                          fontStyle: FontStyle.italic,
+                          fontSize: 34,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        "Updated ${math.max(1, DateTime.now().hour % 12)}:${DateTime.now().minute.toString().padLeft(2, '0')}:${DateTime.now().second.toString().padLeft(2, '0')} ${DateTime.now().hour >= 12 ? 'PM' : 'AM'}",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Namaste, ${provider.userProfile['full_name'] ?? provider.userProfile['name'] ?? 'Farmer'}",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ],
                   ),
-                  if (isConnected)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF059669).withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
                       ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.wifi_rounded, color: Color(0xFF059669), size: 14),
-                          SizedBox(width: 4),
-                          Text(
-                            "CONNECTED",
-                            style: TextStyle(
-                              color: Color(0xFF059669),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                        ),
+                      ],
                     ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isConnected ? const Color(0xFF34D399) : const Color(0xFFFBBF24),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isConnected ? 'LIVE' : 'OFFLINE',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               // Category Filter Chips
               SingleChildScrollView(
@@ -102,15 +144,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           duration: const Duration(milliseconds: 250),
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                           decoration: BoxDecoration(
-                            color: active ? const Color(0xFF1565C0) : Colors.white,
+                            color: active ? Colors.white : Colors.white.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: active ? const Color(0xFF1565C0) : Colors.grey.shade300,
+                              color: active ? Colors.white : Colors.white.withOpacity(0.3),
                             ),
                             boxShadow: active
                                 ? [
                                     BoxShadow(
-                                      color: const Color(0xFF1565C0).withOpacity(0.2),
+                                      color: Colors.white.withOpacity(0.2),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     )
@@ -122,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: active ? Colors.white : const Color(0xFF0D1F3C),
+                              color: active ? const Color(0xFF0D1F3C) : Colors.white,
                             ),
                           ),
                         ),
@@ -134,9 +176,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 24),
 
-              Text(
-                AppTranslations.get('live_params'),
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF0D1F3C)),
+              const Text(
+                "Live Parameters",
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white),
               ),
               const SizedBox(height: 12),
 
@@ -190,9 +232,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
 
               // Smart Recommendations
-              Text(
-                AppTranslations.get('smart_rec'),
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF0D1F3C)),
+              const Text(
+                "Smart Recommendations",
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white),
               ),
               const SizedBox(height: 12),
               _SmartRecommendation(reading: r, isConnected: isConnected),
