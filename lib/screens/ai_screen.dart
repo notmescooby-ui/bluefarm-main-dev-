@@ -54,7 +54,7 @@ class _AIScreenState extends State<AIScreen> {
           // Banner
           Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [AppTheme.lightPrimaryMid, AppTheme.lightAccent]),
+              gradient: const LinearGradient(colors: [AppColors.brandSecondary, AppColors.brandPrimary]),
               borderRadius: BorderRadius.circular(19),
             ),
             padding: const EdgeInsets.all(17),
@@ -103,8 +103,8 @@ class _AIScreenState extends State<AIScreen> {
                     fillColor: Theme.of(context).cardColor,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: BorderSide.none),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: BorderSide(color: AppTheme.lightAccent.withOpacity(0.1))),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: const BorderSide(color: AppTheme.lightAccent)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: BorderSide(color: AppColors.brandPrimary.withOpacity(0.1))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: const BorderSide(color: AppColors.brandPrimary)),
                   ),
                 ),
               ),
@@ -115,7 +115,7 @@ class _AIScreenState extends State<AIScreen> {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [AppTheme.lightPrimaryMid, AppTheme.lightAccent]),
+                    gradient: const LinearGradient(colors: [AppColors.brandSecondary, AppColors.brandPrimary]),
                     borderRadius: BorderRadius.circular(13),
                   ),
                   child: Center(
@@ -133,7 +133,7 @@ class _AIScreenState extends State<AIScreen> {
           if (_reply.isNotEmpty)
             Container(
               decoration: AppTheme.cardDecoration(context).copyWith(
-                color: isDark ? AppTheme.lightAccent.withOpacity(0.05) : AppTheme.lightAccent.withOpacity(0.05),
+                color: isDark ? AppColors.brandPrimary.withOpacity(0.05) : AppColors.brandPrimary.withOpacity(0.05),
               ),
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -142,8 +142,8 @@ class _AIScreenState extends State<AIScreen> {
                   Container(
                     width: 30,
                     height: 30,
-                    decoration: BoxDecoration(color: AppTheme.lightAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.psychology_outlined, color: AppTheme.lightAccent, size: 16),
+                    decoration: BoxDecoration(color: AppColors.brandPrimary.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                    child: const Icon(Icons.psychology_outlined, color: AppColors.brandPrimary, size: 16),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -182,7 +182,7 @@ class _AIScreenState extends State<AIScreen> {
                         _controller.text = q;
                         _askClaude();
                       },
-                      child: Text(q, style: const TextStyle(fontSize: 11, color: AppTheme.lightAccent)),
+                      child: Text(q, style: const TextStyle(fontSize: 11, color: AppColors.brandPrimary)),
                     ))
                 .toList(),
           ),
@@ -229,7 +229,7 @@ class _RecCardState extends State<RecCard> {
       onTap: () => setState(() => _expanded = !_expanded),
       child: Container(
         decoration: AppTheme.cardDecoration(context).copyWith(
-          color: isDark ? AppTheme.lightAccent.withOpacity(0.04) : AppTheme.lightAccent.withOpacity(0.02),
+          color: isDark ? AppColors.brandPrimary.withOpacity(0.04) : AppColors.brandPrimary.withOpacity(0.02),
         ),
         child: Column(
           children: [
@@ -240,8 +240,8 @@ class _RecCardState extends State<RecCard> {
                   Container(
                     width: 38,
                     height: 38,
-                    decoration: BoxDecoration(color: AppTheme.lightAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(11)),
-                    child: const Icon(Icons.info_outline, color: AppTheme.lightAccent, size: 20),
+                    decoration: BoxDecoration(color: AppColors.brandPrimary.withOpacity(0.1), borderRadius: BorderRadius.circular(11)),
+                    child: const Icon(Icons.info_outline, color: AppColors.brandPrimary, size: 20),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -250,7 +250,7 @@ class _RecCardState extends State<RecCard> {
                       children: [
                         Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                         const SizedBox(height: 2),
-                        Text(widget.badge, style: TextStyle(fontSize: 10, color: widget.badge == 'Good' ? AppTheme.lightSuccess : AppTheme.lightDanger)),
+                        Text(widget.badge, style: TextStyle(fontSize: 10, color: widget.badge == 'Good' ? AppColors.success : AppColors.error)),
                       ],
                     ),
                   ),
@@ -273,7 +273,7 @@ class _RecCardState extends State<RecCard> {
                            const SizedBox(height: 8),
                            Text('What to Do', style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w700)),
                            const SizedBox(height: 4),
-                           const Text('✓ Add agricultural limestone\n✓ Monitor for next 24 hours', style: TextStyle(fontSize: 12, height: 1.5, color: AppTheme.lightSuccess)),
+                           const Text('✓ Add agricultural limestone\n✓ Monitor for next 24 hours', style: TextStyle(fontSize: 12, height: 1.5, color: AppColors.success)),
                         ],
                       ),
                     )

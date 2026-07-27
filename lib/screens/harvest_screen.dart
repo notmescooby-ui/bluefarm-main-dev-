@@ -118,7 +118,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: success ? AppTheme.lightSuccess : AppTheme.lightDanger,
+        backgroundColor: success ? AppColors.success : AppColors.error,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -198,7 +198,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                   height: 74,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [AppTheme.lightPrimaryMid, AppTheme.lightAccent],
+                      colors: [AppColors.brandSecondary, AppColors.brandPrimary],
                     ),
                     borderRadius: BorderRadius.circular(22),
                   ),
@@ -232,7 +232,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                     icon: const Icon(Icons.add_rounded),
                     label: const Text('Create First Listing'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.lightAccent,
+                      backgroundColor: AppColors.brandPrimary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
@@ -265,9 +265,9 @@ class _HarvestScreenState extends State<HarvestScreen> {
   Widget _listingCard(Map<String, dynamic> listing) {
     final status = (listing['status'] as String? ?? 'active').toLowerCase();
     final statusColor = status == 'active'
-        ? AppTheme.lightSuccess
+        ? AppColors.success
         : status == 'sold'
-            ? AppTheme.lightWarning
+            ? AppColors.warning
             : Colors.grey;
 
     return Container(
@@ -283,12 +283,12 @@ class _HarvestScreenState extends State<HarvestScreen> {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: AppTheme.lightAccent.withOpacity(0.12),
+                  color: AppColors.brandPrimary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
                   Icons.set_meal_rounded,
-                  color: AppTheme.lightAccent,
+                  color: AppColors.brandPrimary,
                   size: 22,
                 ),
               ),
@@ -360,9 +360,9 @@ class _HarvestScreenState extends State<HarvestScreen> {
                   icon: const Icon(Icons.edit_outlined, size: 15),
                   label: const Text('Edit'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.lightAccent,
+                    foregroundColor: AppColors.brandPrimary,
                     side: BorderSide(
-                      color: AppTheme.lightAccent.withOpacity(0.4),
+                      color: AppColors.brandPrimary.withOpacity(0.4),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -376,11 +376,11 @@ class _HarvestScreenState extends State<HarvestScreen> {
                 child: OutlinedButton(
                   onPressed: status == 'sold' ? null : () => _markSold(listing['id']),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.lightWarning,
+                    foregroundColor: AppColors.warning,
                     side: BorderSide(
-                      color: AppTheme.lightWarning.withOpacity(0.45),
+                      color: AppColors.warning.withOpacity(0.45),
                     ),
-                    disabledForegroundColor: AppTheme.lightWarning.withOpacity(0.45),
+                    disabledForegroundColor: AppColors.warning.withOpacity(0.45),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -395,9 +395,9 @@ class _HarvestScreenState extends State<HarvestScreen> {
               OutlinedButton(
                 onPressed: () => _delete(listing['id']),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.lightDanger,
+                  foregroundColor: AppColors.error,
                   side: BorderSide(
-                    color: AppTheme.lightDanger.withOpacity(0.45),
+                    color: AppColors.error.withOpacity(0.45),
                   ),
                   padding: const EdgeInsets.symmetric(
                     vertical: 10,
@@ -469,7 +469,7 @@ class _HarvestHeader extends StatelessWidget {
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: Text(actionLabel),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.lightAccent,
+                    backgroundColor: AppColors.brandPrimary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -485,9 +485,9 @@ class _HarvestHeader extends StatelessWidget {
                   icon: const Icon(Icons.arrow_back_rounded, size: 18),
                   label: Text(actionLabel),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.lightAccent,
+                    foregroundColor: AppColors.brandPrimary,
                     side: BorderSide(
-                      color: AppTheme.lightAccent.withOpacity(0.4),
+                      color: AppColors.brandPrimary.withOpacity(0.4),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -524,7 +524,7 @@ class _MetricChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppTheme.lightAccent),
+          Icon(icon, size: 14, color: AppColors.brandPrimary),
           const SizedBox(width: 5),
           Text(
             label,
@@ -656,7 +656,7 @@ class _HarvestFormState extends State<_HarvestForm> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: success ? AppTheme.lightSuccess : AppTheme.lightDanger,
+        backgroundColor: success ? AppColors.success : AppColors.error,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -680,14 +680,14 @@ class _HarvestFormState extends State<_HarvestForm> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppTheme.lightAccent.withOpacity(0.07),
+                color: AppColors.brandPrimary.withOpacity(0.07),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.lightAccent.withOpacity(0.2)),
+                border: Border.all(color: AppColors.brandPrimary.withOpacity(0.2)),
               ),
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline_rounded, color: AppTheme.lightAccent, size: 18),
+                  Icon(Icons.info_outline_rounded, color: AppColors.brandPrimary, size: 18),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -695,7 +695,7 @@ class _HarvestFormState extends State<_HarvestForm> {
                       style: TextStyle(
                         fontSize: 12,
                         height: 1.45,
-                        color: AppTheme.lightAccent,
+                        color: AppColors.brandPrimary,
                       ),
                     ),
                   ),
@@ -756,7 +756,7 @@ class _HarvestFormState extends State<_HarvestForm> {
                         color: Theme.of(context).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppTheme.lightPrimaryMid.withOpacity(0.08),
+                          color: AppColors.brandSecondary.withOpacity(0.08),
                         ),
                       ),
                       child: Row(
@@ -765,12 +765,12 @@ class _HarvestFormState extends State<_HarvestForm> {
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: AppTheme.lightAccent.withOpacity(0.12),
+                              color: AppColors.brandPrimary.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
                               Icons.monitor_weight_outlined,
-                              color: AppTheme.lightAccent,
+                              color: AppColors.brandPrimary,
                               size: 18,
                             ),
                           ),
@@ -873,7 +873,7 @@ class _HarvestFormState extends State<_HarvestForm> {
                                 : AppTranslations.get('post_listing'),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.lightAccent,
+                        backgroundColor: AppColors.brandPrimary,
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: Colors.grey.shade300,
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -919,11 +919,11 @@ class _HarvestFormState extends State<_HarvestForm> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppTheme.lightPrimaryMid.withOpacity(0.12)),
+        borderSide: BorderSide(color: AppColors.brandSecondary.withOpacity(0.12)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppTheme.lightAccent, width: 1.4),
+        borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.4),
       ),
       filled: true,
       fillColor: Theme.of(context).cardColor,

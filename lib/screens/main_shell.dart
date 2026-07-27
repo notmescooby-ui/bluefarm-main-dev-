@@ -176,55 +176,52 @@ class _MainShellState extends State<MainShell> {
                   constraints: const BoxConstraints(maxWidth: 500),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(40),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(40),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 1,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(40),
+                        border: Border.all(
+                          color: const Color(0xFF10263F).withOpacity(0.06),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF10263F).withOpacity(0.10),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildNavItem(
-                              icon: Icons.home_outlined,
-                              label: 'Dashboard',
-                              isActive: _currentIndex == 0,
-                              onTap: () => setState(() => _currentIndex = 0),
-                            ),
-                            _buildNavItem(
-                              icon: Icons.insights_outlined,
-                              label: 'Insights',
-                              isActive: _currentIndex == 2,
-                              onTap: () => setState(() => _currentIndex = 2),
-                            ),
-                            _buildCenterAddButton(),
-                            _buildNavItem(
-                              icon: Icons.storefront_outlined,
-                              label: 'Market',
-                              isActive: _currentIndex == 3,
-                              onTap: () => setState(() => _currentIndex = 3),
-                            ),
-                            _buildNavItem(
-                              icon: Icons.settings_outlined,
-                              label: 'Settings',
-                              isActive: _sidebarOpen,
-                              onTap: () => setState(() => _sidebarOpen = true),
-                            ),
-                          ],
-                        ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildNavItem(
+                            icon: Icons.home_outlined,
+                            label: 'Dashboard',
+                            isActive: _currentIndex == 0,
+                            onTap: () => setState(() => _currentIndex = 0),
+                          ),
+                          _buildNavItem(
+                            icon: Icons.insights_outlined,
+                            label: 'Insights',
+                            isActive: _currentIndex == 2,
+                            onTap: () => setState(() => _currentIndex = 2),
+                          ),
+                          _buildCenterAddButton(),
+                          _buildNavItem(
+                            icon: Icons.storefront_outlined,
+                            label: 'Market',
+                            isActive: _currentIndex == 3,
+                            onTap: () => setState(() => _currentIndex = 3),
+                          ),
+                          _buildNavItem(
+                            icon: Icons.settings_outlined,
+                            label: 'Settings',
+                            isActive: _sidebarOpen,
+                            onTap: () => setState(() => _sidebarOpen = true),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -265,14 +262,14 @@ class _MainShellState extends State<MainShell> {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    final color = isActive ? Colors.white : Colors.white.withOpacity(0.6);
+    final color = isActive ? const Color(0xFF10263F) : const Color(0xFF7A7568).withOpacity(0.7);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white.withOpacity(0.18) : Colors.transparent,
+          color: isActive ? const Color(0xFF10263F).withOpacity(0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -327,7 +324,7 @@ class _MainShellState extends State<MainShell> {
                   end: Alignment.bottomRight,
                 ),
                 border: Border.all(
-                  color: const Color(0xFF002B5B),
+                  color: Colors.white,
                   width: 4,
                 ),
               ),
@@ -350,47 +347,45 @@ class _MainShellState extends State<MainShell> {
       builder: (BuildContext context) {
         return ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF0A1628).withOpacity(0.9),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.15),
-                  width: 1,
-                ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              border: Border.all(
+                color: const Color(0xFF10263F).withOpacity(0.06),
+                width: 1,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 38,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10263F).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Quick Actions",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  "Quick Actions",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1B2430),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Add data manually or connect options",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.6),
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Add data manually or connect options",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: const Color(0xFF7A7568).withOpacity(0.9),
                   ),
-                  const SizedBox(height: 28),
+                ),
+                const SizedBox(height: 28),
                   _buildActionOption(
                     icon: Icons.edit_note_rounded,
                     title: "Manual Sensor Reading",
@@ -430,8 +425,7 @@ class _MainShellState extends State<MainShell> {
                 ],
               ),
             ),
-          ),
-        );
+          );
       },
     );
   }
@@ -448,10 +442,10 @@ class _MainShellState extends State<MainShell> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
+          color: const Color(0xFFFAF7F2),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            color: const Color(0xFF10263F).withOpacity(0.06),
           ),
         ),
         child: Row(

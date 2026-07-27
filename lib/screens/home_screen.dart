@@ -534,16 +534,16 @@ class _FlippableCardState extends State<_FlippableCard>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: (widget.isNormal
-                    ? AppTheme.lightSuccess
-                    : AppTheme.lightWarning).withOpacity(0.14),
+                    ? AppColors.success
+                    : AppColors.warning).withOpacity(0.14),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(widget.status,
                   style: TextStyle(
                       fontSize: 11, fontWeight: FontWeight.w800,
                       color: widget.isNormal
-                          ? AppTheme.lightSuccess
-                          : AppTheme.lightWarning)),
+                          ? AppColors.success
+                          : AppColors.warning)),
             ),
             const SizedBox(height: 4),
             Text('Safe: ${widget.safeRange}',

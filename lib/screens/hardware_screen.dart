@@ -50,7 +50,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: (provider.servoAngle > 0
-                                  ? AppTheme.lightSuccess
+                                  ? AppColors.success
                                   : (Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey))
                               .withOpacity(0.12),
                           borderRadius: BorderRadius.circular(8),
@@ -61,7 +61,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
                             color: provider.servoAngle > 0
-                                ? AppTheme.lightSuccess
+                                ? AppColors.success
                                 : Colors.grey.shade600,
                           ),
                         ),
@@ -185,7 +185,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: (speed > 0
-                          ? AppTheme.lightSuccess
+                          ? AppColors.success
                           : (Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey))
                       .withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8),
@@ -195,7 +195,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: speed > 0 ? AppTheme.lightSuccess : Colors.grey.shade600,
+                    color: speed > 0 ? AppColors.success : Colors.grey.shade600,
                   ),
                 ),
               ),
@@ -301,13 +301,13 @@ class _HardwareScreenState extends State<HardwareScreen> {
                 const SizedBox(height: 6),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppTheme.lightSuccess.withOpacity(isDark ? 0.2 : 0.1),
+                    color: AppColors.success.withOpacity(isDark ? 0.2 : 0.1),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   child: const Text(
                     'Online',
-                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppTheme.lightSuccess),
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.success),
                   ),
                 ),
               ],
