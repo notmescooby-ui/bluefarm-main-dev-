@@ -234,7 +234,7 @@ class _AdminShellState extends State<AdminShell> {
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: roleColor.withOpacity(0.15),
+                      backgroundColor: roleColor.withValues(alpha: 0.15),
                       child: Icon(Icons.person, color: roleColor),
                     ),
                     title: Text(u['full_name'] ?? 'No name'),

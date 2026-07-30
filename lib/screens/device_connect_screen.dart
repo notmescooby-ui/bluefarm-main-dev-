@@ -153,10 +153,10 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 30,
                 ),
               ],
@@ -182,7 +182,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
         Text(
           'Turn on Bluetooth and keep the BlueFarm sensor device nearby.',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
+            color: Colors.white.withValues(alpha: 0.85),
             fontSize: 15,
             height: 1.5,
           ),
@@ -199,7 +199,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 15,
                   offset: const Offset(0, 4),
                 ),
@@ -228,7 +228,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
           child: Text(
             'Skip for now — explore the app first',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -266,7 +266,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.white.withOpacity(opacity),
+                              color: Colors.white.withValues(alpha: opacity),
                               width: 1.5,
                             ),
                           ),
@@ -304,7 +304,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
         const SizedBox(height: 8),
         Text(
           'Looking for nearby BlueFarm devices',
-          style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 15),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 15),
         ),
       ],
     );
@@ -339,7 +339,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -350,7 +350,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1565C0).withOpacity(0.1),
+                          color: const Color(0xFF1565C0).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -399,7 +399,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
           child: Text(
             'Scan Again',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -420,7 +420,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
           height: 90,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.18),
+            color: Colors.white.withValues(alpha: 0.18),
           ),
           child: const Center(
             child: SizedBox(
@@ -445,7 +445,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
         const SizedBox(height: 8),
         Text(
           _selectedDevice ?? '',
-          style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 15),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 15),
         ),
       ],
     );
@@ -488,7 +488,7 @@ class _DeviceConnectScreenState extends State<DeviceConnectScreen>
         const SizedBox(height: 8),
         Text(
           _selectedDevice ?? '',
-          style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 15),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 15),
         ),
         const SizedBox(height: 36),
         const SizedBox(

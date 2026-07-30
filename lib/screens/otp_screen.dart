@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart';
+import 'package:bluefarm/services/auth_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
 import 'role_selection_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phone;
+  final String verificationId;
 
-  const OtpScreen({super.key, required this.phone});
+  const OtpScreen({super.key, required this.phone, required this.verificationId});
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -62,13 +63,9 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
     setState(() => _loading = true);
 
     try {
-      final res = await Supabase.instance.client.auth.verifyOTP(
-        phone: widget.phone,
-        token: _otp,
-        type: OtpType.sms,
-      );
+      final res = await AuthService().verifyOTP(widget.verificationId, _otp);
 
-      if (res.session != null && mounted) {
+      if (res.user != null && mounted) {
         setState(() => _verified = true);
         _successCtrl.forward();
 
@@ -140,7 +137,7 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -156,7 +153,7 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                     child: Text(
                       'Enter 6-digit code sent to\n${widget.phone}',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 16,
                         height: 1.4,
                         fontWeight: FontWeight.w500,
@@ -179,19 +176,19 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                               height: 54,
                               decoration: BoxDecoration(
                                 color: _digitCtrls[i].text.isNotEmpty
-                                    ? Colors.white.withOpacity(0.25)
-                                    : Colors.white.withOpacity(0.1),
+                                    ? Colors.white.withValues(alpha: 0.25)
+                                    : Colors.white.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: _focusNodes[i].hasFocus
                                       ? Colors.white
-                                      : Colors.white.withOpacity(0.2),
+                                      : Colors.white.withValues(alpha: 0.2),
                                   width: _focusNodes[i].hasFocus ? 2.5 : 1,
                                 ),
                                 boxShadow: _focusNodes[i].hasFocus
                                     ? [
                                         BoxShadow(
-                                          color: Colors.white.withOpacity(0.2),
+                                          color: Colors.white.withValues(alpha: 0.2),
                                           blurRadius: 12,
                                         ),
                                       ]
@@ -244,7 +241,7 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
+                              color: Colors.black.withValues(alpha: 0.06),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),

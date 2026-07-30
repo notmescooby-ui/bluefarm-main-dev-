@@ -25,6 +25,8 @@ dependencies:
   google_sign_in: ^6.2.1
   image_picker: ^1.0.4
   url_launcher: ^6.2.5          # ← required for UPI deep links
+  video_player: ^2.11.1
+  google_generative_ai: ^0.4.7
 
 dev_dependencies:
   flutter_test:

@@ -6,7 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:bluefarm/services/supabase_compatibility.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'main_shell.dart';
 import 'buyer_shell.dart';
 import 'device_connect_screen.dart';
@@ -453,7 +454,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
   Future<void> _submit() async {
     setState(() => _submitting = true);
     try {
-      final user = Supabase.instance.client.auth.currentUser;
+      final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         if (!mounted) return;
         _showSnack('Your session has expired. Please log in again to continue.');
@@ -466,7 +467,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
 
       if (_role == 'farmer') {
         final payload = {
-          'id':                user.id,
+          'id':                user.uid,
           'farm_name':         _farmNameCtrl.text.trim(),
           'full_name':         _farmerNameCtrl.text.trim(),
           'age':               int.tryParse(_farmerAgeCtrl.text.trim()),
@@ -489,24 +490,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           'account_status':    'active',
         };
 
-        try {
-          await Supabase.instance.client.from('profiles').upsert(payload);
-        } on PostgrestException catch (_) {
-          await Supabase.instance.client.from('profiles').upsert({
-            'id':               user.id,
-            'farm_name':        _farmNameCtrl.text.trim(),
-            'full_name':        _farmerNameCtrl.text.trim(),
-            'phone':            widget.phone.isNotEmpty ? widget.phone : null,
-            'email':            widget.email ?? user.email,
-            'role':             'farmer',
-            'aadhaar_verified': true,
-            'pincode':          _pincodeCtrl.text.trim(),
-            'region':           _region,
-            'gps_address':      _gpsCtrl.text.trim(),
-            'fish_species':     _primarySpecies,
-            'account_status':   'active',
-          });
-        }
+        await FirebaseFirestore.instance.collection('profiles').doc(user.uid).set(payload, SetOptions(merge: true));
 
         if (!mounted) return;
         Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
@@ -525,8 +509,8 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           (route) => false,
         );
       } else {
-        await Supabase.instance.client.from('profiles').upsert({
-          'id':               user.id,
+        await FirebaseFirestore.instance.collection('profiles').doc(user.uid).set({
+          'id':               user.uid,
           'full_name':        _buyerNameCtrl.text.trim(),
           'company_name':     _companyCtrl.text.trim(),
           'phone':            widget.phone.isNotEmpty ? widget.phone : null,
@@ -538,14 +522,11 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           'region':           _buyerRegion,
           'gps_address':      _buyerGpsCtrl.text.trim(),
           'account_status':   'active',
-        });
+        }, SetOptions(merge: true));
 
         if (!mounted) return;
-        final savedProfile = await Supabase.instance.client
-            .from('profiles')
-            .select('role, full_name')
-            .eq('id', user.id)
-            .maybeSingle();
+        final doc = await FirebaseFirestore.instance.collection('profiles').doc(user.uid).get();
+        final savedProfile = doc.data();
 
         if (!mounted) return;
         if (savedProfile == null || savedProfile['role'] != 'buyer') {
@@ -554,7 +535,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         }
 
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const BuyerShell()),
+          MaterialPageRoute(builder: (_) => BuyerShell()),
           (route) => false,
         );
       }

@@ -129,7 +129,7 @@ class _LanguageScreenState extends State<LanguageScreen>
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -164,7 +164,7 @@ class _LanguageScreenState extends State<LanguageScreen>
                     child: Text(
                       "You can change this anytime in settings",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -203,7 +203,7 @@ class _LanguageScreenState extends State<LanguageScreen>
                                     // Highlight selected box with white/light-green background
                                     color: selected
                                         ? Colors.white
-                                        : Colors.white.withOpacity(0.85),
+                                        : Colors.white.withValues(alpha: 0.85),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                       // Thicker green/accent border for selected box
@@ -215,8 +215,8 @@ class _LanguageScreenState extends State<LanguageScreen>
                                     boxShadow: [
                                       BoxShadow(
                                         color: selected
-                                            ? Colors.black.withOpacity(0.12)
-                                            : Colors.black.withOpacity(0.04),
+                                            ? Colors.black.withValues(alpha: 0.12)
+                                            : Colors.black.withValues(alpha: 0.04),
                                         blurRadius: selected ? 24 : 10,
                                         offset: selected ? const Offset(0, 8) : const Offset(0, 4),
                                       ),
@@ -245,8 +245,8 @@ class _LanguageScreenState extends State<LanguageScreen>
                                               style: TextStyle(
                                                 fontSize: 11,
                                                 color: selected
-                                                    ? const Color(0xFF059669).withOpacity(0.7)
-                                                    : const Color(0xFF5A789E).withOpacity(0.6),
+                                                    ? const Color(0xFF059669).withValues(alpha: 0.7)
+                                                    : const Color(0xFF5A789E).withValues(alpha: 0.6),
                                                 fontWeight: FontWeight.bold,
                                                 letterSpacing: 1.5,
                                               ),
@@ -332,7 +332,7 @@ class _LanguageScreenState extends State<LanguageScreen>
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
+                                color: Colors.black.withValues(alpha: 0.12),
                                 blurRadius: 20,
                                 offset: const Offset(0, 6),
                               ),
@@ -374,7 +374,7 @@ class _LanguageWavePainter extends CustomPainter {
     final rect = Offset.zero & size;
     for (int i = 0; i < 2; i++) {
       final paint = Paint()
-        ..color = Colors.white.withOpacity(0.08 - i * 0.03)
+        ..color = Colors.white.withValues(alpha: 0.08 - i * 0.03)
         ..style = PaintingStyle.fill;
 
       final path = Path();

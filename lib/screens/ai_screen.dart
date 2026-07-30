@@ -66,7 +66,7 @@ class _AIScreenState extends State<AIScreen> {
                   child: Container(
                     width: 70,
                     height: 70,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.08)),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.08)),
                   ),
                 ),
                 Column(
@@ -75,13 +75,13 @@ class _AIScreenState extends State<AIScreen> {
                     Container(
                       width: 36,
                       height: 36,
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
                       child: const Icon(Icons.psychology_outlined, color: Colors.white, size: 20),
                     ),
                     const SizedBox(height: 10),
                     const Text('BlueFarm AI Assistant', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white)),
                     const SizedBox(height: 3),
-                    Text('Powered by Claude - Ask anything about your farm', style: TextStyle(color: Colors.white.withOpacity(0.72), fontSize: 12)),
+                    Text('Powered by Claude - Ask anything about your farm', style: TextStyle(color: Colors.white.withValues(alpha: 0.72), fontSize: 12)),
                   ],
                 ),
               ],
@@ -103,7 +103,7 @@ class _AIScreenState extends State<AIScreen> {
                     fillColor: Theme.of(context).cardColor,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: BorderSide.none),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: BorderSide(color: AppColors.brandPrimary.withOpacity(0.1))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: BorderSide(color: AppColors.brandPrimary.withValues(alpha: 0.1))),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: const BorderSide(color: AppColors.brandPrimary)),
                   ),
                 ),
@@ -133,7 +133,7 @@ class _AIScreenState extends State<AIScreen> {
           if (_reply.isNotEmpty)
             Container(
               decoration: AppTheme.cardDecoration(context).copyWith(
-                color: isDark ? AppColors.brandPrimary.withOpacity(0.05) : AppColors.brandPrimary.withOpacity(0.05),
+                color: isDark ? AppColors.brandPrimary.withValues(alpha: 0.05) : AppColors.brandPrimary.withValues(alpha: 0.05),
               ),
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -142,7 +142,7 @@ class _AIScreenState extends State<AIScreen> {
                   Container(
                     width: 30,
                     height: 30,
-                    decoration: BoxDecoration(color: AppColors.brandPrimary.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: AppColors.brandPrimary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
                     child: const Icon(Icons.psychology_outlined, color: AppColors.brandPrimary, size: 16),
                   ),
                   const SizedBox(width: 10),
@@ -229,7 +229,7 @@ class _RecCardState extends State<RecCard> {
       onTap: () => setState(() => _expanded = !_expanded),
       child: Container(
         decoration: AppTheme.cardDecoration(context).copyWith(
-          color: isDark ? AppColors.brandPrimary.withOpacity(0.04) : AppColors.brandPrimary.withOpacity(0.02),
+          color: isDark ? AppColors.brandPrimary.withValues(alpha: 0.04) : AppColors.brandPrimary.withValues(alpha: 0.02),
         ),
         child: Column(
           children: [
@@ -240,7 +240,7 @@ class _RecCardState extends State<RecCard> {
                   Container(
                     width: 38,
                     height: 38,
-                    decoration: BoxDecoration(color: AppColors.brandPrimary.withOpacity(0.1), borderRadius: BorderRadius.circular(11)),
+                    decoration: BoxDecoration(color: AppColors.brandPrimary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(11)),
                     child: const Icon(Icons.info_outline, color: AppColors.brandPrimary, size: 20),
                   ),
                   const SizedBox(width: 10),

@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart';
+import 'package:bluefarm/services/auth_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
 import 'otp_screen.dart';
@@ -55,11 +56,7 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> signInWithGoogle() async {
     setState(() => _loading = true);
     try {
-      await Supabase.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: kIsWeb ? Uri.base.origin : null,
-        authScreenLaunchMode: LaunchMode.platformDefault,
-      );
+      await AuthService().signInWithGoogle();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -76,42 +73,46 @@ class _LoginScreenState extends State<LoginScreen>
 
     setState(() => _loading = true);
     try {
-      await Supabase.instance.client.auth.signInWithOtp(phone: phone);
+      await AuthService().verifyPhone(
+        phone: phone,
+        onCodeSent: (verificationId) {
+          if (mounted) {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                transitionDuration: const Duration(milliseconds: 600),
+                pageBuilder: (_, __, ___) => OtpScreen(phone: phone, verificationId: verificationId),
+                transitionsBuilder: (_, anim, __, child) {
+                  return FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0.08, 0),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                        parent: anim,
+                        curve: Curves.easeOutCubic,
+                      )),
+                      child: child,
+                    ),
+                  );
+                },
+              ),
+            );
+          }
+        },
+        onError: (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+            setState(() => _loading = false);
+          }
+        },
+      );
+    } on FirebaseAuthException catch (e) {
       if (mounted) {
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 600),
-            pageBuilder: (_, __, ___) => OtpScreen(phone: phone),
-            transitionsBuilder: (_, anim, __, child) {
-              return FadeTransition(
-                opacity: anim,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: const Offset(0.08, 0),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                    parent: anim,
-                    curve: Curves.easeOutCubic,
-                  )),
-                  child: child,
-                ),
-              );
-            },
-          ),
-        );
-      }
-    } on AuthApiException catch (e) {
-      if (mounted) {
-        final errorText = e.message.toLowerCase();
-        final friendlyMessage =
-            errorText.contains('temporarily blocked by twilio') ||
-                    errorText.contains('sms_send_failed') ||
-                    errorText.contains('fraudulent')
-                ? 'OTP could not be sent. Please use Google Sign-In or try again later.'
-                : 'Failed to send OTP: ${e.message}';
+        setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyMessage)),
+          SnackBar(content: Text(e.message ?? 'Login failed')),
         );
       }
     } catch (e) {
@@ -153,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
+                                color: Colors.black.withValues(alpha: 0.12),
                                 blurRadius: 40,
                                 spreadRadius: 6,
                               ),
@@ -191,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen>
                       child: Text(
                         "Your aquaculture companion",
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontSize: 14,
                         ),
                       ),
@@ -213,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen>
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.06),
+                                  color: Colors.black.withValues(alpha: 0.06),
                                   blurRadius: 15,
                                   offset: const Offset(0, 4),
                                 ),
@@ -260,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen>
                         children: [
                           Expanded(
                             child: Divider(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                               thickness: 1,
                             ),
                           ),
@@ -269,7 +270,7 @@ class _LoginScreenState extends State<LoginScreen>
                             child: Text(
                               "OR",
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 12,
                                 letterSpacing: 2,
                                 fontWeight: FontWeight.bold,
@@ -278,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                           Expanded(
                             child: Divider(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                               thickness: 1,
                             ),
                           ),
@@ -296,10 +297,10 @@ class _LoginScreenState extends State<LoginScreen>
                         child: Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
+                            color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               width: 1.5,
                             ),
                           ),
@@ -311,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   letterSpacing: 1.2,
                                 ),
                               ),
@@ -327,7 +328,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 decoration: InputDecoration(
                                   hintText: "+91 XXXXXXXXXX",
                                   hintStyle: TextStyle(
-                                    color: Colors.white.withOpacity(0.55),
+                                    color: Colors.white.withValues(alpha: 0.55),
                                   ),
                                   prefixIcon: const Icon(
                                     Icons.phone_android_rounded,
@@ -335,7 +336,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     size: 20,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white.withOpacity(0.08),
+                                  fillColor: Colors.white.withValues(alpha: 0.08),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide.none,
@@ -354,7 +355,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.06),
+                                        color: Colors.black.withValues(alpha: 0.06),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -405,7 +406,7 @@ class _LoginScreenState extends State<LoginScreen>
                       child: Text(
                         "First time here? Sign up now",
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

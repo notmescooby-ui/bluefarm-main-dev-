@@ -52,7 +52,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
                           color: (provider.servoAngle > 0
                                   ? AppColors.success
                                   : (Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey))
-                              .withOpacity(0.12),
+                              .withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -77,9 +77,9 @@ class _HardwareScreenState extends State<HardwareScreen> {
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       activeTrackColor: const Color(0xFF1565C0),
-                      inactiveTrackColor: const Color(0xFF1565C0).withOpacity(0.15),
+                      inactiveTrackColor: const Color(0xFF1565C0).withValues(alpha: 0.15),
                       thumbColor: Colors.white,
-                      overlayColor: const Color(0xFF1565C0).withOpacity(0.15),
+                      overlayColor: const Color(0xFF1565C0).withValues(alpha: 0.15),
                       trackHeight: 6,
                     ),
                     child: Slider(
@@ -187,7 +187,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
                   color: (speed > 0
                           ? AppColors.success
                           : (Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey))
-                      .withOpacity(0.12),
+                      .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -205,9 +205,9 @@ class _HardwareScreenState extends State<HardwareScreen> {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: const Color(0xFF1565C0),
-              inactiveTrackColor: const Color(0xFF1565C0).withOpacity(0.15),
+              inactiveTrackColor: const Color(0xFF1565C0).withValues(alpha: 0.15),
               thumbColor: Colors.white,
-              overlayColor: const Color(0xFF1565C0).withOpacity(0.15),
+              overlayColor: const Color(0xFF1565C0).withValues(alpha: 0.15),
               trackHeight: 6,
             ),
             child: Slider(
@@ -275,7 +275,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 16, color: color),
@@ -301,7 +301,7 @@ class _HardwareScreenState extends State<HardwareScreen> {
                 const SizedBox(height: 6),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(isDark ? 0.2 : 0.1),
+                    color: AppColors.success.withValues(alpha: isDark ? 0.2 : 0.1),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

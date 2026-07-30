@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 
 import 'providers/app_provider.dart';
@@ -35,7 +35,7 @@ void main() async {
     ChangeNotifierProvider(
       create: (_) => AppProvider()
         ..loadAllData()
-        ..startRealtimeListening(),
+        ..initializeData(),
       child: const BlueFarmApp(),
     ),
   );
@@ -49,24 +49,16 @@ class BlueFarmApp extends StatefulWidget {
 }
 
 class _BlueFarmAppState extends State<BlueFarmApp> {
-  late final StreamSubscription<AuthState> _authSub;
+  
 
   @override
   void initState() {
     super.initState();
-    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      if (data.event == AuthChangeEvent.signedIn && data.session != null) {
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
-          (route) => false,
-        );
-      }
-    });
   }
 
   @override
   void dispose() {
-    _authSub.cancel();
+    
     super.dispose();
   }
 

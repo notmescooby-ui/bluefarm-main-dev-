@@ -1,99 +1,122 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/sensor_data.dart';
-import '../services/supabase_service.dart';
 
 class AppProvider extends ChangeNotifier {
-  final _supabase = SupabaseService();
-
-  bool isDarkMode = false;
-  bool isDeviceConnected = false;
-  SensorData? latestReading;
-  List<SensorData> todayReadings = [];
-  Map<String, dynamic> userProfile = {
-    'name': 'Rajesh Kumar',
-    'farm_name': 'BlueFarm Pond 1',
-    'email': 'rajesh@bluefarm.in',
-    'phone': '+91 98765 43210',
-    'fish_species': 'Rohu, Catla',
-    'location': 'Navi Mumbai, MH',
-    'pond_size': '2.5 acres',
-  };
-  Map<String, dynamic>? deviceStatus;
-  bool isLoading = false;
-  int motorASpeed = 0;
-  int motorBSpeed = 0;
-  int servoAngle = 0;
-  StreamSubscription? _sensorSubscription;
-
-  void toggleDarkMode() {
-    isDarkMode = !isDarkMode;
-    notifyListeners();
-  }
-
-  Future<void> setDeviceConnected(bool connected) async {
-    isDeviceConnected = connected;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_device_connected', connected);
-    notifyListeners();
-  }
-
   Future<void> loadAllData() async {
-    isLoading = true;
-    notifyListeners();
-
-    final prefs = await SharedPreferences.getInstance();
-    isDeviceConnected = prefs.getBool('is_device_connected') ?? false;
-
-    final results = await Future.wait([
-      _supabase.getLatestReading(),
-      _supabase.getTodayReadings(),
-      _supabase.getUserProfile(),
-      _supabase.getDeviceStatus(),
-    ]);
-
-    latestReading = (results[0] as SensorData?) ?? SensorData.demo;
-    todayReadings = results[1] as List<SensorData>;
-    final profile = results[2] as Map<String, dynamic>?;
-    if (profile != null) userProfile = profile;
-    deviceStatus = results[3] as Map<String, dynamic>?;
-
-    isLoading = false;
-    notifyListeners();
+    await initializeData();
+  }
+  
+  Future<void> updateProfile(Map<String, dynamic> data) async {
+    await updateUserProfile(data);
   }
 
-  void startRealtimeListening() {
-    _sensorSubscription = _supabase.watchSensorReadings().listen((readings) {
-      if (readings.isNotEmpty) {
-        latestReading = readings.first;
-        notifyListeners();
-      }
-    });
-  }
+  Map<String, dynamic>? _userProfile;
+  Map<String, dynamic>? get userProfile => _userProfile;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? _error;
+  String? get error => _error;
+
+  SensorData? _latestReading;
+  SensorData? get latestReading => _latestReading;
+
+  List<SensorData> _todayReadings = [];
+  List<SensorData> get todayReadings => _todayReadings;
+
+  Map<String, dynamic> _deviceStatus = {};
+  Map<String, dynamic> get deviceStatus => _deviceStatus;
+
+  int get motorASpeed => _deviceStatus['motor_a'] == true ? 255 : 0;
+  int get motorBSpeed => _deviceStatus['motor_b'] == true ? 255 : 0;
+  int get servoAngle => _deviceStatus['feeder_angle'] as int? ?? 0;
 
   Future<void> updateMotorA(int speed) async {
-    motorASpeed = speed;
-    notifyListeners();
-    await _supabase.updateMotorSpeed('a', speed);
+    await updateMotorSpeed('a', speed);
   }
 
   Future<void> updateMotorB(int speed) async {
-    motorBSpeed = speed;
-    notifyListeners();
-    await _supabase.updateMotorSpeed('b', speed);
+    await updateMotorSpeed('b', speed);
   }
 
   Future<void> updateServo(int angle) async {
-    servoAngle = angle;
-    notifyListeners();
-    await _supabase.updateServoAngle(angle);
+    await updateServoAngle(angle);
   }
 
-  Future<void> updateProfile(Map<String, dynamic> data) async {
-    userProfile = {...userProfile, ...data};
+
+  
+  bool _isDarkMode = false;
+  bool get isDarkMode => _isDarkMode;
+  void toggleDarkMode() {
+    _isDarkMode = !_isDarkMode;
     notifyListeners();
-    await _supabase.updateUserProfile(data);
+  }
+
+  bool _isDeviceConnected = false;
+  bool get isDeviceConnected => _isDeviceConnected;
+  Future<void> setDeviceConnected(bool val) async {
+    _isDeviceConnected = val;
+    notifyListeners();
+  }
+
+  StreamSubscription? _sensorSubscription;
+
+  Future<void> initializeData() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        final doc = await FirebaseFirestore.instance.collection('profiles').doc(uid).get();
+        _userProfile = doc.data();
+      }
+      
+      // Stubbing IoT data
+      _latestReading = SensorData(createdAt: DateTime.now(), ph: 7.2, temperature: 28.5, turbidity: 2.5);
+      _todayReadings = [_latestReading!];
+      _deviceStatus = {'motor_a': false, 'motor_b': false, 'feeder_angle': 0};
+      
+      _startSensorWatch();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void _startSensorWatch() {
+    _sensorSubscription?.cancel();
+    // Use dummy stream for now
+    _sensorSubscription = Stream.periodic(const Duration(seconds: 10)).listen((_) {
+      _latestReading = SensorData(createdAt: DateTime.now(), ph: 7.2, temperature: 28.0 + (DateTime.now().second % 10) / 10, turbidity: 2.5);
+      notifyListeners();
+    });
+  }
+
+  Future<void> updateMotorSpeed(String motor, int speed) async {
+    _deviceStatus['motor_'] = speed > 0;
+    notifyListeners();
+  }
+
+  Future<void> updateServoAngle(int angle) async {
+    _deviceStatus['feeder_angle'] = angle;
+    notifyListeners();
+  }
+
+  Future<void> updateUserProfile(Map<String, dynamic> data) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      await FirebaseFirestore.instance.collection('profiles').doc(uid).update(data);
+      _userProfile = { ...?_userProfile, ...data };
+      notifyListeners();
+    }
   }
 
   @override
@@ -102,4 +125,3 @@ class AppProvider extends ChangeNotifier {
     super.dispose();
   }
 }
-

@@ -71,10 +71,10 @@ class AppTheme {
 
   static BoxDecoration glassCardDecoration({double radius = 24, Color? color}) {
     return BoxDecoration(
-      color: color ?? Colors.white.withOpacity(0.12),
+      color: color ?? Colors.white.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: Colors.white.withOpacity(0.25),
+        color: Colors.white.withValues(alpha: 0.25),
         width: 1.5,
       ),
     );
@@ -177,17 +177,25 @@ class AppTheme {
       color: isDark ? darkCardColor : lightCardColor,
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
-        color: isDark ? Colors.white.withOpacity(0.05) : const Color(0xFF1565C0).withOpacity(0.09),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFF1565C0).withValues(alpha: 0.09),
       ),
       boxShadow: isDark
           ? []
           : [
               BoxShadow(
-                color: const Color(0xFF1565C0).withOpacity(0.09),
+                color: const Color(0xFF1565C0).withValues(alpha: 0.09),
                 blurRadius: 22,
                 offset: const Offset(0, 4),
               )
             ],
     );
   }
+}
+
+class AppColors {
+  static const Color brandPrimary = Color(0xFF0F2B5B);
+  static const Color brandSecondary = Color(0xFF00B4CC);
+  static const Color success = Color(0xFF059669);
+  static const Color warning = Color(0xFFD97706);
+  static const Color error = Color(0xFFDC2626);
 }

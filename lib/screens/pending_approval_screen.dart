@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/legacy_theme.dart';
 import '../widgets/animated_bg.dart';
 import 'admin_shell.dart';
@@ -45,14 +46,11 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
     setState(() => _checking = true);
 
     try {
-      final user = Supabase.instance.client.auth.currentUser;
+      final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      final profile = await Supabase.instance.client
-          .from('profiles')
-          .select('account_status')
-          .eq('id', user.id)
-          .maybeSingle();
+      final doc = await FirebaseFirestore.instance.collection('profiles').doc(user.uid).get();
+      final profile = doc.data();
 
       if (!mounted) return;
 
@@ -85,7 +83,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
         actions: [
           TextButton(
             onPressed: () =>
-                Supabase.instance.client.auth.signOut(),
+                FirebaseAuth.instance.signOut(),
             child: const Text('Sign Out'),
           ),
         ],
@@ -122,7 +120,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4A148C).withOpacity(0.4),
+                            color: const Color(0xFF4A148C).withValues(alpha: 0.4),
                             blurRadius: 30,
                             spreadRadius: 5,
                           ),
@@ -160,10 +158,10 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4A148C).withOpacity(0.07),
+                      color: const Color(0xFF4A148C).withValues(alpha: 0.07),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFF4A148C).withOpacity(0.2),
+                        color: const Color(0xFF4A148C).withValues(alpha: 0.2),
                       ),
                     ),
                     child: Column(children: [
@@ -207,7 +205,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () =>
-                        Supabase.instance.client.auth.signOut(),
+                        FirebaseAuth.instance.signOut(),
                     child: const Text(
                       'Sign Out',
                       style: TextStyle(color: AppTheme.textSecondary),

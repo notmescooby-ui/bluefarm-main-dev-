@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../localization/app_translations.dart';
 import '../theme/app_theme.dart';
@@ -13,12 +14,14 @@ class HarvestScreen extends StatefulWidget {
 }
 
 class _HarvestScreenState extends State<HarvestScreen> {
-  final _client = Supabase.instance.client;
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
 
   List<Map<String, dynamic>> _listings = [];
   bool _loading = true;
   bool _showForm = false;
   Map<String, dynamic>? _editingListing;
+  dynamic _openMenuId;
 
   @override
   void initState() {
@@ -29,21 +32,21 @@ class _HarvestScreenState extends State<HarvestScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final uid = _client.auth.currentUser?.id;
+      final uid = _auth.currentUser?.uid;
       if (uid == null) {
         if (mounted) setState(() => _loading = false);
         return;
       }
 
-      final data = await _client
-          .from('listings')
-          .select()
-          .eq('farmer_id', uid)
-          .order('created_at', ascending: false);
+      final querySnapshot = await _firestore
+          .collection('listings')
+          .where('farmer_id', isEqualTo: uid)
+          .orderBy('created_at', descending: true)
+          .get();
 
       if (!mounted) return;
       setState(() {
-        _listings = List<Map<String, dynamic>>.from(data);
+        _listings = querySnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
         _loading = false;
       });
     } catch (_) {
@@ -56,6 +59,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
     setState(() {
       _showForm = true;
       _editingListing = editing;
+      _openMenuId = null;
     });
   }
 
@@ -67,28 +71,25 @@ class _HarvestScreenState extends State<HarvestScreen> {
     _load();
   }
 
-  Future<void> _markSold(dynamic id) async {
+  Future<void> _toggleSold(dynamic id, String currentStatus) async {
+    final newStatus = currentStatus == 'sold' ? 'active' : 'sold';
     try {
-      final updated = await _client
-          .from('listings')
-          .update({'status': 'sold'})
-          .eq('id', id)
-          .select();
+      await _firestore
+          .collection('listings')
+          .doc(id as String)
+          .update({'status': newStatus});
 
       if (!mounted) return;
-      if (updated.isEmpty) {
-        _snack('Could not mark this listing as sold.');
-        return;
-      }
 
       setState(() {
         _listings = _listings
             .map((listing) => listing['id'] == id
-                ? {...listing, 'status': 'sold'}
+                ? {...listing, 'status': newStatus}
                 : listing)
             .toList();
+        _openMenuId = null;
       });
-      _snack('Listing marked as sold.', success: true);
+      _snack(newStatus == 'sold' ? 'Marked as sold.' : 'Marked as listed.', success: true);
     } catch (error) {
       if (!mounted) return;
       _snack('Error: $error');
@@ -100,10 +101,11 @@ class _HarvestScreenState extends State<HarvestScreen> {
 
     setState(() {
       _listings = _listings.where((listing) => listing['id'] != id).toList();
+      _openMenuId = null;
     });
 
     try {
-      await _client.from('listings').delete().eq('id', id);
+      await _firestore.collection('listings').doc(id as String).delete();
 
       if (!mounted) return;
       _snack('Listing deleted.', success: true);
@@ -133,44 +135,142 @@ class _HarvestScreenState extends State<HarvestScreen> {
   }
 
   Widget _buildListingsView() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 100, 14, 0),
-      child: Column(
-        key: const ValueKey('harvest-list'),
-        children: [
-          _HarvestHeader(
-            title: 'Harvest Market',
-            subtitle: 'Manage your fish listings and post new harvest stock.',
-            actionLabel: 'Add Harvest',
-            onAction: () => _openForm(),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9F9F5),
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 20,
+              left: 20, right: 20, bottom: 20,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Harvest & Market",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F1A2A),
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          "YOUR LISTINGS GO LIVE TO BUYERS INSTANTLY",
+                          style: TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 3.0,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _openForm(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF0F1A2A),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.add, color: Colors.white, size: 24),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 14),
-          Expanded(child: _buildListings()),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverToBoxAdapter(
+              child: _buildListings(),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
   }
 
   Widget _buildFormView() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 100, 14, 0),
-      child: Column(
-        key: const ValueKey('harvest-form'),
-        children: [
-          _HarvestHeader(
-            title: _editingListing != null ? 'Edit Listing' : 'Add Harvest',
-            subtitle: 'Fill in the harvest details that buyers will see.',
-            actionLabel: 'Back',
-            isPrimaryAction: false,
-            onAction: _closeForm,
-          ),
-          const SizedBox(height: 14),
-          Expanded(
-            child: _HarvestForm(
-              editing: _editingListing,
-              onDone: _closeForm,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9F9F5),
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 20,
+              left: 20, right: 20, bottom: 20,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _editingListing != null ? 'Edit Listing' : 'Add Harvest',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F1A2A),
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          "FILL IN THE HARVEST DETAILS THAT BUYERS WILL SEE",
+                          style: TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 3.0,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _closeForm,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: const Color(0xFF0F1A2A).withValues(alpha: 0.2)),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.arrow_back, color: Color(0xFF0F1A2A), size: 20),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverToBoxAdapter(
+              child: _HarvestForm(
+                editing: _editingListing,
+                onDone: _closeForm,
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
@@ -178,357 +278,286 @@ class _HarvestScreenState extends State<HarvestScreen> {
 
   Widget _buildListings() {
     if (_loading) {
-      return Container(
-        decoration: AppTheme.cardDecoration(context),
-        child: const Center(child: CircularProgressIndicator()),
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(40.0),
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
     if (_listings.isEmpty) {
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 110),
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(22, 28, 22, 28),
-            decoration: AppTheme.cardDecoration(context),
-            child: Column(
-              children: [
-                Container(
-                  width: 74,
-                  height: 74,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.brandSecondary, AppColors.brandPrimary],
-                    ),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: const Icon(
-                    Icons.inventory_2_outlined,
-                    color: Colors.white,
-                    size: 36,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'No harvest listings yet',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Post your first harvest to show fish quantity, size, and pricing to buyers.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.5,
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _openForm(),
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('Create First Listing'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.brandPrimary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+      return Padding(
+        padding: const EdgeInsets.only(top: 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F1A2A).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(Icons.set_meal, size: 36, color: Color(0xFF0F1A2A)),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            const Text(
+              "No listings yet",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F1A2A),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Post your first catch to appear in the buyer marketplace right away.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: const Color(0xFF6B7280).withValues(alpha: 0.8),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => _openForm(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F1A2A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text("+ Add your first harvest", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 110),
-        itemCount: _listings.length,
-        itemBuilder: (_, index) => _listingCard(_listings[index]),
-      ),
+    return Column(
+      children: _listings.map((listing) => _listingCard(listing)).toList(),
     );
   }
 
   Widget _listingCard(Map<String, dynamic> listing) {
     final status = (listing['status'] as String? ?? 'active').toLowerCase();
-    final statusColor = status == 'active'
-        ? AppColors.success
-        : status == 'sold'
-            ? AppColors.warning
-            : Colors.grey;
+    final isSold = status == 'sold';
+    final id = listing['id'];
+
+    final pond = listing['pond_number']?.toString() ?? 'N/A';
+    final species = listing['species']?.toString() ?? 'Unknown';
+    final count = listing['fish_count']?.toString() ?? '-';
+    
+    // Calculate average weight
+    final qtyStr = listing['quantity_kg']?.toString() ?? '0';
+    final qty = double.tryParse(qtyStr) ?? 0;
+    final fishCountNum = int.tryParse(count) ?? 0;
+    final avgWeight = (fishCountNum > 0) ? (qty / fishCountNum).toStringAsFixed(2) : '-';
+    
+    final priceStr = listing['price_per_kg']?.toString() ?? '0';
+    
+    final isOpen = _openMenuId == id;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: AppTheme.cardDecoration(context),
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFE5E5E0),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.set_meal_rounded,
-                  color: AppColors.brandPrimary,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 4,
+            child: Container(
+              color: isSold ? Colors.grey.withValues(alpha: 0.4) : const Color(0xFF059669),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      (listing['species'] as String?)?.trim().isNotEmpty == true
-                          ? listing['species']
-                          : 'Unknown species',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          pond.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          species,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0F1A2A),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "$count fish · avg $avgWeight kg",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Ready for buyers',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Theme.of(context).textTheme.bodySmall?.color,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _openMenuId = isOpen ? null : id;
+                        });
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(4.0),
+                        child: Icon(Icons.more_vert, size: 20, color: Colors.grey),
                       ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  status.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (listing['quantity_kg'] != null)
-                _MetricChip(
-                  icon: Icons.scale_outlined,
-                  label: '${listing['quantity_kg']} kg',
-                ),
-              if (listing['price_per_kg'] != null)
-                _MetricChip(
-                  icon: Icons.currency_rupee,
-                  label: 'Rs ${listing['price_per_kg']}/kg',
-                ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _openForm(editing: listing),
-                  icon: const Icon(Icons.edit_outlined, size: 15),
-                  label: const Text('Edit'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.brandPrimary,
-                    side: BorderSide(
-                      color: AppColors.brandPrimary.withOpacity(0.4),
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Total $qtyStr kg",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              "₹$priceStr",
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F1A2A),
+                              ),
+                            ),
+                            const Text(
+                              "/kg",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isSold ? Colors.grey.shade200 : const Color(0xFF059669).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Text(
+                        isSold ? "Sold" : "Ready for buyers",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isSold ? Colors.grey.shade600 : const Color(0xFF059669),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: status == 'sold' ? null : () => _markSold(listing['id']),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.warning,
-                    side: BorderSide(
-                      color: AppColors.warning.withOpacity(0.45),
-                    ),
-                    disabledForegroundColor: AppColors.warning.withOpacity(0.45),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                if (isOpen) ...[
+                  const SizedBox(height: 16),
+                  Container(height: 1, color: Colors.grey.withValues(alpha: 0.2)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            if (isSold) {
+                              _toggleSold(id, status);
+                            } else {
+                              _openForm(editing: listing);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              isSold ? "Mark listed" : "Edit",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0F1A2A),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!isSold) {
+                              _toggleSold(id, status);
+                            } else {
+                              _delete(id);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSold ? Colors.transparent : const Color(0xFFE2E8F0),
+                              border: isSold ? Border.all(color: const Color(0xFFDC2626).withValues(alpha: 0.3)) : null,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              isSold ? "Delete" : "Mark sold",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isSold ? const Color(0xFFDC2626) : const Color(0xFF0F1A2A),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    status == 'sold' ? 'Sold' : AppTranslations.get('mark_sold'),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: () => _delete(listing['id']),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  side: BorderSide(
-                    color: AppColors.error.withOpacity(0.45),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Icon(Icons.delete_outline_rounded, size: 18),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HarvestHeader extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String actionLabel;
-  final VoidCallback onAction;
-  final bool isPrimaryAction;
-
-  const _HarvestHeader({
-    required this.title,
-    required this.subtitle,
-    required this.actionLabel,
-    required this.onAction,
-    this.isPrimaryAction = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: AppTheme.cardDecoration(context),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.45,
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                  ),
-                ),
+                ],
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          isPrimaryAction
-              ? ElevatedButton.icon(
-                  onPressed: onAction,
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(actionLabel),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                )
-              : OutlinedButton.icon(
-                  onPressed: onAction,
-                  icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                  label: Text(actionLabel),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.brandPrimary,
-                    side: BorderSide(
-                      color: AppColors.brandPrimary.withOpacity(0.4),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _MetricChip({
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppColors.brandPrimary),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -550,7 +579,8 @@ class _HarvestForm extends StatefulWidget {
 }
 
 class _HarvestFormState extends State<_HarvestForm> {
-  final _client = Supabase.instance.client;
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
 
   final _pondCtrl = TextEditingController();
   final _qtyCtrl = TextEditingController();
@@ -620,7 +650,7 @@ class _HarvestFormState extends State<_HarvestForm> {
     setState(() => _submitting = true);
 
     try {
-      final uid = _client.auth.currentUser?.id;
+      final uid = _auth.currentUser?.uid;
       if (uid == null) {
         _snack('User not signed in');
         return;
@@ -631,13 +661,16 @@ class _HarvestFormState extends State<_HarvestForm> {
         'species': _species,
         'quantity_kg': double.tryParse(_qtyCtrl.text.trim()),
         'price_per_kg': double.tryParse(_priceKgCtrl.text.trim()),
+        'fish_count': int.tryParse(_countCtrl.text.trim()),
+        'pond_number': _pondCtrl.text.trim(),
         'status': 'active',
+        'created_at': FieldValue.serverTimestamp(),
       };
 
       if (widget.editing != null) {
-        await _client.from('listings').update(data).eq('id', widget.editing!['id']);
+        await _firestore.collection('listings').doc(widget.editing!['id'] as String).update(data);
       } else {
-        await _client.from('listings').insert(data);
+        await _firestore.collection('listings').add(data);
       }
 
       _snack(
@@ -656,7 +689,7 @@ class _HarvestFormState extends State<_HarvestForm> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: success ? AppColors.success : AppColors.error,
+        backgroundColor: success ? const Color(0xFF059669) : const Color(0xFFDC2626),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -665,233 +698,105 @@ class _HarvestFormState extends State<_HarvestForm> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final averageWeight = _calculatedAverageWeight();
-
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: bottomInset > 0 ? 12 : 0),
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: EdgeInsets.fromLTRB(0, 0, 0, bottomInset + 110),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.brandPrimary.withOpacity(0.07),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.brandPrimary.withOpacity(0.2)),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline_rounded, color: AppColors.brandPrimary, size: 18),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Your listing will appear to buyers after you submit it.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.45,
-                        color: AppColors.brandPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              decoration: AppTheme.cardDecoration(context),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _label('Fish Species *'),
-                  DropdownButtonFormField<String>(
-                    value: _species,
-                    decoration: _dec('Select species', Icons.set_meal_rounded),
-                    items: _speciesList
-                        .map((species) => DropdownMenuItem(
-                              value: species,
-                              child: Text(species),
-                            ))
-                        .toList(),
-                    onChanged: (value) => setState(() => _species = value),
-                  ),
-                  const SizedBox(height: 14),
-                  _label('Pond Number / Name'),
-                  TextField(
-                    controller: _pondCtrl,
-                    decoration: _dec('e.g. Pond 1 or North Pond', Icons.water_rounded),
-                  ),
-                  const SizedBox(height: 14),
-                  _label('Total Weight Harvested (kg) *'),
-                  TextField(
-                    controller: _qtyCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    onChanged: (_) => setState(() {}),
-                    decoration: _dec('e.g. 200', Icons.scale_outlined),
-                  ),
-                  const SizedBox(height: 14),
-                  _label('Number of Fish Harvested'),
-                  TextField(
-                    controller: _countCtrl,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (_) => setState(() {}),
-                    decoration: _dec('e.g. 150', Icons.numbers_rounded),
-                  ),
-                  if (averageWeight != null) ...[
-                    const SizedBox(height: 14),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppColors.brandSecondary.withOpacity(0.08),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.brandPrimary.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.monitor_weight_outlined,
-                              color: AppColors.brandPrimary,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Estimated average per fish',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${averageWeight.toStringAsFixed(1)} g',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Calculated from total weight and fish count.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    height: 1.4,
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 14),
-                  _label('Price per kg (Rs)'),
-                  TextField(
-                    controller: _priceKgCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    decoration: _dec('e.g. 120', Icons.currency_rupee_outlined),
-                  ),
-                  const SizedBox(height: 14),
-                  _label('Price per Fish (Rs)'),
-                  TextField(
-                    controller: _priceFishCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    decoration: _dec('e.g. 90', Icons.currency_rupee_outlined),
-                  ),
-                  const SizedBox(height: 14),
-                  _label('Bulk / Lot Price (Rs)'),
-                  TextField(
-                    controller: _bulkPriceCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    decoration: _dec('e.g. 18000', Icons.local_offer_outlined),
-                  ),
-                  const SizedBox(height: 14),
-                  _label('Notes'),
-                  TextField(
-                    controller: _notesCtrl,
-                    maxLines: 3,
-                    decoration: _dec(
-                      'e.g. Live fish, available for early morning pickup',
-                      Icons.notes_rounded,
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: (_canSubmit && !_submitting) ? _submit : null,
-                      icon: _submitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.upload_rounded),
-                      label: Text(
-                        _submitting
-                            ? AppTranslations.get('posting')
-                            : widget.editing != null
-                                ? 'Update Listing'
-                                : AppTranslations.get('post_listing'),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.brandPrimary,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey.shade300,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFE5E5E0),
         ),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label('Fish Species *'),
+          DropdownButtonFormField<String>(
+            value: _species,
+            decoration: _dec('Select species', Icons.set_meal_rounded),
+            items: _speciesList
+                .map((species) => DropdownMenuItem(
+                      value: species,
+                      child: Text(species),
+                    ))
+                .toList(),
+            onChanged: (value) => setState(() => _species = value),
+          ),
+          const SizedBox(height: 14),
+          _label('Pond Number / Name'),
+          TextField(
+            controller: _pondCtrl,
+            decoration: _dec('e.g. Pond 1 or North Pond', Icons.water_rounded),
+          ),
+          const SizedBox(height: 14),
+          _label('Total Weight Harvested (kg) *'),
+          TextField(
+            controller: _qtyCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+            ],
+            onChanged: (_) => setState(() {}),
+            decoration: _dec('e.g. 200', Icons.scale_outlined),
+          ),
+          const SizedBox(height: 14),
+          _label('Number of Fish Harvested'),
+          TextField(
+            controller: _countCtrl,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: (_) => setState(() {}),
+            decoration: _dec('e.g. 150', Icons.numbers_rounded),
+          ),
+          const SizedBox(height: 14),
+          _label('Price per kg (Rs)'),
+          TextField(
+            controller: _priceKgCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+            ],
+            decoration: _dec('e.g. 120', Icons.currency_rupee_outlined),
+          ),
+          const SizedBox(height: 22),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: (_canSubmit && !_submitting) ? _submit : null,
+              icon: _submitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.upload_rounded),
+              label: Text(
+                _submitting
+                    ? 'Posting...'
+                    : widget.editing != null
+                        ? 'Update Listing'
+                        : 'Post Listing',
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F1A2A),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey.shade300,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -904,7 +809,7 @@ class _HarvestFormState extends State<_HarvestForm> {
         style: const TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 13,
-          color: Color(0xFF0D2B4E),
+          color: Color(0xFF0F1A2A),
         ),
       ),
     );
@@ -919,24 +824,15 @@ class _HarvestFormState extends State<_HarvestForm> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.brandSecondary.withOpacity(0.12)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.4),
+        borderSide: const BorderSide(color: Color(0xFF0F1A2A), width: 1.4),
       ),
       filled: true,
-      fillColor: Theme.of(context).cardColor,
+      fillColor: const Color(0xFFF9F9F5),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
-  }
-
-  double? _calculatedAverageWeight() {
-    final quantityKg = double.tryParse(_qtyCtrl.text.trim());
-    final fishCount = int.tryParse(_countCtrl.text.trim());
-    if (quantityKg == null || fishCount == null || fishCount <= 0) {
-      return null;
-    }
-    return (quantityKg * 1000) / fishCount;
   }
 }

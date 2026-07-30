@@ -1,12 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'settings_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_redirect_service.dart';
 import '../theme/app_theme.dart';
 import '../localization/app_translations.dart';
-import '../services/supabase_compatibility.dart';
+
 import 'home_screen.dart';
 import 'knowledge_screen.dart';
 import 'insights_screen.dart';
@@ -14,6 +15,7 @@ import 'harvest_screen.dart';
 import 'camera_screen.dart';
 import 'hardware_screen.dart';
 import 'device_connect_screen.dart';
+import 'settings_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -23,21 +25,6 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
-  bool _sidebarOpen = false;
-
-  final List<String> _titles = [
-    'Water Quality Dashboard',
-    'Knowledge Center',
-    'Insights & Trends',
-    'Harvest & Market',
-    'Farm Camera',
-  ];
-
-  String _shortLocation(dynamic value) {
-    final text = (value as String?)?.trim() ?? '';
-    if (text.isEmpty) return 'Navi Mumbai';
-    return text.split(',').first.trim();
-  }
 
   @override
   void initState() {
@@ -50,604 +37,119 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isHome = _currentIndex == 0;
-    final gradient = isHome ? AppTheme.homeScreenGradient : AppTheme.otherScreensGradient;
-
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: gradient,
-        ),
-        child: Stack(
-          children: [
-            IndexedStack(
-              index: _currentIndex,
-              children: [
-                HomeScreen(),
-                Padding(
-                  padding: const EdgeInsets.only(top: 68),
-                  child: KnowledgeScreen(),
-                ),
-                InsightsScreen(),
-                HarvestScreen(),
-                const CameraScreen(),
-              ],
-            ),
+      backgroundColor: const Color(0xFFF7F9FC), // Modern off-white background
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: _currentIndex,
+            children: [
+              HomeScreen(),
+              InsightsScreen(),
+              KnowledgeScreen(),
+              HarvestScreen(),
+              const SettingsScreen(),
+            ],
+          ),
 
-            // ── Ultra-thin white header (hidden on Dashboard/HomeScreen) ──────────────────
-            if (!isHome)
-              Positioned(
-                top: 0, left: 0, right: 0,
-                child: Consumer<AppProvider>(
-                  builder: (context, provider, _) => Container(
-                    color: Colors.white,
-                    child: SafeArea(
-                      bottom: false,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 4,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                        child: Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => setState(() => _sidebarOpen = true),
-                              child: Container(
-                                width: 30, height: 30,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1565C0).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(Icons.person_outline,
-                                    color: Color(0xFF1565C0), size: 16),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    provider.userProfile['full_name'] as String? ??
-                                        provider.userProfile['farm_name'] as String? ?? 'BlueFarm',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF0D1F3C),
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                  Text(
-                                    _shortLocation(
-                                      provider.userProfile['region'] ??
-                                          provider.userProfile['location'],
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade500,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const LiveBadgeWidget(),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => setState(() => _sidebarOpen = true),
-                              child: Container(
-                                width: 30, height: 30,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1565C0).withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(Icons.settings_outlined,
-                                    color: Color(0xFF1565C0), size: 16),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+          // ── Bottom Navigation Bar (React Design) ──────────────────
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.only(
+                top: 12,
+                bottom: 16 + MediaQuery.of(context).padding.bottom,
+                left: 16,
+                right: 16,
+              ),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF9F9F5), // Cream background
+                border: Border(
+                  top: BorderSide(
+                    color: Color(0xFFE5E5E0), // Hairline border
+                    width: 1,
                   ),
                 ),
               ),
-
-            // ── Floating Glassmorphic Bottom Navigation Bar (Fisflow Style) ──────────────────
-            Positioned(
-              bottom: 16 + MediaQuery.of(context).padding.bottom,
-              left: 16,
-              right: 16,
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 500),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(40),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(40),
-                        border: Border.all(
-                          color: const Color(0xFF10263F).withOpacity(0.06),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF10263F).withOpacity(0.10),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildNavItem(
-                            icon: Icons.home_outlined,
-                            label: 'Dashboard',
-                            isActive: _currentIndex == 0,
-                            onTap: () => setState(() => _currentIndex = 0),
-                          ),
-                          _buildNavItem(
-                            icon: Icons.insights_outlined,
-                            label: 'Insights',
-                            isActive: _currentIndex == 2,
-                            onTap: () => setState(() => _currentIndex = 2),
-                          ),
-                          _buildCenterAddButton(),
-                          _buildNavItem(
-                            icon: Icons.storefront_outlined,
-                            label: 'Market',
-                            isActive: _currentIndex == 3,
-                            onTap: () => setState(() => _currentIndex = 3),
-                          ),
-                          _buildNavItem(
-                            icon: Icons.settings_outlined,
-                            label: 'Settings',
-                            isActive: _sidebarOpen,
-                            onTap: () => setState(() => _sidebarOpen = true),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // ── Sidebar ────────────────────────────────────────────────────────
-            if (_sidebarOpen)
-              Stack(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _sidebarOpen = false),
-                    child: Container(
-                      color: Colors.black.withOpacity(0.42),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                        child: Container(color: Colors.transparent),
-                      ),
-                    ),
+                  _buildNavItem(
+                    icon: Icons.home_filled,
+                    inactiveIcon: Icons.home_outlined,
+                    label: 'Home',
+                    isActive: _currentIndex == 0,
+                    onTap: () => setState(() => _currentIndex = 0),
                   ),
-                  Positioned(
-                    left: 0, top: 0, bottom: 0, width: 305,
-                    child: SidebarWidget(
-                        onClose: () => setState(() => _sidebarOpen = false)),
+                  _buildNavItem(
+                    icon: Icons.show_chart,
+                    inactiveIcon: Icons.show_chart,
+                    label: 'Insights',
+                    isActive: _currentIndex == 1,
+                    onTap: () => setState(() => _currentIndex = 1),
+                  ),
+                  _buildNavItem(
+                    icon: Icons.menu_book,
+                    inactiveIcon: Icons.menu_book_outlined,
+                    label: 'Learn',
+                    isActive: _currentIndex == 2,
+                    onTap: () => setState(() => _currentIndex = 2),
+                  ),
+                  _buildNavItem(
+                    icon: Icons.shopping_bag,
+                    inactiveIcon: Icons.shopping_bag_outlined,
+                    label: 'Market',
+                    isActive: _currentIndex == 3,
+                    onTap: () => setState(() => _currentIndex = 3),
+                  ),
+                  _buildNavItem(
+                    icon: Icons.settings,
+                    inactiveIcon: Icons.settings_outlined,
+                    label: 'Settings',
+                    isActive: _currentIndex == 4,
+                    onTap: () => setState(() => _currentIndex = 4),
                   ),
                 ],
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildNavItem({
     required IconData icon,
+    required IconData inactiveIcon,
     required String label,
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    final color = isActive ? const Color(0xFF10263F) : const Color(0xFF7A7568).withOpacity(0.7);
+    final color = isActive ? const Color(0xFF0F1A2A) : const Color(0xFF6B7280); // Ink vs Muted Ink
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF10263F).withOpacity(0.08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
+        width: 60,
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 20, color: color),
+            Icon(isActive ? icon : inactiveIcon, size: 24, color: color),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
+                fontSize: 10.5,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                 color: color,
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildCenterAddButton() {
-    return GestureDetector(
-      onTap: _showAddActionSheet,
-      child: Transform.translate(
-        offset: const Offset(0, -18),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF22D3EE).withOpacity(0.4),
-                    blurRadius: 16,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF22D3EE), Color(0xFF2563EB)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 4,
-                ),
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAddActionSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border.all(
-                color: const Color(0xFF10263F).withOpacity(0.06),
-                width: 1,
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10263F).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  "Quick Actions",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1B2430),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Add data manually or connect options",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: const Color(0xFF7A7568).withOpacity(0.9),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                  _buildActionOption(
-                    icon: Icons.edit_note_rounded,
-                    title: "Manual Sensor Reading",
-                    subtitle: "Manually input current pH, Temp, Turbidity",
-                    color: const Color(0xFF22D3EE),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showManualEntryDialog();
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActionOption(
-                    icon: Icons.wifi_find_rounded,
-                    title: "Connect AquaBot Device",
-                    subtitle: "Pair and setup real-time telemetry",
-                    color: const Color(0xFF2563EB),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const DeviceConnectScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActionOption(
-                    icon: Icons.camera_alt_outlined,
-                    title: "Analyze via Camera",
-                    subtitle: "Perform AI diagnostics via photo scan",
-                    color: const Color(0xFF10B981),
-                    onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _currentIndex = 4);
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                ],
-              ),
-            ),
-          );
-      },
-    );
-  }
-
-  Widget _buildActionOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAF7F2),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFF10263F).withOpacity(0.06),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.white.withOpacity(0.5),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.4), size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showManualEntryDialog() {
-    final phCtrl = TextEditingController(text: "7.2");
-    final tempCtrl = TextEditingController(text: "28.5");
-    final turbCtrl = TextEditingController(text: "2.5");
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0D1F3C).withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
-                    width: 1,
-                  ),
-                ),
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Add Sensor Reading",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Enter current water measurements manually.",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildDialogField("pH Level (e.g. 7.2)", phCtrl, TextInputType.number),
-                    const SizedBox(height: 14),
-                    _buildDialogField("Temperature (°C) (e.g. 28.5)", tempCtrl, TextInputType.number),
-                    const SizedBox(height: 14),
-                    _buildDialogField("Turbidity (NTU) (e.g. 2.5)", turbCtrl, TextInputType.number),
-                    const SizedBox(height: 28),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.white.withOpacity(0.6)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF22D3EE),
-                            foregroundColor: const Color(0xFF0D1F3C),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          ),
-                          onPressed: () async {
-                            final phVal = double.tryParse(phCtrl.text) ?? 7.2;
-                            final tempVal = double.tryParse(tempCtrl.text) ?? 28.5;
-                            final turbVal = double.tryParse(turbCtrl.text) ?? 2.5;
-
-                            try {
-                              await Supabase.instance.client.from('sensor_readings').insert({
-                                'created_at': DateTime.now().toIso8601String(),
-                                'ph': phVal,
-                                'temperature': tempVal,
-                                'turbidity': turbVal,
-                                'device_id': 'manual-entry',
-                              });
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Reading saved successfully!"),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text("Failed to save reading: $e"),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          child: const Text(
-                            "Save Reading",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildDialogField(String label, TextEditingController ctrl, TextInputType type) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w800,
-            color: Colors.white.withOpacity(0.5),
-            letterSpacing: 1.1,
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: ctrl,
-          keyboardType: type,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white.withOpacity(0.06),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF22D3EE)),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -682,9 +184,9 @@ class _LiveBadgeWidgetState extends State<LiveBadgeWidget> with SingleTickerProv
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF059669).withOpacity(0.16),
+        color: const Color(0xFF059669).withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: const Color(0xFF059669).withOpacity(0.32)),
+        border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.32)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       child: Row(
@@ -695,7 +197,7 @@ class _LiveBadgeWidgetState extends State<LiveBadgeWidget> with SingleTickerProv
               width: 6,
               height: 6,
               decoration: BoxDecoration(
-                color: const Color(0xFF059669).withOpacity(_opacity.value),
+                color: const Color(0xFF059669).withValues(alpha: _opacity.value),
                 shape: BoxShape.circle,
               ),
             ),
@@ -764,7 +266,7 @@ class _DockItemWidgetState extends State<DockItemWidget> with SingleTickerProvid
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = widget.isActive
         ? (isDark ? const Color(0xFF22D3EE) : const Color(0xFF1565C0))
-        : (isDark ? Colors.white.withOpacity(0.6) : const Color(0xFF0D1F3C).withOpacity(0.6));
+        : (isDark ? Colors.white.withValues(alpha: 0.6) : const Color(0xFF0D1F3C).withValues(alpha: 0.6));
 
     return GestureDetector(
       onTap: _handleTap,
@@ -783,10 +285,10 @@ class _DockItemWidgetState extends State<DockItemWidget> with SingleTickerProvid
                   width: 47,
                   height: 47,
                   decoration: BoxDecoration(
-                    color: widget.isActive ? AppTheme.lightAccent.withOpacity(0.1) : Colors.transparent,
+                    color: widget.isActive ? AppTheme.lightAccent.withValues(alpha: 0.1) : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: widget.isActive
-                        ? [BoxShadow(color: AppTheme.lightAccent.withOpacity(0.3), blurRadius: 14)]
+                        ? [BoxShadow(color: AppTheme.lightAccent.withValues(alpha: 0.3), blurRadius: 14)]
                         : [],
                   ),
                   child: Icon(widget.icon, size: 22, color: color),
@@ -874,7 +376,7 @@ class _AadhaarCenterButtonState extends State<AadhaarCenterButton> with SingleTi
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF00B4CC).withOpacity(0.42),
+                        color: const Color(0xFF00B4CC).withValues(alpha: 0.42),
                         blurRadius: 26,
                       )
                     ],
@@ -890,7 +392,7 @@ class _AadhaarCenterButtonState extends State<AadhaarCenterButton> with SingleTi
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
-                              colors: [Colors.white.withOpacity(0.3), Colors.transparent],
+                              colors: [Colors.white.withValues(alpha: 0.3), Colors.transparent],
                             ),
                           ),
                         ),
@@ -943,14 +445,14 @@ class _SidebarWidgetState extends State<SidebarWidget> {
   @override
   void initState() {
     super.initState();
-    final p = context.read<AppProvider>().userProfile;
-    _nameController.text = p['full_name'] ?? p['name'] ?? '';
-    _farmController.text = p['farm_name'] ?? '';
-    _emailController.text = p['email'] ?? '';
-    _phoneController.text = p['phone'] ?? '';
-    _speciesController.text = p['fish_species'] ?? '';
-    _locationController.text = p['region'] ?? p['location'] ?? '';
-    _pondController.text = p['pond_size'] ?? '';
+    final p = context.read<AppProvider>();
+    _nameController.text = p.userProfile?['full_name'] ?? p.userProfile?['name'] ?? '';
+    _farmController.text = p.userProfile?['farm_name'] ?? '';
+    _emailController.text = p.userProfile?['email'] ?? '';
+    _phoneController.text = p.userProfile?['phone'] ?? '';
+    _speciesController.text = p.userProfile?['fish_species'] ?? '';
+    _locationController.text = p.userProfile?['region'] ?? p.userProfile?['location'] ?? '';
+    _pondController.text = p.userProfile?['pond_size'] ?? '';
   }
 
   @override
@@ -1018,7 +520,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1097,11 +599,11 @@ class _SidebarWidgetState extends State<SidebarWidget> {
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(11),
-                borderSide: BorderSide(color: AppTheme.lightAccent.withOpacity(0.3)),
+                borderSide: BorderSide(color: AppTheme.lightAccent.withValues(alpha: 0.3)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(11),
-                borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(11),
@@ -1144,7 +646,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                 ),
               ),
               child: Container(
-                color: const Color(0xFF0F2B5B).withOpacity(0.65),
+                color: const Color(0xFF0F2B5B).withValues(alpha: 0.65),
                 child: Stack(
                   children: [
                     // Profile Info Box
@@ -1184,7 +686,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                               children: [
                                 Consumer<AppProvider>(
                                   builder: (context, p, _) => Text(
-                                    p.userProfile['full_name'] as String? ?? p.userProfile['name'] as String? ?? 'prasuna',
+                                    p.userProfile?['full_name'] as String? ?? p.userProfile?['name'] as String? ?? 'prasuna',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 18,
@@ -1197,7 +699,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 const SizedBox(height: 2),
                                 Consumer<AppProvider>(
                                   builder: (context, p, _) => Text(
-                                    '${p.userProfile['role'] as String? ?? 'farmer'} · ${_shortLocation(p.userProfile['region'] ?? p.userProfile['location'])}, Maharashtra',
+                                    '${p.userProfile?['role'] as String? ?? 'farmer'} · ${_shortLocation(p.userProfile?['region'] ?? p.userProfile?['location'])}, Maharashtra',
                                     style: const TextStyle(
                                       fontSize: 10,
                                       color: Colors.white70,
@@ -1211,7 +713,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF059669).withOpacity(0.24),
+                                    color: const Color(0xFF059669).withValues(alpha: 0.24),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(color: const Color(0xFF059669), width: 1),
                                   ),
@@ -1247,7 +749,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                           height: 32,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                           ),
                           child: const Icon(Icons.close, color: Colors.white, size: 16),
                         ),
@@ -1286,7 +788,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color: Colors.black.withValues(alpha: 0.03),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -1328,7 +830,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 Switch(
                                   value: context.watch<AppProvider>().isDarkMode,
                                   onChanged: (_) => context.read<AppProvider>().toggleDarkMode(),
-                                  activeColor: const Color(0xFF0F2B5B),
+                                  activeThumbColor: const Color(0xFF0F2B5B),
                                   activeTrackColor: const Color(0xFFBAE6FD),
                                   inactiveThumbColor: Colors.grey.shade400,
                                   inactiveTrackColor: Colors.grey.shade200,
@@ -1342,7 +844,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                               minimumSize: const Size(double.infinity, 48),
                               side: const BorderSide(color: Color(0xFF2563EB), width: 1.2),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              backgroundColor: Colors.white.withOpacity(0.2),
+                              backgroundColor: Colors.white.withValues(alpha: 0.2),
                               foregroundColor: const Color(0xFF2563EB),
                             ),
                             onPressed: _signOut,
@@ -1385,25 +887,25 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                 child: Consumer<AppProvider>(
                                   builder: (context, p, _) => Column(
                                     children: [
-                                      _profileRowCompact('Name', p.userProfile['full_name'] as String? ?? p.userProfile['name'] as String?),
+                                      _profileRowCompact('Name', p.userProfile?['full_name'] as String? ?? p.userProfile?['name'] as String?),
                                       const Divider(),
-                                      _profileRowCompact('Farm Name', p.userProfile['farm_name']),
+                                      _profileRowCompact('Farm Name', p.userProfile?['farm_name']),
                                       const Divider(),
-                                      _profileRowCompact('Email', p.userProfile['email']),
+                                      _profileRowCompact('Email', p.userProfile?['email']),
                                       const Divider(),
-                                      _profileRowCompact('Phone', p.userProfile['phone']),
+                                      _profileRowCompact('Phone', p.userProfile?['phone']),
                                       const Divider(),
-                                      _profileRowCompact('Species', p.userProfile['fish_species']),
+                                      _profileRowCompact('Species', p.userProfile?['fish_species']),
                                       const Divider(),
                                       _profileRowCompact(
                                         'Location',
                                         _shortLocation(
-                                          p.userProfile['region'] ??
-                                              p.userProfile['location'],
+                                          p.userProfile?['region'] ??
+                                              p.userProfile?['location'],
                                         ),
                                       ),
                                       const Divider(),
-                                      _profileRowCompact('Pond Size', p.userProfile['pond_size']),
+                                      _profileRowCompact('Pond Size', p.userProfile?['pond_size']),
                                     ],
                                   ),
                                 ),
@@ -1466,7 +968,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                                           width: 38,
                                           height: 38,
                                           decoration: BoxDecoration(
-                                            color: Colors.orange.withOpacity(0.1),
+                                            color: Colors.orange.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(11),
                                           ),
                                           child: const Icon(Icons.light_mode_outlined, color: Colors.orange, size: 20),
@@ -1615,9 +1117,9 @@ class _AadhaarSheetState extends State<AadhaarSheet> with SingleTickerProviderSt
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: AppTheme.lightSuccess.withOpacity(0.05),
+                color: AppTheme.lightSuccess.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: AppTheme.lightSuccess.withOpacity(0.2)),
+                border: Border.all(color: AppTheme.lightSuccess.withValues(alpha: 0.2)),
               ),
               child: const Column(
                 children: [
@@ -1672,12 +1174,12 @@ class _AadhaarSheetState extends State<AadhaarSheet> with SingleTickerProviderSt
           Container(
             height: 165,
             decoration: BoxDecoration(
-              border: Border.all(color: AppTheme.lightAccent.withOpacity(0.5), width: 1.5, style: BorderStyle.none),
+              border: Border.all(color: AppTheme.lightAccent.withValues(alpha: 0.5), width: 1.5, style: BorderStyle.none),
               borderRadius: BorderRadius.circular(15),
             ),
             child: Stack(
               children: [
-                 Positioned.fill(child: Container(decoration: BoxDecoration(color: AppTheme.lightAccent.withOpacity(0.05), borderRadius: BorderRadius.circular(15)))),
+                 Positioned.fill(child: Container(decoration: BoxDecoration(color: AppTheme.lightAccent.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(15)))),
                 if (_scanning)
                   AnimatedBuilder(
                     animation: _scanController,
@@ -1691,7 +1193,7 @@ class _AadhaarSheetState extends State<AadhaarSheet> with SingleTickerProviderSt
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, AppTheme.lightAccent.withOpacity(0.4), Colors.transparent],
+                            colors: [Colors.transparent, AppTheme.lightAccent.withValues(alpha: 0.4), Colors.transparent],
                           ),
                         ),
                       ),

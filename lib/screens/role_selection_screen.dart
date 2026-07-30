@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
@@ -22,7 +23,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     if (_loading) return;
     setState(() => _loading = true);
 
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (!mounted) return;
       Navigator.of(context).push(
@@ -33,11 +34,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     }
 
     try {
-      final profile = await Supabase.instance.client
-          .from('profiles')
-          .select('role, full_name')
-          .eq('id', user.id)
-          .maybeSingle();
+      final doc = await FirebaseFirestore.instance.collection('profiles').doc(user.uid).get();
+      final profile = doc.data();
 
       if (!mounted) return;
       final hasProfile =
@@ -49,7 +47,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => FarmerInfoScreen(
-              phone: user.phone ?? '',
+              phone: user.phoneNumber ?? '',
               email: user.email,
               role: role,
             ),
@@ -79,7 +77,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAuthenticated = Supabase.instance.client.auth.currentUser != null;
+    final isAuthenticated = FirebaseAuth.instance.currentUser != null;
 
     return Scaffold(
       body: Container(
@@ -101,7 +99,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 36,
                             spreadRadius: 4,
                           ),
@@ -131,7 +129,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           : 'Choose whether you want to use BlueFarm as a farmer or as a buyer.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         height: 1.5,
                       ),
                       textAlign: TextAlign.center,

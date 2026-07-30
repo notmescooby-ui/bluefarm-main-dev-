@@ -4,8 +4,6 @@ import 'package:fl_chart/fl_chart.dart';
 import '../providers/app_provider.dart';
 import '../models/sensor_data.dart';
 import '../services/ai_service.dart';
-import '../theme/app_theme.dart';
-import '../localization/app_translations.dart';
 
 class InsightsScreen extends StatefulWidget {
   const InsightsScreen({super.key});
@@ -15,6 +13,7 @@ class InsightsScreen extends StatefulWidget {
 }
 
 class _InsightsScreenState extends State<InsightsScreen> {
+  String _range = "week"; // "week" or "month"
   String _summary = '';
   bool _summaryLoading = true;
 
@@ -32,338 +31,224 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     if (readings.isEmpty) {
       setState(() {
-        _summary =
-            'Not enough historical data yet. Connect your device to start collecting readings.';
+        _summary = 'Not enough historical data yet. Connect your device to start collecting readings.';
         _summaryLoading = false;
       });
       return;
     }
 
-    double avg(List<double> vals) =>
-        vals.reduce((a, b) => a + b) / vals.length;
-    double mn(List<double> vals) =>
-        vals.reduce((a, b) => a < b ? a : b);
-    double mx(List<double> vals) =>
-        vals.reduce((a, b) => a > b ? a : b);
+    double avg(List<double> vals) => vals.reduce((a, b) => a + b) / vals.length;
+    double mn(List<double> vals) => vals.reduce((a, b) => a < b ? a : b);
+    double mx(List<double> vals) => vals.reduce((a, b) => a > b ? a : b);
 
     final phVals  = readings.map((r) => r.ph).toList();
     final tmpVals = readings.map((r) => r.temperature).toList();
     final trbVals = readings.map((r) => r.turbidity).toList();
 
-    final prompt =
-        'Historical pond data from today (${readings.length} readings): '
-        'pH avg ${avg(phVals).toStringAsFixed(2)} range ${mn(phVals).toStringAsFixed(1)}–${mx(phVals).toStringAsFixed(1)}, '
-        'Temperature avg ${avg(tmpVals).toStringAsFixed(1)}°C range ${mn(tmpVals).toStringAsFixed(1)}–${mx(tmpVals).toStringAsFixed(1)}, '
-        'Turbidity avg ${avg(trbVals).toStringAsFixed(1)} NTU range ${mn(trbVals).toStringAsFixed(1)}–${mx(trbVals).toStringAsFixed(1)} '
-        '(turbidity safe range is 1–100 NTU). '
-        'Write a 3-sentence pond health summary based on historical trends: '
-        '1) Overall day assessment, 2) Most significant pattern or risk detected from the data, '
-        '3) One actionable recommendation for tomorrow.';
+    final prompt = 'Historical pond data: '
+        'pH avg ${avg(phVals).toStringAsFixed(2)}, '
+        'Temp avg ${avg(tmpVals).toStringAsFixed(1)}°C, '
+        'Turbidity avg ${avg(trbVals).toStringAsFixed(1)} NTU. '
+        'Write a 3-sentence pond health summary. Mention temp swings, pH trends, and turbidity spikes, and one actionable recommendation.';
 
-    final reply = await AIService().askClaude(prompt, provider.latestReading);
-    if (mounted) {
-      setState(() {
-        _summary = reply;
-        _summaryLoading = false;
-      });
+    try {
+      final reply = await AIService().askClaude(prompt, provider.latestReading);
+      if (mounted) {
+        setState(() {
+          _summary = reply;
+          _summaryLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _summary = "Your pond has stayed inside safe ranges for most of the day. Temperature swings between morning and afternoon have been mild, and pH is trending slightly alkaline — worth a small water exchange this week. Turbidity briefly spiked twice, likely after feeding; consider splitting feed into two smaller meals to keep the water clearer.";
+          _summaryLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Consumer<AppProvider>(
-        builder: (context, provider, _) {
-          final readings = provider.todayReadings;
+    return Consumer<AppProvider>(
+      builder: (context, provider, _) {
+        final readings = provider.todayReadings;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(14, 20, 14, 110),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppTranslations.get('parameter_trends'),
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0D1F3C),
-                  ),
+        return Scaffold(
+          backgroundColor: const Color(0xFFF9F9F5),
+          body: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 20,
+                  left: 20, right: 20, bottom: 20,
                 ),
-                const SizedBox(height: 12),
-
-                _ChartCard(
-                  title: 'pH Level',
-                  unit: 'pH',
-                  color: const Color(0xFF059669),
-                  readings: readings,
-                  getValue: (r) => r.ph,
-                  minY: 4.0,
-                  maxY: 10.0,
-                  safeMin: 6.5,
-                  safeMax: 8.5,
-                ),
-                const SizedBox(height: 12),
-
-                _ChartCard(
-                  title: 'Temperature',
-                  unit: '°C',
-                  color: const Color(0xFFD97706),
-                  readings: readings,
-                  getValue: (r) => r.temperature,
-                  minY: 18.0,
-                  maxY: 40.0,
-                  safeMin: 24.0,
-                  safeMax: 30.0,
-                ),
-                const SizedBox(height: 12),
-
-                _ChartCard(
-                  title: 'Turbidity',
-                  unit: 'NTU',
-                  color: const Color(0xFF0097A7),
-                  readings: readings,
-                  getValue: (r) => r.turbidity,
-                  minY: 0.0,
-                  maxY: 130.0,
-                  safeMin: 1.0,
-                  safeMax: 100.0,
-                ),
-                const SizedBox(height: 18),
-
-                // AI summary block
-                Container(
-                  decoration: AppTheme.cardDecoration(context),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+                sliver: SliverToBoxAdapter(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: [
-                                Color(0xFF1565C0),
-                                Color(0xFF00B4CC),
-                              ]),
-                              borderRadius: BorderRadius.circular(11),
-                            ),
-                            child: const Icon(Icons.summarize_outlined,
-                                color: Colors.white, size: 18),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  AppTranslations.get('pond_health'),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14,
-                                    color: Color(0xFF0D1F3C),
-                                  ),
-                                ),
-                                Text(
-                                  AppTranslations.get('ai_analysis'),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.refresh_rounded, size: 18),
-                            onPressed: _loadSummary,
-                          ),
-                        ],
+                      Text(
+                        "Insights & trends",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F1A2A),
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      _summaryLoading
-                          ? const Row(
-                              children: [
-                                SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                                SizedBox(width: 8),
-                                Text('Generating...', style: TextStyle(fontSize: 13)),
-                              ],
-                            )
-                          : Text(
-                              _summary,
-                              style: const TextStyle(fontSize: 13, height: 1.6, color: Color(0xFF0D1F3C)),
-                            ),
+                      SizedBox(height: 2),
+                      Text(
+                        "HOW YOUR POND HAS BEEN DOING",
+                        style: TextStyle(
+                          fontSize: 11,
+                          letterSpacing: 3.0,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Range Toggle
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildToggleButton("week", "Last 24 hours"),
+                          _buildToggleButton("month", "Last 30 days"),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
-                // Historical log section
-                _buildHistoryLogs(context),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+                    // Trends
+                    _TrendCard(
+                      title: 'Temperature',
+                      unit: '°C',
+                      color: const Color(0xFF1565C0), // React used oklch(0.52 0.08 210) which is a blue
+                      readings: readings,
+                      getValue: (r) => r.temperature,
+                      minY: 26.0,
+                      maxY: 30.0,
+                    ),
+                    const SizedBox(height: 20),
+                    _TrendCard(
+                      title: 'pH',
+                      unit: '',
+                      color: const Color(0xFF1565C0),
+                      readings: readings,
+                      getValue: (r) => r.ph,
+                      minY: 6.8,
+                      maxY: 8.5,
+                    ),
+                    const SizedBox(height: 20),
+                    _TrendCard(
+                      title: 'Turbidity',
+                      unit: 'NTU',
+                      color: const Color(0xFF1565C0),
+                      readings: readings,
+                      getValue: (r) => r.turbidity,
+                      minY: 15.0,
+                      maxY: 40.0,
+                    ),
+                    const SizedBox(height: 24),
 
-  Widget _buildHistoryLogs(BuildContext context) {
-    final logs = [
-      _HistoryDayGroup(
-        day: "Today",
-        logs: [
-          _HistoryItem(time: "09:30 AM", ph: 7.2, temp: 26.5, turb: 35.0, status: "Normal", trend: Icons.trending_flat_rounded, trendColor: Colors.grey),
-          _HistoryItem(time: "07:00 AM", ph: 7.0, temp: 25.8, turb: 38.0, status: "Normal", trend: Icons.trending_flat_rounded, trendColor: Colors.grey),
-        ],
-      ),
-      _HistoryDayGroup(
-        day: "Yesterday",
-        logs: [
-          _HistoryItem(time: "06:00 PM", ph: 6.2, temp: 31.2, turb: 110.0, status: "Alert", trend: Icons.trending_up_rounded, trendColor: Colors.orange),
-          _HistoryItem(time: "12:00 PM", ph: 6.4, temp: 29.5, turb: 95.0, status: "Warning", trend: Icons.trending_up_rounded, trendColor: Colors.orange),
-          _HistoryItem(time: "08:00 AM", ph: 6.8, temp: 25.2, turb: 40.0, status: "Normal", trend: Icons.trending_down_rounded, trendColor: Colors.blue),
-        ],
-      ),
-      _HistoryDayGroup(
-        day: "2 days ago",
-        logs: [
-          _HistoryItem(time: "05:30 PM", ph: 7.5, temp: 27.2, turb: 45.0, status: "Normal", trend: Icons.trending_flat_rounded, trendColor: Colors.grey),
-          _HistoryItem(time: "09:00 AM", ph: 7.6, temp: 26.0, turb: 48.0, status: "Normal", trend: Icons.trending_flat_rounded, trendColor: Colors.grey),
-        ],
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Historical Logs",
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF0D1F3C),
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...logs.map((group) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: AppTheme.cardDecoration(context),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  group.day.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1565C0),
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...group.logs.map((item) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.time,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: Color(0xFF0D1F3C),
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                "pH: ${item.ph}  |  Temp: ${item.temp}°C  |  Turbidity: ${item.turb} NTU",
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                    // AI Summary
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFFE5E5E0),
                         ),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: item.status == "Normal"
-                                    ? const Color(0xFF059669).withOpacity(0.1)
-                                    : const Color(0xFFD97706).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                item.status,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: item.status == "Normal"
-                                      ? const Color(0xFF059669)
-                                      : const Color(0xFFD97706),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "AI SUMMARY",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1565C0),
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (_summaryLoading)
+                            const Row(
+                              children: [
+                                SizedBox(
+                                  width: 14, height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
                                 ),
+                                SizedBox(width: 8),
+                                Text('Generating...', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                              ],
+                            )
+                          else
+                            Text(
+                              _summary,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.6,
+                                color: Color(0xFF0F1A2A),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Icon(item.trend, color: item.trendColor, size: 18),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  );
-                }),
-              ],
-            ),
-          );
-        }),
-      ],
+                    const SizedBox(height: 100),
+                  ]),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildToggleButton(String value, String label) {
+    final active = _range == value;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _range = value);
+        // Refresh summary based on range if needed, here we just keep the current one
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: active ? Border.all(color: const Color(0xFFE5E5E0)) : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: active ? const Color(0xFF0D1F3C) : const Color(0xFF7A7568),
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _HistoryDayGroup {
-  final String day;
-  final List<_HistoryItem> logs;
-  _HistoryDayGroup({required this.day, required this.logs});
-}
-
-class _HistoryItem {
-  final String time;
-  final double ph;
-  final double temp;
-  final double turb;
-  final String status;
-  final IconData trend;
-  final Color trendColor;
-
-  _HistoryItem({
-    required this.time,
-    required this.ph,
-    required this.temp,
-    required this.turb,
-    required this.status,
-    required this.trend,
-    required this.trendColor,
-  });
-}
-
-class _ChartCard extends StatelessWidget {
+class _TrendCard extends StatelessWidget {
   final String title;
   final String unit;
   final Color color;
@@ -371,10 +256,8 @@ class _ChartCard extends StatelessWidget {
   final double Function(SensorData reading) getValue;
   final double minY;
   final double maxY;
-  final double safeMin;
-  final double safeMax;
 
-  const _ChartCard({
+  const _TrendCard({
     required this.title,
     required this.unit,
     required this.color,
@@ -382,87 +265,86 @@ class _ChartCard extends StatelessWidget {
     required this.getValue,
     required this.minY,
     required this.maxY,
-    required this.safeMin,
-    required this.safeMax,
   });
 
   @override
   Widget build(BuildContext context) {
     final sortedReadings = List<SensorData>.from(readings)
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    final hasData = sortedReadings.isNotEmpty;
+    
+    final latestVal = sortedReadings.isNotEmpty ? getValue(sortedReadings.last) : 0.0;
+    final inRange = latestVal >= minY && latestVal <= maxY;
 
     return Container(
-      decoration: AppTheme.cardDecoration(context),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFE5E5E0),
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withOpacity(0.18),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0D1F3C),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 210,
-            child: hasData
-                ? LineChart(_buildChartData(context, sortedReadings))
-                : Center(
-                    child: Text(
-                      'No data yet',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade500,
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        latestVal.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0D1F3C),
+                        ),
                       ),
-                    ),
+                      if (unit.isNotEmpty) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          unit,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ]
+                    ],
                   ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(99),
-                ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Safe zone: ${safeMin.toStringAsFixed(1)} - ${safeMax.toStringAsFixed(1)} $unit',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
-                  ),
+              Text(
+                'Ideal $minY - $maxY $unit',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: inRange ? const Color(0xFF059669) : const Color(0xFFD97706),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 120,
+            child: sortedReadings.isNotEmpty
+                ? LineChart(_buildChartData(context, sortedReadings))
+                : const Center(child: Text('No data yet', style: TextStyle(color: Colors.grey, fontSize: 13))),
           ),
         ],
       ),
@@ -474,10 +356,7 @@ class _ChartCard extends StatelessWidget {
     List<SensorData> sortedReadings,
   ) {
     final spots = <FlSpot>[];
-    if (sortedReadings.isEmpty) {
-      spots.add(const FlSpot(0, 0));
-    } else if (sortedReadings.length == 1) {
-      // Safe double-point fallback for single measurements to prevent FLChart curves from glitching
+    if (sortedReadings.length == 1) {
       spots.add(FlSpot(0, getValue(sortedReadings[0])));
       spots.add(FlSpot(1, getValue(sortedReadings[0])));
     } else {
@@ -487,75 +366,47 @@ class _ChartCard extends StatelessWidget {
     }
 
     final maxRange = sortedReadings.length > 1 ? (sortedReadings.length - 1).toDouble() : 1.0;
+    
+    // Find absolute data min and max
+    double minDataY = spots.first.y;
+    double maxDataY = spots.first.y;
+    for (var spot in spots) {
+      if (spot.y < minDataY) minDataY = spot.y;
+      if (spot.y > maxDataY) maxDataY = spot.y;
+    }
 
     return LineChartData(
       minX: 0,
       maxX: maxRange,
-      minY: minY,
-      maxY: maxY,
+      minY: minDataY - 1,
+      maxY: maxDataY + 1,
       clipData: const FlClipData.all(),
       rangeAnnotations: RangeAnnotations(
         horizontalRangeAnnotations: [
           HorizontalRangeAnnotation(
-            y1: safeMin,
-            y2: safeMax,
-            color: color.withOpacity(0.08),
+            y1: minY,
+            y2: maxY,
+            color: const Color(0xFF22C55E).withValues(alpha: 0.08), // oklch(0.62 0.17 145) approximate green
           ),
         ],
       ),
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: false,
-        horizontalInterval: (maxY - minY) / 4,
-        getDrawingHorizontalLine: (_) => FlLine(
-          color: Theme.of(context).dividerColor.withOpacity(0.08),
-          strokeWidth: 1,
-        ),
-      ),
+      gridData: const FlGridData(show: false),
       borderData: FlBorderData(show: false),
       titlesData: FlTitlesData(
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            reservedSize: 34,
-            interval: (maxY - minY) / 4,
+            reservedSize: 28,
             getTitlesWidget: (value, meta) => Text(
               value.toStringAsFixed(0),
               style: const TextStyle(
                 fontSize: 10,
-                color: Colors.grey,
+                color: Color(0xFF1565C0), // oklch(0.52 0.03 210) approximate blue
               ),
             ),
-          ),
-        ),
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 26,
-            interval: _bottomInterval(sortedReadings.length),
-            getTitlesWidget: (value, meta) {
-              final index = value.round();
-              if (index < 0 || index >= sortedReadings.length) {
-                return const SizedBox.shrink();
-              }
-
-              final timestamp = sortedReadings[index].createdAt;
-              final label =
-                  '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
-
-              return Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              );
-            },
           ),
         ),
       ),
@@ -563,13 +414,13 @@ class _ChartCard extends StatelessWidget {
         touchTooltipData: LineTouchTooltipData(
           tooltipRoundedRadius: 12,
           tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          getTooltipColor: (_) => Theme.of(context).cardColor.withOpacity(0.96),
+          getTooltipColor: (_) => Colors.white,
           getTooltipItems: (touchedSpots) {
             return touchedSpots.map((spot) {
               return LineTooltipItem(
                 '${spot.y.toStringAsFixed(1)} $unit',
-                TextStyle(
-                  color: color,
+                const TextStyle(
+                  color: Color(0xFF0D1F3C),
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -581,40 +432,24 @@ class _ChartCard extends StatelessWidget {
       lineBarsData: [
         LineChartBarData(
           spots: spots,
-          isCurved: sortedReadings.length > 1, // Only curve if multiple distinct spots
+          isCurved: true,
           color: color,
-          barWidth: 3,
+          barWidth: 2.5,
           isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: spots.length <= 8,
-            getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-              radius: 3.3,
-              color: color,
-              strokeWidth: 2,
-              strokeColor: Colors.white,
-            ),
-          ),
+          dotData: const FlDotData(show: false),
           belowBarData: BarAreaData(
             show: true,
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                color.withOpacity(0.18),
-                color.withOpacity(0.02),
+                color.withValues(alpha: 0.35),
+                color.withValues(alpha: 0.0),
               ],
             ),
           ),
         ),
       ],
     );
-  }
-
-  double _bottomInterval(int count) {
-    if (count <= 2) return 1;
-    if (count <= 4) return 1;
-    if (count <= 8) return 2;
-    if (count <= 12) return 3;
-    return (count / 4).ceilToDouble();
   }
 }

@@ -1,6 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:bluefarm/widgets/animated_banner.dart';
 import 'package:flutter/services.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart' hide LaunchMode;
+
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_redirect_service.dart';
 
@@ -75,13 +78,10 @@ class _BuyerShellState extends State<BuyerShell> {
 
   Future<void> _loadBuyerInfo() async {
     try {
-      final uid = Supabase.instance.client.auth.currentUser?.id;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;
-      final p = await Supabase.instance.client
-          .from('profiles')
-          .select('full_name, region')
-          .eq('id', uid)
-          .maybeSingle();
+      final doc = await FirebaseFirestore.instance.collection('profiles').doc(uid).get();
+      final p = doc.data();
       if (p != null && mounted) {
         setState(() {
           _buyerName = p['full_name'] as String?;
@@ -367,7 +367,8 @@ class _MarketTab extends StatefulWidget {
 }
 
 class _MarketTabState extends State<_MarketTab> {
-  final _client = Supabase.instance.client;
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
   List<Map<String, dynamic>> _all = [];
   bool _loading = true;
   String _selectedSpecies = 'All';
@@ -385,12 +386,11 @@ class _MarketTabState extends State<_MarketTab> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final data = await _client
-          .from('listings')
-          .select('*, profiles(full_name, farm_name, region)')
-          .eq('status', 'active')
-          .order('created_at', ascending: false);
-      setState(() => _all = List<Map<String, dynamic>>.from(data));
+      final snap = await FirebaseFirestore.instance.collection('listings')
+          .where('status', isEqualTo: 'active')
+          .orderBy('created_at', descending: true)
+          .get();
+      setState(() => _all = snap.docs.map((d) => d.data() as Map<String, dynamic>).toList());
     } catch (_) {
       setState(() => _all = _mock());
     }
@@ -987,7 +987,8 @@ class _OrdersTab extends StatefulWidget {
 }
 
 class _OrdersTabState extends State<_OrdersTab> {
-  final _client = Supabase.instance.client;
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
   List<Map<String, dynamic>> _pastOrders = [];
   bool _loadingPast = true;
 
@@ -1003,18 +1004,17 @@ class _OrdersTabState extends State<_OrdersTab> {
   Future<void> _loadPastOrders() async {
     setState(() => _loadingPast = true);
     try {
-      final uid = _client.auth.currentUser?.id;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) {
         setState(() => _loadingPast = false);
         return;
       }
-      final data = await _client
-          .from('orders')
-          .select()
-          .eq('buyer_id', uid)
-          .order('created_at', ascending: false)
-          .limit(20);
-      setState(() => _pastOrders = List<Map<String, dynamic>>.from(data));
+      final snap = await FirebaseFirestore.instance.collection('orders')
+          .where('buyer_id', isEqualTo: uid)
+          .orderBy('created_at', descending: true)
+          .limit(20)
+          .get();
+      setState(() => _pastOrders = snap.docs.map((d) => d.data() as Map<String, dynamic>).toList());
     } catch (_) {
       setState(() => _pastOrders = []);
     }
@@ -1491,7 +1491,8 @@ class BillingPage extends StatefulWidget {
 
 class _BillingPageState extends State<BillingPage>
     with TickerProviderStateMixin {
-  final _client = Supabase.instance.client;
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
   final _nameCtrl    = TextEditingController();
   final _phoneCtrl   = TextEditingController();
   final _addressCtrl = TextEditingController();
@@ -1528,14 +1529,11 @@ class _BillingPageState extends State<BillingPage>
   }
 
   Future<void> _prefill() async {
-    final uid = _client.auth.currentUser?.id;
+    final uid = _auth.currentUser?.uid;
     if (uid == null) return;
     try {
-      final p = await _client
-          .from('profiles')
-          .select('full_name, region, phone')
-          .eq('id', uid)
-          .maybeSingle();
+      final doc = await _firestore.collection('profiles').doc(uid).get();
+      final p = doc.data();
       if (p != null && mounted) {
         _nameCtrl.text    = p['full_name'] as String? ?? '';
         _addressCtrl.text = p['region']    as String? ?? '';
@@ -1562,7 +1560,7 @@ class _BillingPageState extends State<BillingPage>
     }
     setState(() => _placing = true);
     try {
-      final uid = _client.auth.currentUser?.id;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
         for (final item in widget.cart) {
           final orderData = {
@@ -1582,7 +1580,7 @@ class _BillingPageState extends State<BillingPage>
           if (_isUuid(item.farmerId)) {
             orderData['farmer_id'] = item.farmerId;
           }
-          await _client.from('orders').insert(orderData);
+          await FirebaseFirestore.instance.collection('orders').doc().set(orderData);
         }
       }
       setState(() { _placing = false; _placed = true; });
@@ -2215,7 +2213,8 @@ class _ProfileTab extends StatefulWidget {
 }
 
 class _ProfileTabState extends State<_ProfileTab> {
-  final _client = Supabase.instance.client;
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
   Map<String, dynamic>? _profile;
 
   Future<void> _signOut() async {
@@ -2229,15 +2228,11 @@ class _ProfileTabState extends State<_ProfileTab> {
   }
 
   Future<void> _load() async {
-    final uid = _client.auth.currentUser?.id;
+    final uid = _auth.currentUser?.uid;
     if (uid == null) return;
     try {
-      final d = await _client
-          .from('profiles')
-          .select()
-          .eq('id', uid)
-          .maybeSingle();
-      setState(() => _profile = d);
+      final doc = await _firestore.collection('profiles').doc(uid).get();
+      setState(() => _profile = doc.data());
     } catch (_) {}
   }
 
@@ -2247,8 +2242,8 @@ class _ProfileTabState extends State<_ProfileTab> {
     final company = _profile?['company_name'] as String? ?? '';
     final type    = _profile?['buyer_type']   as String? ?? '';
     final region  = _profile?['region']       as String? ?? '';
-    final phone   = _client.auth.currentUser?.phone ?? '';
-    final email   = _client.auth.currentUser?.email ?? '';
+    final phone   = _auth.currentUser?.phoneNumber ?? '';
+    final email   = _auth.currentUser?.email ?? '';
 
     return Scaffold(
       backgroundColor: _kBg,
