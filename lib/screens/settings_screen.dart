@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_redirect_service.dart';
+import 'edit_profile_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -20,7 +21,14 @@ class SettingsScreen extends StatelessWidget {
         children: [
           _buildSectionTitle('Profile'),
           _buildSettingsCard([
-            _buildListTile(Icons.person, 'Edit Profile / Personal Info', onTap: () {}),
+            _buildListTile(Icons.person, 'Edit Profile / Personal Info', onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditProfileScreen(),
+                ),
+              );
+            }),
             _buildListTile(Icons.phone, 'Update Phone Number', onTap: () {}),
             _buildListTile(Icons.email, 'Update Email', onTap: () {}),
           ]),

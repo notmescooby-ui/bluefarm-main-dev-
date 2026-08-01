@@ -41,12 +41,20 @@ class _HarvestScreenState extends State<HarvestScreen> {
       final querySnapshot = await _firestore
           .collection('listings')
           .where('farmer_id', isEqualTo: uid)
-          .orderBy('created_at', descending: true)
           .get();
 
       if (!mounted) return;
       setState(() {
-        _listings = querySnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+        var docs = querySnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+        docs.sort((a, b) {
+          final t1 = a['created_at'] as Timestamp?;
+          final t2 = b['created_at'] as Timestamp?;
+          if (t1 == null && t2 == null) return 0;
+          if (t1 == null) return 1;
+          if (t2 == null) return -1;
+          return t2.compareTo(t1); // descending
+        });
+        _listings = docs;
         _loading = false;
       });
     } catch (_) {
@@ -656,6 +664,9 @@ class _HarvestFormState extends State<_HarvestForm> {
         return;
       }
 
+      final profileDoc = await _firestore.collection('profiles').doc(uid).get();
+      final pData = profileDoc.data() ?? {};
+      
       final data = <String, dynamic>{
         'farmer_id': uid,
         'species': _species,
@@ -665,6 +676,11 @@ class _HarvestFormState extends State<_HarvestForm> {
         'pond_number': _pondCtrl.text.trim(),
         'status': 'active',
         'created_at': FieldValue.serverTimestamp(),
+        'profiles': {
+          'full_name': pData['full_name'] ?? 'Farmer',
+          'farm_name': pData['farm_name'] ?? 'Farm',
+          'region': pData['region'] ?? '',
+        }
       };
 
       if (widget.editing != null) {

@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_redirect_service.dart';
-
+import 'edit_profile_screen.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 //  BUYER SHELL — Quick-commerce fish marketplace
 //  Tabs: Market | Orders (Cart) | Profile
@@ -375,7 +375,14 @@ class _MarketTabState extends State<_MarketTab> {
   String _sortBy = 'price_low';
   double _maxPrice = 1000;
   String _locationFilter = '';
+  final _searchCtrl = TextEditingController();
   bool _showFilters = false;
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -390,9 +397,26 @@ class _MarketTabState extends State<_MarketTab> {
           .where('status', isEqualTo: 'active')
           .orderBy('created_at', descending: true)
           .get();
-      setState(() => _all = snap.docs.map((d) => d.data() as Map<String, dynamic>).toList());
+          
+      String initialLocationFilter = '';
+      final uid = _auth.currentUser?.uid;
+      if (uid != null) {
+        final doc = await _firestore.collection('profiles').doc(uid).get();
+        final p = doc.data();
+        if (p != null && p['region'] != null) {
+           initialLocationFilter = (p['region'] as String).split(',').first; // e.g. "Thane"
+        }
+      }
+
+      setState(() {
+         _all = snap.docs.map((d) => d.data() as Map<String, dynamic>).toList();
+         if (initialLocationFilter.isNotEmpty && _locationFilter.isEmpty) {
+            _locationFilter = initialLocationFilter;
+            _searchCtrl.text = initialLocationFilter;
+         }
+      });
     } catch (_) {
-      setState(() => _all = _mock());
+      setState(() => _all = []);
     }
     setState(() => _loading = false);
   }
@@ -502,6 +526,7 @@ class _MarketTabState extends State<_MarketTab> {
             child: Row(children: [
               Expanded(
                 child: TextField(
+                  controller: _searchCtrl,
                   onChanged: (v) => setState(() => _locationFilter = v),
                   decoration: InputDecoration(
                     hintText: 'Filter by location...',
@@ -2255,37 +2280,50 @@ class _ProfileTabState extends State<_ProfileTab> {
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [_kGreenDark, _kGreen],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight)),
+                image: DecorationImage(
+                  image: AssetImage('lib/assets/market-bg.png'),
+                  fit: BoxFit.cover,
+                ),
+              ),
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                 const SizedBox(height: 40),
                 Container(
-                  width: 70,
-                  height: 70,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.2),
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
-                          width: 2)),
-                  child: const Icon(Icons.person_rounded,
-                      color: Colors.white, size: 36),
+                    color: Colors.black.withOpacity(0.3), // Darker translucent box
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.2),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.4),
+                                width: 2)),
+                        child: const Icon(Icons.person_rounded,
+                            color: Colors.white, size: 36),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(name,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800)),
+                      if (company.isNotEmpty)
+                        Text(company,
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 12)),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(name,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800)),
-                if (company.isNotEmpty)
-                  Text(company,
-                      style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 12)),
               ]),
             ),
           ),
@@ -2325,14 +2363,18 @@ class _ProfileTabState extends State<_ProfileTab> {
                         blurRadius: 8)
                   ]),
               child: Column(children: [
-                if (type.isNotEmpty)
-                  _pr('Buyer Type', type, Icons.category_rounded),
-                if (region.isNotEmpty)
-                  _pr('Location', region, Icons.location_on_rounded),
-                if (phone.isNotEmpty)
-                  _pr('Phone', phone, Icons.phone_rounded),
-                if (email.isNotEmpty)
-                  _pr('Email', email, Icons.email_rounded),
+                _buildSettingTile(Icons.person, 'Edit Profile / Personal Info', onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                  );
+                }),
+                Divider(height: 1, color: Colors.grey.shade200),
+                _buildSettingTile(Icons.notifications_outlined, 'Notifications', onTap: () {}),
+                Divider(height: 1, color: Colors.grey.shade200),
+                _buildSettingTile(Icons.language_outlined, 'Language & Region', onTap: () {}),
+                Divider(height: 1, color: Colors.grey.shade200),
+                _buildSettingTile(Icons.help_outline_rounded, 'Help & Support', onTap: () {}),
               ]),
             ),
             const SizedBox(height: 20),
@@ -2360,19 +2402,19 @@ class _ProfileTabState extends State<_ProfileTab> {
     );
   }
 
-  Widget _pr(String label, String value, IconData icon) => Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(children: [
-          Icon(icon, size: 18, color: _kGreen),
-          const SizedBox(width: 12),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label,
-                style: TextStyle(fontSize: 11, color: _kMuted)),
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700)),
-          ]),
-        ]),
-      );
+  Widget _buildSettingTile(IconData icon, String title, {VoidCallback? onTap}) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: _kGreen.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: _kGreen, size: 20),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: _kText)),
+      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+      onTap: onTap,
+    );
+  }
 }

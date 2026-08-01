@@ -110,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
             if (_videoCtrl.value.isInitialized)
               SizedBox.expand(
                 child: FittedBox(
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   child: SizedBox(
                     width: _videoCtrl.value.size.width,
                     height: _videoCtrl.value.size.height,

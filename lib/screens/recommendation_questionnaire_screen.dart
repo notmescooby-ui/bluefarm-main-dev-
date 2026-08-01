@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/sensor_data.dart';
-import '../services/gemini_service.dart';
+import '../services/openai_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'recommendation_result_screen.dart';
 
@@ -89,8 +89,8 @@ class _RecommendationQuestionnaireScreenState extends State<RecommendationQuesti
         answers[entry.key] = entry.value.text.trim();
       }
 
-      final gemini = GeminiService();
-      final recommendation = await gemini.generateRecommendation(
+      final ai = OpenAIService();
+      final recommendation = await ai.generateRecommendation(
         affectedParameter: widget.parameter,
         sensorData: widget.sensorData,
         questionnaireAnswers: answers,
@@ -98,7 +98,7 @@ class _RecommendationQuestionnaireScreenState extends State<RecommendationQuesti
 
       final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
       
-      await gemini.saveRecommendationHistory(
+      await ai.saveRecommendationHistory(
         uid: uid,
         affectedParameter: widget.parameter,
         sensorData: widget.sensorData,

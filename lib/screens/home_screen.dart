@@ -260,34 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 20),
                     ],
 
-                    // Quick actions
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildQuickAction(
-                            icon: Icons.camera_alt,
-                            label: "Scan fish",
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CameraScreen())),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildQuickAction(
-                            icon: Icons.bolt,
-                            label: "Feed now",
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DeviceConnectScreen())),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildQuickAction(
-                            icon: Icons.notifications_active,
-                            label: "Alerts",
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InsightsScreen())),
-                          ),
-                        ),
-                      ],
-                    ),
+
                     
                     // Padding for bottom nav
                     const SizedBox(height: 100),
@@ -314,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildAnimatedBanner(BuildContext context, String farmerName) {
     return AnimatedBanner(
-      title: 'Namaste, \$farmerName!',
+      title: 'Namaste, $farmerName!',
       subtitle: 'Your ponds are being watched over.',
       ctaText: 'View Pond',
       onCtaPressed: () {
@@ -355,36 +328,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickAction({required IconData icon, required String label, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: _cardDecoration(),
-        child: Column(
-          children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1565C0).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: const Color(0xFF1565C0), size: 20),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0D1F3C),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _StatusDot extends StatefulWidget {
