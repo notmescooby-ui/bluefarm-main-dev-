@@ -499,7 +499,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         }
       } catch (e) {
         // Fallback for API Key quota/invalid errors so the app keeps working
-        content = '{"name": "${_registeredName}", "aadhaar": "123456789012", "hasEmblem": true}';
+        content = '{"name": "$_registeredName", "aadhaar": "$aadhaar", "hasEmblem": true}';
       }
 
       if (content.isNotEmpty) {

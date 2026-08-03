@@ -29,20 +29,20 @@ class SettingsScreen extends StatelessWidget {
                 ),
               );
             }),
-            _buildListTile(Icons.phone, 'Update Phone Number', onTap: () {}),
-            _buildListTile(Icons.email, 'Update Email', onTap: () {}),
+            _buildListTile(Icons.phone, 'Update Phone Number', onTap: () => _showComingSoon(context)),
+            _buildListTile(Icons.email, 'Update Email', onTap: () => _showComingSoon(context)),
           ]),
           
           _buildSectionTitle('Farm & Ponds'),
           _buildSettingsCard([
-            _buildListTile(Icons.landscape, 'Edit Farm Details', onTap: () {}),
-            _buildListTile(Icons.water, 'Update Pond Details', onTap: () {}),
-            _buildListTile(Icons.set_meal, 'Change Fish Species', onTap: () {}),
+            _buildListTile(Icons.landscape, 'Edit Farm Details', onTap: () => _showComingSoon(context)),
+            _buildListTile(Icons.water, 'Update Pond Details', onTap: () => _showComingSoon(context)),
+            _buildListTile(Icons.set_meal, 'Change Fish Species', onTap: () => _showComingSoon(context)),
           ]),
           
           _buildSectionTitle('Security'),
           _buildSettingsCard([
-            _buildListTile(Icons.lock, 'Change Password', onTap: () {}),
+            _buildListTile(Icons.lock, 'Change Password', onTap: () => _showComingSoon(context)),
             _buildListTile(
               Icons.logout,
               'Logout',
@@ -53,6 +53,15 @@ class SettingsScreen extends StatelessWidget {
             ),
           ]),
         ],
+      ),
+    );
+  }
+
+  void _showComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('This feature is coming soon!'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

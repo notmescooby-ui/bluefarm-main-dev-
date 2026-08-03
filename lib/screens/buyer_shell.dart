@@ -395,7 +395,6 @@ class _MarketTabState extends State<_MarketTab> {
     try {
       final snap = await FirebaseFirestore.instance.collection('listings')
           .where('status', isEqualTo: 'active')
-          .orderBy('created_at', descending: true)
           .get();
           
       String initialLocationFilter = '';
@@ -409,13 +408,30 @@ class _MarketTabState extends State<_MarketTab> {
       }
 
       setState(() {
-         _all = snap.docs.map((d) => d.data() as Map<String, dynamic>).toList();
+         var docs = snap.docs.map((d) {
+           var data = d.data();
+           data['id'] = d.id;
+           return data;
+         }).toList();
+         
+         // Sort locally to avoid requiring Firestore composite index
+         docs.sort((a, b) {
+           final aTime = a['created_at'] as Timestamp?;
+           final bTime = b['created_at'] as Timestamp?;
+           if (aTime == null && bTime == null) return 0;
+           if (aTime == null) return 1;
+           if (bTime == null) return -1;
+           return bTime.compareTo(aTime);
+         });
+         
+         _all = docs;
          if (initialLocationFilter.isNotEmpty && _locationFilter.isEmpty) {
             _locationFilter = initialLocationFilter;
             _searchCtrl.text = initialLocationFilter;
          }
       });
-    } catch (_) {
+    } catch (e) {
+      print('Error loading listings: $e');
       setState(() => _all = []);
     }
     setState(() => _loading = false);
@@ -2275,7 +2291,7 @@ class _ProfileTabState extends State<_ProfileTab> {
       body: CustomScrollView(slivers: [
         SliverAppBar(
           pinned: true,
-          expandedHeight: 160,
+          expandedHeight: 200,
           backgroundColor: _kGreenDark,
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
@@ -2370,11 +2386,11 @@ class _ProfileTabState extends State<_ProfileTab> {
                   );
                 }),
                 Divider(height: 1, color: Colors.grey.shade200),
-                _buildSettingTile(Icons.notifications_outlined, 'Notifications', onTap: () {}),
+                _buildSettingTile(Icons.notifications_outlined, 'Notifications', onTap: () => _showComingSoon(context)),
                 Divider(height: 1, color: Colors.grey.shade200),
-                _buildSettingTile(Icons.language_outlined, 'Language & Region', onTap: () {}),
+                _buildSettingTile(Icons.language_outlined, 'Language & Region', onTap: () => _showComingSoon(context)),
                 Divider(height: 1, color: Colors.grey.shade200),
-                _buildSettingTile(Icons.help_outline_rounded, 'Help & Support', onTap: () {}),
+                _buildSettingTile(Icons.help_outline_rounded, 'Help & Support', onTap: () => _showComingSoon(context)),
               ]),
             ),
             const SizedBox(height: 20),
@@ -2399,6 +2415,15 @@ class _ProfileTabState extends State<_ProfileTab> {
           ])),
         ),
       ]),
+    );
+  }
+
+  void _showComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('This feature is coming soon!'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
