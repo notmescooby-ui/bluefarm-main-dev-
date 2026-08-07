@@ -123,6 +123,7 @@ class CreateSensorReadingVariables {
     turb == otherTyped.turb && 
     dissolvedOxygen == otherTyped.dissolvedOxygen && 
     nh3 == otherTyped.nh3;
+  }
   @override
   int get hashCode => Object.hashAll([pondId.hashCode, ph.hashCode, temp.hashCode, turb.hashCode, dissolvedOxygen.hashCode, nh3.hashCode]);
   
