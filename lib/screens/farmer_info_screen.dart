@@ -1078,32 +1078,18 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           ],
           const SizedBox(height: 14),
 
-          if (!_aadhaarVerified)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: (_aadhaarPhoto != null && !_aadhaarVerifying)
-                    ? _verifyAadhaarWithAI
-                    : null,
-                icon: _aadhaarVerifying
-                    ? const SizedBox(
-                        width: 16, height: 16,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.document_scanner_rounded),
-                label: Text(_aadhaarVerifying
-                    ? 'Verifying with OCR…'
-                    : 'Verify Aadhaar with OCR'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: accentColor,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.grey.shade300,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
+          if (_aadhaarVerifying) ...[
+            const SizedBox(height: 14),
+            Center(
+              child: Column(
+                children: [
+                  CircularProgressIndicator(strokeWidth: 2, color: accentColor),
+                  const SizedBox(height: 8),
+                  const Text('Analyzing Aadhaar card...', style: TextStyle(color: Colors.grey)),
+                ],
               ),
             ),
+          ],
 
           if (_aadhaarVerified || _aadhaarError != null) ...[
             const SizedBox(height: 12),

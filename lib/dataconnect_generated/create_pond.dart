@@ -138,7 +138,7 @@ class CreatePondVariables {
     return json;
   }
 
-  const CreatePondVariables({
+  CreatePondVariables({
     required this.name,
     required this.location,
     required this.capacity,
