@@ -84,8 +84,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   top: MediaQuery.of(context).padding.top + 20,
                   left: 20, right: 20, bottom: 20,
                 ),
-                sliver: SliverToBoxAdapter(
-                  child: const Column(
+                sliver: const SliverToBoxAdapter(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(

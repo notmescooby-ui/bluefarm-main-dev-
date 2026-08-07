@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "52765421109-0q90gcfm2o08nefbn7r9tel3fjd30c1l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.bluefarm",
+            "certificate_hash": "b32177ea16c3e43cc6772168a5b978af04bc3c5f"
+          }
+        },
+        {
           "client_id": "52765421109-t0dtnt8b7ksicb9ndkaehjfpm6f3dgn0.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -30,6 +38,13 @@
             {
               "client_id": "52765421109-t0dtnt8b7ksicb9ndkaehjfpm6f3dgn0.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "52765421109-jct4tvn8jptmt191m9jbg9nr7kmvf9e6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bluefarm"
+              }
             }
           ]
         }

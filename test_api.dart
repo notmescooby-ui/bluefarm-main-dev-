@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 void main() async {
-  final apiKey = 'AIzaSyAuOvUu13aw-_s8c_pifCXzavgl4SxWhoM';
+  const apiKey = 'AIzaSyAuOvUu13aw-_s8c_pifCXzavgl4SxWhoM';
   
   final modelsToTest = [
     'gemini-1.5-pro',
@@ -22,10 +21,10 @@ void main() async {
       final response = await model.generateContent([
         Content.text('Say hello.')
       ]);
-      print('SUCCESS Response: ' + (response.text ?? 'empty'));
+      print('SUCCESS Response: ${response.text ?? 'empty'}');
       return; // Exit on first success
     } catch (e) {
-      print('Failed: ' + e.toString());
+      print('Failed: $e');
     }
   }
 }

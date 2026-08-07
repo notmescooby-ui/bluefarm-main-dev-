@@ -1,0 +1,373 @@
+extend type Query {
+  """
+  ✨ Look up a single `HarvestListing` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  harvestListing(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: HarvestListing_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: HarvestListing_FirstRow
+  ): HarvestListing @fdc_generated(from: "HarvestListing", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Notification` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  notification(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Notification_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Notification_FirstRow
+  ): Notification @fdc_generated(from: "Notification", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Order` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  order(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Order_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Order_FirstRow
+  ): Order @fdc_generated(from: "Order", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Pond` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  pond(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Pond_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Pond_FirstRow
+  ): Pond @fdc_generated(from: "Pond", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `SensorReading` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  sensorReading(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: SensorReading_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SensorReading_FirstRow
+  ): SensorReading @fdc_generated(from: "SensorReading", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `SmartRecommendation` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  smartRecommendation(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: SmartRecommendation_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SmartRecommendation_FirstRow
+  ): SmartRecommendation @fdc_generated(from: "SmartRecommendation", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `User` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  user(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+  ): User @fdc_generated(from: "User", purpose: QUERY_SINGLE)
+  """
+  ✨ List `HarvestListing` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  harvestListings(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: HarvestListing_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [HarvestListing_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: HarvestListing_Having
+  ): [HarvestListing!]! @fdc_generated(from: "HarvestListing", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Notification` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  notifications(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Notification_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Notification_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Notification_Having
+  ): [Notification!]! @fdc_generated(from: "Notification", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Order` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  orders(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Order_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Order_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Order_Having
+  ): [Order!]! @fdc_generated(from: "Order", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Pond` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  ponds(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Pond_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Pond_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Pond_Having
+  ): [Pond!]! @fdc_generated(from: "Pond", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `SensorReading` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  sensorReadings(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: SensorReading_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [SensorReading_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: SensorReading_Having
+  ): [SensorReading!]! @fdc_generated(from: "SensorReading", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `SmartRecommendation` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  smartRecommendations(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: SmartRecommendation_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [SmartRecommendation_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: SmartRecommendation_Having
+  ): [SmartRecommendation!]! @fdc_generated(from: "SmartRecommendation", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `User` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  users(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: User_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [User_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: User_Having
+  ): [User!]! @fdc_generated(from: "User", purpose: QUERY_MULTIPLE)
+}

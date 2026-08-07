@@ -1,21 +1,14 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'settings_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_redirect_service.dart';
 import '../theme/app_theme.dart';
-import '../localization/app_translations.dart';
 
 import 'home_screen.dart';
 import 'knowledge_screen.dart';
 import 'insights_screen.dart';
 import 'harvest_screen.dart';
-import 'camera_screen.dart';
-import 'hardware_screen.dart';
-import 'device_connect_screen.dart';
-import 'settings_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -43,12 +36,12 @@ class _MainShellState extends State<MainShell> {
         children: [
           IndexedStack(
             index: _currentIndex,
-            children: [
+            children: const [
               HomeScreen(),
               InsightsScreen(),
               KnowledgeScreen(),
               HarvestScreen(),
-              const SettingsScreen(),
+              SettingsScreen(),
             ],
           ),
 

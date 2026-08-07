@@ -1,0 +1,786 @@
+extend type Mutation {
+  """
+  ✨ Insert a single `HarvestListing` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  harvestListing_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: HarvestListing_Data!
+  ): HarvestListing_KeyOutput! @fdc_generated(from: "HarvestListing", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Notification` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  notification_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Notification_Data!
+  ): Notification_KeyOutput! @fdc_generated(from: "Notification", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Order` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  order_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Order_Data!
+  ): Order_KeyOutput! @fdc_generated(from: "Order", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Pond` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  pond_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Pond_Data!
+  ): Pond_KeyOutput! @fdc_generated(from: "Pond", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `SensorReading` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  sensorReading_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: SensorReading_Data!
+  ): SensorReading_KeyOutput! @fdc_generated(from: "SensorReading", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `SmartRecommendation` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  smartRecommendation_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: SmartRecommendation_Data!
+  ): SmartRecommendation_KeyOutput! @fdc_generated(from: "SmartRecommendation", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `User` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert `HarvestListing` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  harvestListing_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [HarvestListing_Data!]!
+  ): [HarvestListing_KeyOutput!]! @fdc_generated(from: "HarvestListing", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Notification` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  notification_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Notification_Data!]!
+  ): [Notification_KeyOutput!]! @fdc_generated(from: "Notification", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Order` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  order_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Order_Data!]!
+  ): [Order_KeyOutput!]! @fdc_generated(from: "Order", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Pond` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  pond_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Pond_Data!]!
+  ): [Pond_KeyOutput!]! @fdc_generated(from: "Pond", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `SensorReading` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  sensorReading_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [SensorReading_Data!]!
+  ): [SensorReading_KeyOutput!]! @fdc_generated(from: "SensorReading", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `SmartRecommendation` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  smartRecommendation_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [SmartRecommendation_Data!]!
+  ): [SmartRecommendation_KeyOutput!]! @fdc_generated(from: "SmartRecommendation", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `User` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert or update a single `HarvestListing` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `HarvestListing`.
+  """
+  harvestListing_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: HarvestListing_Data!
+  ): HarvestListing_KeyOutput! @fdc_generated(from: "HarvestListing", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Notification` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Notification`.
+  """
+  notification_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Notification_Data!
+  ): Notification_KeyOutput! @fdc_generated(from: "Notification", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Order` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Order`.
+  """
+  order_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Order_Data!
+  ): Order_KeyOutput! @fdc_generated(from: "Order", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Pond` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Pond`.
+  """
+  pond_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Pond_Data!
+  ): Pond_KeyOutput! @fdc_generated(from: "Pond", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `SensorReading` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `SensorReading`.
+  """
+  sensorReading_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: SensorReading_Data!
+  ): SensorReading_KeyOutput! @fdc_generated(from: "SensorReading", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `SmartRecommendation` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `SmartRecommendation`.
+  """
+  smartRecommendation_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: SmartRecommendation_Data!
+  ): SmartRecommendation_KeyOutput! @fdc_generated(from: "SmartRecommendation", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `User` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update `HarvestListing` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `HarvestListing`.
+  """
+  harvestListing_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [HarvestListing_Data!]!
+  ): [HarvestListing_KeyOutput!]! @fdc_generated(from: "HarvestListing", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Notification` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Notification`.
+  """
+  notification_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Notification_Data!]!
+  ): [Notification_KeyOutput!]! @fdc_generated(from: "Notification", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Order` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Order`.
+  """
+  order_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Order_Data!]!
+  ): [Order_KeyOutput!]! @fdc_generated(from: "Order", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Pond` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Pond`.
+  """
+  pond_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Pond_Data!]!
+  ): [Pond_KeyOutput!]! @fdc_generated(from: "Pond", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `SensorReading` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `SensorReading`.
+  """
+  sensorReading_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [SensorReading_Data!]!
+  ): [SensorReading_KeyOutput!]! @fdc_generated(from: "SensorReading", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `SmartRecommendation` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `SmartRecommendation`.
+  """
+  smartRecommendation_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [SmartRecommendation_Data!]!
+  ): [SmartRecommendation_KeyOutput!]! @fdc_generated(from: "SmartRecommendation", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `User` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Update a single `HarvestListing` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `HarvestListing` or `null` if not found.
+  """
+  harvestListing_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: HarvestListing_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: HarvestListing_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: HarvestListing_Data!
+  ): HarvestListing_KeyOutput @fdc_generated(from: "HarvestListing", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Notification` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Notification` or `null` if not found.
+  """
+  notification_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Notification_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Notification_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Notification_Data!
+  ): Notification_KeyOutput @fdc_generated(from: "Notification", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Order` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Order` or `null` if not found.
+  """
+  order_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Order_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Order_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Order_Data!
+  ): Order_KeyOutput @fdc_generated(from: "Order", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Pond` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Pond` or `null` if not found.
+  """
+  pond_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Pond_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Pond_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Pond_Data!
+  ): Pond_KeyOutput @fdc_generated(from: "Pond", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `SensorReading` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `SensorReading` or `null` if not found.
+  """
+  sensorReading_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: SensorReading_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SensorReading_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: SensorReading_Data!
+  ): SensorReading_KeyOutput @fdc_generated(from: "SensorReading", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `SmartRecommendation` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `SmartRecommendation` or `null` if not found.
+  """
+  smartRecommendation_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: SmartRecommendation_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SmartRecommendation_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: SmartRecommendation_Data!
+  ): SmartRecommendation_KeyOutput @fdc_generated(from: "SmartRecommendation", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `User` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `User` or `null` if not found.
+  """
+  user_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: User_Data!
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update `HarvestListing` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  harvestListing_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: HarvestListing_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: HarvestListing_Data!
+  ): Int! @fdc_generated(from: "HarvestListing", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Notification` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  notification_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Notification_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Notification_Data!
+  ): Int! @fdc_generated(from: "Notification", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Order` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  order_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Order_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Order_Data!
+  ): Int! @fdc_generated(from: "Order", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Pond` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  pond_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Pond_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Pond_Data!
+  ): Int! @fdc_generated(from: "Pond", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `SensorReading` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  sensorReading_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: SensorReading_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: SensorReading_Data!
+  ): Int! @fdc_generated(from: "SensorReading", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `SmartRecommendation` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  smartRecommendation_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: SmartRecommendation_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: SmartRecommendation_Data!
+  ): Int! @fdc_generated(from: "SmartRecommendation", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `User` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  user_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: User_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: User_Data!
+  ): Int! @fdc_generated(from: "User", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Delete a single `HarvestListing` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  harvestListing_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: HarvestListing_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: HarvestListing_FirstRow
+  ): HarvestListing_KeyOutput @fdc_generated(from: "HarvestListing", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Notification` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  notification_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Notification_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Notification_FirstRow
+  ): Notification_KeyOutput @fdc_generated(from: "Notification", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Order` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  order_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Order_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Order_FirstRow
+  ): Order_KeyOutput @fdc_generated(from: "Order", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Pond` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  pond_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Pond_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Pond_FirstRow
+  ): Pond_KeyOutput @fdc_generated(from: "Pond", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `SensorReading` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  sensorReading_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: SensorReading_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SensorReading_FirstRow
+  ): SensorReading_KeyOutput @fdc_generated(from: "SensorReading", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `SmartRecommendation` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  smartRecommendation_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: SmartRecommendation_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SmartRecommendation_FirstRow
+  ): SmartRecommendation_KeyOutput @fdc_generated(from: "SmartRecommendation", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `User` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  user_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete `HarvestListing` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  harvestListing_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: HarvestListing_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "HarvestListing", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Notification` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  notification_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Notification_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Notification", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Order` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  order_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Order_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Order", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Pond` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  pond_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Pond_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Pond", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `SensorReading` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  sensorReading_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: SensorReading_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "SensorReading", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `SmartRecommendation` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  smartRecommendation_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: SmartRecommendation_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "SmartRecommendation", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `User` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  user_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: User_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "User", purpose: DELETE_MULTIPLE)
+}

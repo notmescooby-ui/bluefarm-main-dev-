@@ -1,0 +1,28 @@
+mutation SeedDatabase @transaction {
+  user_insertMany(data: [
+    { id: "00000000-0000-0000-0000-000000000001", email: "farmer1@test.com", role: "Farmer", createdAt: "2023-01-01T00:00:00Z" },
+    { id: "00000000-0000-0000-0000-000000000002", email: "buyer1@test.com", role: "Buyer", createdAt: "2023-01-02T00:00:00Z" }
+  ])
+  pond_insertMany(data: [
+    { id: "10000000-0000-0000-0000-000000000001", name: "Alpha Pond", location: "Sector A", farmerId: "00000000-0000-0000-0000-000000000001", capacity: 1000.5 },
+    { id: "10000000-0000-0000-0000-000000000002", name: "Beta Pond", location: "Sector B", farmerId: "00000000-0000-0000-0000-000000000001", capacity: 2500.0 }
+  ])
+  sensorReading_insertMany(data: [
+    { id: "20000000-0000-0000-0000-000000000001", pondId: "10000000-0000-0000-0000-000000000001", timestamp: "2023-05-01T10:00:00Z", ph: 7.2, temperature: 25.5, turbidity: 10.2, dissolvedOxygen: 8.5, ammonia: 0.1 },
+    { id: "20000000-0000-0000-0000-000000000002", pondId: "10000000-0000-0000-0000-000000000002", timestamp: "2023-05-01T10:05:00Z", ph: 7.5, temperature: 24.8, turbidity: 8.5, dissolvedOxygen: 7.9, ammonia: 0.2 }
+  ])
+  smartRecommendation_insertMany(data: [
+    { id: "30000000-0000-0000-0000-000000000001", pondId: "10000000-0000-0000-0000-000000000001", sensorReadingId: "20000000-0000-0000-0000-000000000001", message: "Check aeration levels", priority: "High" },
+    { id: "30000000-0000-0000-0000-000000000002", pondId: "10000000-0000-0000-0000-000000000002", sensorReadingId: "20000000-0000-0000-0000-000000000002", message: "Optimize feeding cycle", priority: "Medium" }
+  ])
+  harvestListing_insertMany(data: [
+    { id: "40000000-0000-0000-0000-000000000001", farmerId: "00000000-0000-0000-0000-000000000001", species: "Tilapia", quantity: 500, pricePerUnit: 2.5, status: "Active" },
+    { id: "40000000-0000-0000-0000-000000000002", farmerId: "00000000-0000-0000-0000-000000000001", species: "Catfish", quantity: 300, pricePerUnit: 3.0, status: "Active" }
+  ])
+  order_insertMany(data: [
+    { id: "50000000-0000-0000-0000-000000000001", buyerId: "00000000-0000-0000-0000-000000000002", listingId: "40000000-0000-0000-0000-000000000001", quantity: 100, totalAmount: 250.0, status: "Pending" }
+  ])
+  notification_insertMany(data: [
+    { id: "60000000-0000-0000-0000-000000000001", userId: "00000000-0000-0000-0000-000000000001", message: "New order received!", isRead: false, createdAt: "2023-06-01T12:00:00Z" }
+  ])
+}

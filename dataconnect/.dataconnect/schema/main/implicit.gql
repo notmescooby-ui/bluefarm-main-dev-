@@ -1,0 +1,74 @@
+extend type HarvestListing {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "HarvestListing", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `HarvestListing`.`farmer`. It must match the value of `User`.`id`. See `@ref` for how to customize it.
+  """
+  farmerId: UUID! @fdc_generated(from: "HarvestListing.farmer", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Notification {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Notification", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Notification`.`user`. It must match the value of `User`.`id`. See `@ref` for how to customize it.
+  """
+  userId: UUID! @fdc_generated(from: "Notification.user", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Order {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Order", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Order`.`buyer`. It must match the value of `User`.`id`. See `@ref` for how to customize it.
+  """
+  buyerId: UUID! @fdc_generated(from: "Order.buyer", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Order`.`listing`. It must match the value of `HarvestListing`.`id`. See `@ref` for how to customize it.
+  """
+  listingId: UUID! @fdc_generated(from: "Order.listing", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Pond {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Pond", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Pond`.`farmer`. It must match the value of `User`.`id`. See `@ref` for how to customize it.
+  """
+  farmerId: UUID! @fdc_generated(from: "Pond.farmer", purpose: IMPLICIT_REF_FIELD)
+}
+extend type SensorReading {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "SensorReading", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `SensorReading`.`pond`. It must match the value of `Pond`.`id`. See `@ref` for how to customize it.
+  """
+  pondId: UUID! @fdc_generated(from: "SensorReading.pond", purpose: IMPLICIT_REF_FIELD)
+}
+extend type SmartRecommendation {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "SmartRecommendation", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `SmartRecommendation`.`pond`. It must match the value of `Pond`.`id`. See `@ref` for how to customize it.
+  """
+  pondId: UUID! @fdc_generated(from: "SmartRecommendation.pond", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `SmartRecommendation`.`sensorReading`. It must match the value of `SensorReading`.`id`. See `@ref` for how to customize it.
+  """
+  sensorReadingId: UUID @fdc_generated(from: "SmartRecommendation.sensorReading", purpose: IMPLICIT_REF_FIELD)
+}
+extend type User {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "User", purpose: IMPLICIT_KEY_FIELD)
+}

@@ -1,14 +1,9 @@
-import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:bluefarm/widgets/animated_banner.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/sensor_data.dart';
 import 'recommendation_questionnaire_screen.dart';
-import 'device_connect_screen.dart';
-import 'camera_screen.dart';
-import 'insights_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -188,11 +183,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // Smart recommendations
                     if (worst != "good") ...[
-                      Row(
+                      const Row(
                         children: [
-                          const Icon(Icons.warning_amber_rounded, size: 20, color: Color(0xFFDC2626)),
-                          const SizedBox(width: 8),
-                          const Text(
+                          Icon(Icons.warning_amber_rounded, size: 20, color: Color(0xFFDC2626)),
+                          SizedBox(width: 8),
+                          Text(
                             "Action Required",
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0D1F3C)),
                           ),
@@ -216,8 +211,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: ElevatedButton(
                                 onPressed: () {
                                   String param = "pH";
-                                  if (r.tempStatus == "CRITICAL" || r.tempStatus == "WARNING") param = "Temperature";
-                                  else if (r.turbStatus == "CRITICAL" || r.turbStatus == "WARNING") param = "Turbidity";
+                                  if (r.tempStatus == "CRITICAL" || r.tempStatus == "WARNING") {
+                                    param = "Temperature";
+                                  } else if (r.turbStatus == "CRITICAL" || r.turbStatus == "WARNING") param = "Turbidity";
                                   
                                   Navigator.push(context, MaterialPageRoute(builder: (_) => RecommendationQuestionnaireScreen(
                                     parameter: param,
@@ -237,11 +233,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 20),
                     ] else ...[
-                      Row(
+                      const Row(
                         children: [
-                          const Icon(Icons.check_circle, size: 20, color: Color(0xFF059669)),
-                          const SizedBox(width: 8),
-                          const Text(
+                          Icon(Icons.check_circle, size: 20, color: Color(0xFF059669)),
+                          SizedBox(width: 8),
+                          Text(
                             "Smart recommendations",
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0D1F3C)),
                           ),

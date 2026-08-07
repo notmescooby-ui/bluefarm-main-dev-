@@ -120,7 +120,7 @@ class _RecommendationQuestionnaireScreenState extends State<RecommendationQuesti
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error generating recommendation: \$e')),
+          const SnackBar(content: Text('Error generating recommendation: \$e')),
         );
       }
     } finally {
@@ -139,9 +139,9 @@ class _RecommendationQuestionnaireScreenState extends State<RecommendationQuesti
           icon: const Icon(Icons.arrow_back, color: Color(0xFF0F1A2A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           "\${widget.parameter} Analysis",
-          style: const TextStyle(
+          style: TextStyle(
             color: Color(0xFF0F1A2A),
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -182,9 +182,9 @@ class _RecommendationQuestionnaireScreenState extends State<RecommendationQuesti
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     "Your \${widget.parameter} is outside the safe range. Please provide some details so our AI can generate a precise action plan.",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       color: Color(0xFF0F1A2A),
                       height: 1.5,

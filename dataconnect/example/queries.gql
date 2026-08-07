@@ -1,0 +1,223 @@
+mutation CreateUser @auth(level: USER) {
+  user_insert(data: {
+    id_expr: "auth.uid",
+    email: "user@example.com",
+    role: "Farmer",
+    createdAt_expr: "request.time"
+  })
+}
+
+mutation UpdateUser($displayName: String!) @auth(level: USER) {
+  user_update(key: { id_expr: "auth.uid" }, data: { displayName: $displayName })
+}
+
+mutation DeleteUser @auth(level: USER) {
+  user_delete(key: { id_expr: "auth.uid" })
+}
+
+query GetCurrentUser @auth(level: USER) {
+  user(key: { id_expr: "auth.uid" }) {
+    email
+    displayName
+    role
+  }
+}
+
+query ListUsers @auth(level: PUBLIC, insecureReason: "Public directory of farmers") {
+  users {
+    displayName
+    role
+  }
+}
+
+mutation CreatePond($name: String!, $location: String!, $capacity: Float) @auth(level: USER) {
+  pond_insert(data: {
+    name: $name,
+    location: $location,
+    capacity: $capacity,
+    farmer: { id_expr: "auth.uid" }
+  })
+}
+
+mutation UpdatePond($id: UUID!, $capacity: Float) @auth(level: USER) {
+  pond_update(key: { id: $id }, data: { capacity: $capacity })
+}
+
+mutation DeletePond($id: UUID!) @auth(level: USER) {
+  pond_delete(key: { id: $id })
+}
+
+query GetPond($id: UUID!) @auth(level: USER) {
+  pond(id: $id) {
+    name
+    location
+    capacity
+  }
+}
+
+query ListMyPonds @auth(level: USER) {
+  ponds(where: { farmer: { id: { eq_expr: "auth.uid" } } }) {
+    name
+    location
+  }
+}
+
+mutation CreateSensorReading($pondId: UUID!, $ph: Float!, $temp: Float!, $turb: Float!, $dissolvedOxygen: Float!, $nh3: Float!) @auth(level: USER) {
+  sensorReading_insert(data: {
+    pond: { id: $pondId },
+    ph: $ph,
+    temperature: $temp,
+    turbidity: $turb,
+    dissolvedOxygen: $dissolvedOxygen,
+    ammonia: $nh3,
+    timestamp_expr: "request.time"
+  })
+}
+
+mutation UpdateSensorReading($id: UUID!, $ph: Float!) @auth(level: USER) {
+  sensorReading_update(key: { id: $id }, data: { ph: $ph })
+}
+
+mutation DeleteSensorReading($id: UUID!) @auth(level: USER) {
+  sensorReading_delete(key: { id: $id })
+}
+
+query GetSensorReading($id: UUID!) @auth(level: USER) {
+  sensorReading(id: $id) {
+    ph
+    temperature
+  }
+}
+
+query ListPondReadings($pondId: UUID!) @auth(level: USER) {
+  sensorReadings(where: { pondId: { eq: $pondId } }) {
+    timestamp
+    ph
+    temperature
+  }
+}
+
+mutation CreateRecommendation($pondId: UUID!, $message: String!, $priority: String!) @auth(level: USER) {
+  smartRecommendation_insert(data: {
+    pond: { id: $pondId },
+    message: $message,
+    priority: $priority
+  })
+}
+
+mutation UpdateRecommendation($id: UUID!, $priority: String!) @auth(level: USER) {
+  smartRecommendation_update(key: { id: $id }, data: { priority: $priority })
+}
+
+mutation DeleteRecommendation($id: UUID!) @auth(level: USER) {
+  smartRecommendation_delete(key: { id: $id })
+}
+
+query GetRecommendation($id: UUID!) @auth(level: USER) {
+  smartRecommendation(id: $id) {
+    message
+    priority
+  }
+}
+
+query ListRecommendations @auth(level: USER) {
+  smartRecommendations(where: { pond: { farmer: { id: { eq_expr: "auth.uid" } } } }) {
+    message
+    priority
+  }
+}
+
+mutation CreateListing($species: String!, $quantity: Int!, $price: Float!) @auth(level: USER) {
+  harvestListing_insert(data: {
+    farmer: { id_expr: "auth.uid" },
+    species: $species,
+    quantity: $quantity,
+    pricePerUnit: $price,
+    status: "AVAILABLE"
+  })
+}
+
+mutation UpdateListing($id: UUID!, $status: String!) @auth(level: USER) {
+  harvestListing_update(key: { id: $id }, data: { status: $status })
+}
+
+mutation DeleteListing($id: UUID!) @auth(level: USER) {
+  harvestListing_delete(key: { id: $id })
+}
+
+query GetListing($id: UUID!) @auth(level: PUBLIC, insecureReason: "Publicly visible marketplace") {
+  harvestListing(id: $id) {
+    species
+    pricePerUnit
+  }
+}
+
+query ListAvailableListings @auth(level: PUBLIC, insecureReason: "Publicly visible marketplace") {
+  harvestListings(where: { status: { eq: "AVAILABLE" } }) {
+    species
+    pricePerUnit
+  }
+}
+
+mutation CreateOrder($listingId: UUID!, $quantity: Int!, $total: Float!) @auth(level: USER) {
+  order_insert(data: {
+    buyer: { id_expr: "auth.uid" },
+    listing: { id: $listingId },
+    quantity: $quantity,
+    totalAmount: $total,
+    status: "PENDING"
+  })
+}
+
+mutation UpdateOrder($id: UUID!, $status: String!) @auth(level: USER) {
+  order_update(key: { id: $id }, data: { status: $status })
+}
+
+mutation DeleteOrder($id: UUID!) @auth(level: USER) {
+  order_delete(key: { id: $id })
+}
+
+query GetOrder($id: UUID!) @auth(level: USER) {
+  order(id: $id) {
+    status
+    totalAmount
+  }
+}
+
+query ListMyOrders @auth(level: USER) {
+  orders(where: { buyer: { id: { eq_expr: "auth.uid" } } }) {
+    listing { species }
+    status
+  }
+}
+
+mutation CreateNotification($userId: UUID!, $message: String!) @auth(level: USER) {
+  notification_insert(data: {
+    user: { id: $userId },
+    message: $message,
+    isRead: false,
+    createdAt_expr: "request.time"
+  })
+}
+
+mutation MarkNotificationRead($id: UUID!) @auth(level: USER) {
+  notification_update(key: { id: $id }, data: { isRead: true })
+}
+
+mutation DeleteNotification($id: UUID!) @auth(level: USER) {
+  notification_delete(key: { id: $id })
+}
+
+query GetNotification($id: UUID!) @auth(level: USER) {
+  notification(id: $id) {
+    message
+    isRead
+  }
+}
+
+query ListMyNotifications @auth(level: USER) {
+  notifications(where: { userId: { eq_expr: "auth.uid" } }) {
+    message
+    isRead
+  }
+}

@@ -14,7 +14,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -141,7 +140,7 @@ class _CameraScreenState extends State<CameraScreen>
 
   // ── MJPEG stream (Raspberry Pi) ─────────────────────────
   bool _showStream = false;
-  String _streamUrl = 'http://192.168.1.100:8080/?action=stream';
+  final String _streamUrl = 'http://192.168.1.100:8080/?action=stream';
 
   // ── Animations ──────────────────────────────────────────
   late AnimationController _scanAnim;
@@ -328,11 +327,13 @@ class _CameraScreenState extends State<CameraScreen>
 
   void _reset() {
     _resultAnim.reverse().then((_) {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _state = _AnalysisState.idle;
         _capturedImage = null;
         _result = null;
       });
+      }
     });
   }
 
@@ -495,11 +496,11 @@ class _CameraScreenState extends State<CameraScreen>
             const SizedBox(width: 8),
 
             // Title
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Text('Fish Health Scanner',
                       style: TextStyle(color: Colors.white,
                           fontWeight: FontWeight.w900, fontSize: 16)),
@@ -602,7 +603,7 @@ class _CameraScreenState extends State<CameraScreen>
                       blurRadius: 24, spreadRadius: 4),
                 ],
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
@@ -612,8 +613,8 @@ class _CameraScreenState extends State<CameraScreen>
                       strokeWidth: 2,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  const Text('Analysing with AI…',
+                  SizedBox(width: 10),
+                  Text('Analysing with AI…',
                       style: TextStyle(color: Colors.white,
                           fontWeight: FontWeight.w800, fontSize: 14)),
                 ],

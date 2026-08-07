@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:bluefarm/widgets/animated_banner.dart';
 import 'package:flutter/services.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -122,8 +121,11 @@ class _BuyerShellState extends State<BuyerShell> {
     setState(() {
       final idx = _cart.indexWhere((c) => c.listingId == id);
       if (idx != -1) {
-        if (qty <= 0) _cart.removeAt(idx);
-        else _cart[idx].quantityKg = qty;
+        if (qty <= 0) {
+          _cart.removeAt(idx);
+        } else {
+          _cart[idx].quantityKg = qty;
+        }
       }
     });
   }
@@ -197,7 +199,7 @@ class _BuyerShellState extends State<BuyerShell> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                                color: _kGreen.withOpacity(0.4),
+                                color: _kGreen.withValues(alpha: 0.4),
                                 blurRadius: 16,
                                 offset: const Offset(0, 6))
                           ],
@@ -207,7 +209,7 @@ class _BuyerShellState extends State<BuyerShell> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(8)),
                             child: Text(
                               '$_count item${_count > 1 ? 's' : ''}',
@@ -246,7 +248,7 @@ class _BuyerShellState extends State<BuyerShell> {
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
         backgroundColor: Colors.white,
-        indicatorColor: _kGreen.withOpacity(0.12),
+        indicatorColor: _kGreen.withValues(alpha: 0.12),
         destinations: [
           const NavigationDestination(
               icon: Icon(Icons.storefront_outlined),
@@ -336,7 +338,7 @@ class _ThinGreenStrip extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Text(
@@ -569,7 +571,7 @@ class _MarketTabState extends State<_MarketTab> {
                   height: 44,
                   decoration: BoxDecoration(
                     color: _showFilters
-                        ? _kGreen.withOpacity(0.1)
+                        ? _kGreen.withValues(alpha: 0.1)
                         : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
@@ -618,7 +620,7 @@ class _MarketTabState extends State<_MarketTab> {
                       data: SliderTheme.of(context).copyWith(
                           activeTrackColor: _kGreen,
                           thumbColor: _kGreen,
-                          overlayColor: _kGreen.withOpacity(0.12)),
+                          overlayColor: _kGreen.withValues(alpha: 0.12)),
                       child: Slider(
                           value: _maxPrice,
                           min: 50,
@@ -694,11 +696,11 @@ class _MarketTabState extends State<_MarketTab> {
             child: Center(
                 child: CircularProgressIndicator(color: _kGreen)))
       else if (_filtered.isEmpty)
-        SliverFillRemaining(
+        const SliverFillRemaining(
           child: Center(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('🐟', style: TextStyle(fontSize: 48)),
-            const SizedBox(height: 12),
+            Text('🐟', style: TextStyle(fontSize: 48)),
+            SizedBox(height: 12),
             Text('No listings found',
                 style: TextStyle(color: _kMuted, fontSize: 16)),
           ])),
@@ -774,7 +776,7 @@ class _MarketTabState extends State<_MarketTab> {
                     color: color)),
             Text(
                 '${listings.length} seller${listings.length != 1 ? 's' : ''} available',
-                style: TextStyle(fontSize: 12, color: _kMuted)),
+                style: const TextStyle(fontSize: 12, color: _kMuted)),
           ]),
         ]),
       ),
@@ -830,11 +832,11 @@ class _ListingCardState extends State<_ListingCard> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: _inCart
-                ? _kGreen.withOpacity(0.4)
+                ? _kGreen.withValues(alpha: 0.4)
                 : Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2))
         ],
@@ -849,7 +851,7 @@ class _ListingCardState extends State<_ListingCard> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                  color: _color.withOpacity(0.1),
+                  color: _color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10)),
               child: Center(
                   child: Text(_kSpeciesEmoji[_species] ?? '🐠',
@@ -867,7 +869,7 @@ class _ListingCardState extends State<_ListingCard> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
               Text(_farmer,
-                  style: TextStyle(fontSize: 11, color: _kMuted)),
+                  style: const TextStyle(fontSize: 11, color: _kMuted)),
             ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text('₹${_price.toStringAsFixed(0)}',
@@ -875,7 +877,7 @@ class _ListingCardState extends State<_ListingCard> {
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
                       color: _color)),
-              Text('per kg',
+              const Text('per kg',
                   style: TextStyle(fontSize: 10, color: _kMuted)),
             ]),
           ]),
@@ -984,9 +986,9 @@ class _ListingCardState extends State<_ListingCard> {
       expand
           ? Expanded(
               child: Text(label,
-                  style: TextStyle(fontSize: 11, color: _kMuted),
+                  style: const TextStyle(fontSize: 11, color: _kMuted),
                   overflow: TextOverflow.ellipsis))
-          : Text(label, style: TextStyle(fontSize: 11, color: _kMuted)),
+          : Text(label, style: const TextStyle(fontSize: 11, color: _kMuted)),
     ]);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1055,7 +1057,7 @@ class _OrdersTabState extends State<_OrdersTab> {
           .orderBy('created_at', descending: true)
           .limit(20)
           .get();
-      setState(() => _pastOrders = snap.docs.map((d) => d.data() as Map<String, dynamic>).toList());
+      setState(() => _pastOrders = snap.docs.map((d) => d.data()).toList());
     } catch (_) {
       setState(() => _pastOrders = []);
     }
@@ -1137,15 +1139,15 @@ class _OrdersTabState extends State<_OrdersTab> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.grey.shade200)),
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Text('🛒', style: TextStyle(fontSize: 48)),
-                  const SizedBox(height: 12),
-                  const Text('Cart is empty',
+                child: const Column(mainAxisSize: MainAxisSize.min, children: [
+                  Text('🛒', style: TextStyle(fontSize: 48)),
+                  SizedBox(height: 12),
+                  Text('Cart is empty',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: _kText)),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text('Go to Market tab to add items',
                       style: TextStyle(fontSize: 13, color: _kMuted)),
                 ]),
@@ -1166,10 +1168,10 @@ class _OrdersTabState extends State<_OrdersTab> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                              color: _kGreen.withOpacity(0.2)),
+                              color: _kGreen.withValues(alpha: 0.2)),
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
+                                color: Colors.black.withValues(alpha: 0.04),
                                 blurRadius: 8)
                           ]),
                       child: Row(children: [
@@ -1177,7 +1179,7 @@ class _OrdersTabState extends State<_OrdersTab> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
+                              color: color.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12)),
                           child: Center(
                               child: Text(
@@ -1197,7 +1199,7 @@ class _OrdersTabState extends State<_OrdersTab> {
                                       fontSize: 14,
                                       color: _kText)),
                               Text(item.farmName,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 11, color: _kMuted)),
                               Text(
                                   '₹${item.pricePerKg.toStringAsFixed(0)}/kg',
@@ -1306,7 +1308,7 @@ class _OrdersTabState extends State<_OrdersTab> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                           elevation: 4,
-                          shadowColor: _kGreen.withOpacity(0.4)),
+                          shadowColor: _kGreen.withValues(alpha: 0.4)),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -1365,12 +1367,12 @@ class _OrdersTabState extends State<_OrdersTab> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.grey.shade200)),
-                child: Column(
+                child: const Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                  const Text('📦',
+                  Text('📦',
                       style: TextStyle(fontSize: 36)),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text('No past orders yet',
                       style:
                           TextStyle(color: _kMuted, fontSize: 14)),
@@ -1397,7 +1399,7 @@ class _OrdersTabState extends State<_OrdersTab> {
                               color: Colors.grey.shade200),
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
+                                color: Colors.black.withValues(alpha: 0.03),
                                 blurRadius: 6)
                           ]),
                       child: Padding(
@@ -1407,7 +1409,7 @@ class _OrdersTabState extends State<_OrdersTab> {
                               width: 46,
                               height: 46,
                               decoration: BoxDecoration(
-                                  color: color.withOpacity(0.1),
+                                  color: color.withValues(alpha: 0.1),
                                   borderRadius:
                                       BorderRadius.circular(12)),
                               child: Icon(_statusIcon(status),
@@ -1429,13 +1431,13 @@ class _OrdersTabState extends State<_OrdersTab> {
                               o['farm_name'] != null
                                   ? 'From: ${o['farm_name']}'
                                   : 'Order',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 12, color: _kMuted),
                             ),
                             Row(children: [
                               Text(
                                 '${(o['quantity_kg'] as num?)?.toStringAsFixed(0) ?? '?'} kg · ₹${(o['total_price'] as num?)?.toStringAsFixed(0) ?? '?'}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontSize: 12,
                                     color: _kGreen,
                                     fontWeight: FontWeight.w700),
@@ -1446,9 +1448,9 @@ class _OrdersTabState extends State<_OrdersTab> {
                                     horizontal: 6, vertical: 1),
                                 decoration: BoxDecoration(
                                     color: payment == 'upi'
-                                        ? Colors.blue.withOpacity(0.1)
+                                        ? Colors.blue.withValues(alpha: 0.1)
                                         : Colors.orange
-                                            .withOpacity(0.1),
+                                            .withValues(alpha: 0.1),
                                     borderRadius:
                                         BorderRadius.circular(6)),
                                 child: Text(
@@ -1467,10 +1469,10 @@ class _OrdersTabState extends State<_OrdersTab> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
+                                color: color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                    color: color.withOpacity(0.3))),
+                                    color: color.withValues(alpha: 0.3))),
                             child: Text(
                               status[0].toUpperCase() +
                                   status.substring(1),
@@ -1497,7 +1499,7 @@ class _OrdersTabState extends State<_OrdersTab> {
 
   Widget _summaryRow(String l, String v) =>
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(l, style: TextStyle(fontSize: 13, color: _kMuted)),
+        Text(l, style: const TextStyle(fontSize: 13, color: _kMuted)),
         Text(v,
             style: const TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w600)),
@@ -1680,15 +1682,15 @@ class _BillingPageState extends State<BillingPage>
               padding: const EdgeInsets.symmetric(
                   horizontal: 24, vertical: 16),
               decoration: BoxDecoration(
-                  color: _kGreen.withOpacity(0.08),
+                  color: _kGreen.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
                   border:
-                      Border.all(color: _kGreen.withOpacity(0.25))),
-              child: Column(children: [
-                const Icon(Icons.local_shipping_outlined,
+                      Border.all(color: _kGreen.withValues(alpha: 0.25))),
+              child: const Column(children: [
+                Icon(Icons.local_shipping_outlined,
                     color: _kGreen, size: 32),
-                const SizedBox(height: 10),
-                const Text(
+                SizedBox(height: 10),
+                Text(
                   'Your order has been placed with\ncash on delivery option',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -1700,7 +1702,7 @@ class _BillingPageState extends State<BillingPage>
               ]),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Farmers will be notified and prepare\nyour fish for delivery.',
               textAlign: TextAlign.center,
               style:
@@ -1768,7 +1770,7 @@ class _BillingPageState extends State<BillingPage>
                 color: const Color(0xFFFFFBEB),
                 borderRadius: BorderRadius.circular(10),
                 border:
-                    Border.all(color: _kAmber.withOpacity(0.4))),
+                    Border.all(color: _kAmber.withValues(alpha: 0.4))),
             child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1856,14 +1858,14 @@ class _BillingPageState extends State<BillingPage>
             border: Border.all(color: Colors.grey.shade200),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.03), blurRadius: 6)
+                  color: Colors.black.withValues(alpha: 0.03), blurRadius: 6)
             ]),
         child: Row(children: [
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-                color: (app['color'] as Color).withOpacity(0.12),
+                color: (app['color'] as Color).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12)),
             child: Center(
               child: Text(app['emoji'] as String,
@@ -1880,7 +1882,7 @@ class _BillingPageState extends State<BillingPage>
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: _kText)),
-              Text('Tap to open app',
+              const Text('Tap to open app',
                   style: TextStyle(fontSize: 11, color: _kMuted)),
             ]),
           ),
@@ -1888,7 +1890,7 @@ class _BillingPageState extends State<BillingPage>
             padding: const EdgeInsets.symmetric(
                 horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-                color: (app['color'] as Color).withOpacity(0.1),
+                color: (app['color'] as Color).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20)),
             child: Text('Pay',
                 style: TextStyle(
@@ -1978,7 +1980,7 @@ class _BillingPageState extends State<BillingPage>
                           const Spacer(),
                           Text(
                               '${item.quantityKg.toStringAsFixed(0)} kg',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 12, color: _kMuted)),
                           const SizedBox(width: 8),
                           Text(
@@ -2079,14 +2081,14 @@ class _BillingPageState extends State<BillingPage>
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.07),
+                    color: Colors.black.withValues(alpha: 0.07),
                     blurRadius: 16,
                     offset: const Offset(0, -4))
               ]),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             if (_paymentMethod.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
                 child: Text('Please select a payment method',
                     style: TextStyle(color: _kMuted, fontSize: 13)),
               ),
@@ -2111,7 +2113,7 @@ class _BillingPageState extends State<BillingPage>
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                     elevation: 4,
-                    shadowColor: _kGreen.withOpacity(0.4)),
+                    shadowColor: _kGreen.withValues(alpha: 0.4)),
                 child: _placing
                     ? const SizedBox(
                         width: 22,
@@ -2185,7 +2187,7 @@ class _BillingPageState extends State<BillingPage>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.06) : Colors.white,
+          color: selected ? color.withValues(alpha: 0.06) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
               color: selected ? color : Colors.grey.shade200,
@@ -2196,7 +2198,7 @@ class _BillingPageState extends State<BillingPage>
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, color: color, size: 24),
           ),
@@ -2211,7 +2213,7 @@ class _BillingPageState extends State<BillingPage>
                     fontWeight: FontWeight.w700,
                     color: selected ? color : _kText)),
             Text(subtitle,
-                style: TextStyle(fontSize: 12, color: _kMuted)),
+                style: const TextStyle(fontSize: 12, color: _kMuted)),
           ])),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -2236,7 +2238,7 @@ class _BillingPageState extends State<BillingPage>
 
   Widget _rowSummary(String l, String v) =>
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(l, style: TextStyle(fontSize: 13, color: _kMuted)),
+        Text(l, style: const TextStyle(fontSize: 13, color: _kMuted)),
         Text(v,
             style: const TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w600)),
@@ -2308,9 +2310,9 @@ class _ProfileTabState extends State<_ProfileTab> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3), // Darker translucent box
+                    color: Colors.black.withValues(alpha: 0.3), // Darker translucent box
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
                   ),
                   child: Column(
                     children: [
@@ -2319,9 +2321,9 @@ class _ProfileTabState extends State<_ProfileTab> {
                         height: 70,
                         decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.4),
+                                color: Colors.white.withValues(alpha: 0.4),
                                 width: 2)),
                         child: const Icon(Icons.person_rounded,
                             color: Colors.white, size: 36),
@@ -2335,7 +2337,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       if (company.isNotEmpty)
                         Text(company,
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 12)),
                     ],
                   ),
@@ -2354,10 +2356,10 @@ class _ProfileTabState extends State<_ProfileTab> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                    color: _kGreen.withOpacity(0.08),
+                    color: _kGreen.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: _kGreen.withOpacity(0.25))),
+                        color: _kGreen.withValues(alpha: 0.25))),
                 child: const Row(children: [
                   Icon(Icons.verified_rounded,
                       color: _kGreen, size: 18),
@@ -2375,7 +2377,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 8)
                   ]),
               child: Column(children: [
@@ -2432,7 +2434,7 @@ class _ProfileTabState extends State<_ProfileTab> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: _kGreen.withOpacity(0.1),
+          color: _kGreen.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: _kGreen, size: 20),

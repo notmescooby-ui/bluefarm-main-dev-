@@ -54,7 +54,7 @@ class _AnimatedBannerState extends State<AnimatedBanner> with SingleTickerProvid
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 10),
             )
@@ -84,8 +84,8 @@ class _AnimatedBannerState extends State<AnimatedBanner> with SingleTickerProvid
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    Colors.black.withOpacity(0.75),
-                    Colors.black.withOpacity(0.2),
+                    Colors.black.withValues(alpha: 0.75),
+                    Colors.black.withValues(alpha: 0.2),
                   ],
                 ),
               ),
@@ -113,7 +113,7 @@ class _AnimatedBannerState extends State<AnimatedBanner> with SingleTickerProvid
                     Text(
                       widget.subtitle,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),

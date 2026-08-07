@@ -23,15 +23,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -48,12 +42,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDtaLefYYgsGHf7kvLS3N9cNz0fT-k2iSA',
-    appId: '1:52765421109:web:28b43b4e9d4966d94f8b7c',
+    appId: '1:52765421109:web:93b3b2a227bc410b4f8b7c',
     messagingSenderId: '52765421109',
     projectId: 'bluefarm-96355',
     authDomain: 'bluefarm-96355.firebaseapp.com',
+    databaseURL: 'https://bluefarm-96355-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'bluefarm-96355.firebasestorage.app',
-    measurementId: 'G-7E1Y7H769P',
+    measurementId: 'G-RRYR8MRWBL',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -61,16 +56,41 @@ class DefaultFirebaseOptions {
     appId: '1:52765421109:android:3ecdbca43237ffa94f8b7c',
     messagingSenderId: '52765421109',
     projectId: 'bluefarm-96355',
+    databaseURL: 'https://bluefarm-96355-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'bluefarm-96355.firebasestorage.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyDtaLefYYgsGHf7kvLS3N9cNz0fT-k2iSA',
-    appId: '1:52765421109:web:ee800c1b0b8885724f8b7c',
+    appId: '1:52765421109:web:3cda898be1ed54bd4f8b7c',
     messagingSenderId: '52765421109',
     projectId: 'bluefarm-96355',
     authDomain: 'bluefarm-96355.firebaseapp.com',
+    databaseURL: 'https://bluefarm-96355-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'bluefarm-96355.firebasestorage.app',
-    measurementId: 'G-9SC2N9QN9G',
+    measurementId: 'G-54W5VSN41M',
+  );
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyD3XiT0astzJd7aANXJCmrkU6x1tH7RI9E',
+    appId: '1:52765421109:ios:840ff7d9f9f760ec4f8b7c',
+    messagingSenderId: '52765421109',
+    projectId: 'bluefarm-96355',
+    databaseURL: 'https://bluefarm-96355-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'bluefarm-96355.firebasestorage.app',
+    androidClientId: '52765421109-0q90gcfm2o08nefbn7r9tel3fjd30c1l.apps.googleusercontent.com',
+    iosClientId: '52765421109-jct4tvn8jptmt191m9jbg9nr7kmvf9e6.apps.googleusercontent.com',
+    iosBundleId: 'com.example.bluefarm',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyD3XiT0astzJd7aANXJCmrkU6x1tH7RI9E',
+    appId: '1:52765421109:ios:840ff7d9f9f760ec4f8b7c',
+    messagingSenderId: '52765421109',
+    projectId: 'bluefarm-96355',
+    databaseURL: 'https://bluefarm-96355-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'bluefarm-96355.firebasestorage.app',
+    androidClientId: '52765421109-0q90gcfm2o08nefbn7r9tel3fjd30c1l.apps.googleusercontent.com',
+    iosClientId: '52765421109-jct4tvn8jptmt191m9jbg9nr7kmvf9e6.apps.googleusercontent.com',
+    iosBundleId: 'com.example.bluefarm',
   );
 }

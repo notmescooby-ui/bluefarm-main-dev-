@@ -57,7 +57,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
       if (profile != null && profile['account_status'] == 'active') {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => AdminShell()),
+          MaterialPageRoute(builder: (_) => const AdminShell()),
           (route) => false,
         );
         return;

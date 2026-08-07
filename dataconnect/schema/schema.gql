@@ -1,0 +1,56 @@
+type User @table {
+  email: String!
+  role: String!
+  createdAt: Timestamp!
+  displayName: String
+  phoneNumber: String
+}
+
+type Pond @table {
+  name: String!
+  location: String!
+  farmer: User!
+  dimensions: String
+  capacity: Float
+}
+
+type SensorReading @table {
+  pond: Pond!
+  timestamp: Timestamp!
+  ph: Float!
+  temperature: Float!
+  turbidity: Float!
+  dissolvedOxygen: Float!
+  ammonia: Float!
+}
+
+type SmartRecommendation @table {
+  pond: Pond!
+  message: String!
+  priority: String!
+  sensorReading: SensorReading
+}
+
+type HarvestListing @table {
+  farmer: User!
+  species: String!
+  quantity: Int!
+  pricePerUnit: Float!
+  status: String!
+  harvestDate: Date
+}
+
+type Order @table {
+  buyer: User!
+  listing: HarvestListing!
+  quantity: Int!
+  totalAmount: Float!
+  status: String!
+}
+
+type Notification @table {
+  user: User!
+  message: String!
+  isRead: Boolean!
+  createdAt: Timestamp!
+}

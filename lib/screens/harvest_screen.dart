@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../localization/app_translations.dart';
 import '../theme/app_theme.dart';
 
 class HarvestScreen extends StatefulWidget {
@@ -729,7 +728,7 @@ class _HarvestFormState extends State<_HarvestForm> {
         children: [
           _label('Fish Species *'),
           DropdownButtonFormField<String>(
-            value: _species,
+            initialValue: _species,
             decoration: _dec('Select species', Icons.set_meal_rounded),
             items: _speciesList
                 .map((species) => DropdownMenuItem(

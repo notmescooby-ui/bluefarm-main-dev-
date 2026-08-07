@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/sensor_data.dart';
 
 class OpenAIService {
-  static const String _apiKey = String.fromEnvironment('OPENAI_API_KEY');
+  static const String _apiKey = String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
   static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   /// Generates a recommendation based on parameter, sensor data, and questionnaire answers.
@@ -13,7 +13,7 @@ class OpenAIService {
     required SensorData sensorData,
     required Map<String, String> questionnaireAnswers,
   }) async {
-    final prompt = '''
+    const prompt = '''
 You are an expert aquaculture AI assistant helping a farmer with their pond. 
 The pond's \$affectedParameter is currently outside the safe range.
 

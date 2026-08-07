@@ -114,6 +114,6 @@ class AIService {
       return '✅ Water quality is excellent. Maintain regular monitoring and feeding schedules.';
     }
 
-    return 'BlueFarm Smart Action Plan:\n\n' + advice.join('\n\n') + '\n\n*This recommendation was personalized based on your pond readings and inputs.*';
+    return 'BlueFarm Smart Action Plan:\n\n${advice.join('\n\n')}\n\n*This recommendation was personalized based on your pond readings and inputs.*';
   }
 }

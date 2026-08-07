@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bluefarm/services/supabase_compatibility.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
@@ -9,7 +10,7 @@ class AdminShell extends StatefulWidget {
 }
 
 class _AdminShellState extends State<AdminShell> {
-  final _client = Supabase.instance.client;
+  final _db = FirebaseFirestore.instance;
   Map<String, dynamic> _stats = {};
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _readings = [];
@@ -26,24 +27,15 @@ class _AdminShellState extends State<AdminShell> {
   Future<void> _loadData() async {
     setState(() => _loading = true);
     try {
-      final results = await Future.wait([
-        _client
-            .from('profiles')
-            .select('id, full_name, role, farm_name, account_status, created_at')
-            .order('created_at', ascending: false),
-        _client
-            .from('sensor_readings')
-            .select()
-            .order('created_at', ascending: false)
-            .limit(50),
-        _client.from('listings').select('id, status').eq('status', 'active'),
-        _client.from('orders').select('id, status'),
-      ]);
+      final usersQuery = await _db.collection('profiles').orderBy('created_at', descending: true).get();
+      final readingsQuery = await _db.collection('sensor_readings').orderBy('created_at', descending: true).limit(50).get();
+      final listingsQuery = await _db.collection('listings').where('status', isEqualTo: 'active').get();
+      final ordersQuery = await _db.collection('orders').get();
 
-      final users    = List<Map<String, dynamic>>.from(results[0] as List);
-      final readings = List<Map<String, dynamic>>.from(results[1] as List);
-      final listings = results[2] as List;
-      final orders   = results[3] as List;
+      final users = usersQuery.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+      final readings = readingsQuery.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+      final listings = listingsQuery.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+      final orders = ordersQuery.docs.map((d) => {'id': d.id, ...d.data()}).toList();
 
       setState(() {
         _users    = users;
@@ -61,22 +53,20 @@ class _AdminShellState extends State<AdminShell> {
           'total_readings':  readings.length,
         };
       });
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Admin load error: $e');
+    }
     setState(() => _loading = false);
   }
 
   Future<void> _approveAdmin(String userId) async {
-    await _client
-        .from('profiles')
-        .update({'account_status': 'active'}).eq('id', userId);
+    await _db.collection('profiles').doc(userId).update({'account_status': 'active'});
     _showSnack('Account approved', success: true);
     _loadData();
   }
 
   Future<void> _rejectAdmin(String userId) async {
-    await _client
-        .from('profiles')
-        .update({'account_status': 'rejected'}).eq('id', userId);
+    await _db.collection('profiles').doc(userId).update({'account_status': 'rejected'});
     _showSnack('Account rejected');
     _loadData();
   }
@@ -128,7 +118,7 @@ class _AdminShellState extends State<AdminShell> {
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () => _client.auth.signOut(),
+            onPressed: () => FirebaseAuth.instance.signOut(),
           ),
         ],
       ),

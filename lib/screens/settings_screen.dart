@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_redirect_service.dart';
 import 'edit_profile_screen.dart';
 
@@ -96,7 +95,7 @@ class SettingsScreen extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isDestructive ? Colors.red.withOpacity(0.1) : const Color(0xFFE8F5E9),
+          color: isDestructive ? Colors.red.withValues(alpha: 0.1) : const Color(0xFFE8F5E9),
           shape: BoxShape.circle,
         ),
         child: Icon(

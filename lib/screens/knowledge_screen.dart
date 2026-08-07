@@ -209,11 +209,11 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
               top: MediaQuery.of(context).padding.top + 20,
               left: 20, right: 20, bottom: 20,
             ),
-            sliver: SliverToBoxAdapter(
+            sliver: const SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     "Knowledge Center",
                     style: TextStyle(
                       fontSize: 24,
@@ -222,8 +222,8 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
+                  SizedBox(height: 2),
+                  Text(
                     "EVERYTHING YOU NEED TO FARM WELL",
                     style: TextStyle(
                       fontSize: 11,
