@@ -1,44 +1,34 @@
 # BlueFarm 🌊 — Aquaculture Water Quality Monitoring System
 
-A production-grade IoT Flutter app with Supabase backend and Raspberry Pi 3 sensor integration.
+A production-grade IoT Flutter app with Firebase backend and Raspberry Pi 3 sensor integration.
 
 ---
 
 ## 🚀 Quick Setup Guide
 
-### Step 1: Supabase Setup
+### Step 1: Firebase Setup
 
-1. Go to [supabase.com](https://supabase.com) → Open your project `ttipwqpiwqwejvxtzqqn`
-2. In the SQL Editor, run the entire contents of `supabase/schema.sql`
-3. Go to **Authentication → Providers** → Enable Google OAuth
-4. Copy your **anon key** from Project Settings → API
+1. Go to [Firebase Console](https://console.firebase.google.com) → Open your project.
+2. Enable **Firestore Database**, **Authentication (Google & Email/Password)**, and **Storage**.
+3. Download the `google-services.json` and place it in `android/app/`.
 
-### Step 2: Configure the App
+### Step 2: Configure the Raspberry Pi Script
 
-Open `lib/config/supabase_config.dart` and replace:
-```dart
-static const String anonKey = 'YOUR_SUPABASE_ANON_KEY';
-```
-With your actual anon key from Supabase dashboard.
-
-### Step 3: Configure the Raspberry Pi Script
-
-Open `raspberry_pi/sensor_publisher.py` and replace:
+Open `raspberry_pi/sensor_publisher.py` and replace the endpoint with your Firebase Cloud Function or REST endpoint:
 ```python
-SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"
+FIREBASE_URL = "YOUR_FIREBASE_ENDPOINT"
 ```
-With your actual anon key.
 
-### Step 4: Run the Flutter App
+### Step 3: Run the Flutter App
 
 ```bash
 flutter pub get
 flutter run -d chrome --web-port=3000  # Browser (PWA) on port 3000
 flutter run                            # Android device/emulator
-flutter build apk --release    # Production APK
+flutter build apk --release            # Production APK
 ```
 
-### Step 5: Set up Raspberry Pi
+### Step 4: Set up Raspberry Pi
 
 See `raspberry_pi/WIRING_GUIDE.md` for full hardware wiring instructions.
 
@@ -96,7 +86,7 @@ python3 raspberry_pi/sensor_publisher.py
 |-------|------------|
 | Frontend | Flutter 3.x + Dart |
 | State | Provider + ChangeNotifier |
-| Backend | Supabase (Postgres + Auth + Realtime) |
+| Backend | Firebase (Firestore + Auth + DataConnect) |
 | Charts | fl_chart |
 | Fonts | google_fonts (Nunito) |
 | Animations | flutter_animate |
@@ -112,9 +102,9 @@ python3 raspberry_pi/sensor_publisher.py
     pH + Turbidity → MCP3008 ADC → GPIO SPI
     Temperature    → DS18B20 → GPIO 1-Wire
          ↓  every 5 seconds
-[HTTPS POST → Supabase REST API]
-         ↓  Postgres INSERT
-[Supabase Realtime WebSocket]
+[HTTPS POST → Firebase REST API / Functions]
+         ↓  Firestore Document Creation
+[Firestore Realtime Listener]
          ↓  Push to all clients instantly
 [Flutter App → State update → UI re-render]
 ```
@@ -139,9 +129,7 @@ python3 raspberry_pi/sensor_publisher.py
 ```
 bluefarm/
 ├── lib/
-│   ├── main.dart              # App entry + Supabase init
-│   ├── config/
-│   │   └── supabase_config.dart   # Keys + thresholds
+│   ├── main.dart              # App entry + Firebase init
 │   ├── models/
 │   │   └── sensor_reading.dart    # Data model
 │   ├── providers/
@@ -166,8 +154,6 @@ bluefarm/
 ├── raspberry_pi/
 │   ├── sensor_publisher.py        # Main sensor script
 │   └── WIRING_GUIDE.md           # Hardware wiring
-├── supabase/
-│   └── schema.sql                 # Database setup
 ├── pubspec.yaml
 └── README.md
 ```

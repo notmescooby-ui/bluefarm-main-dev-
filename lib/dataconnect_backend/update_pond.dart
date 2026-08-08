@@ -134,7 +134,7 @@ class UpdatePondVariables {
     return json;
   }
 
-  UpdatePondVariables({
+  const UpdatePondVariables({
     required this.id,
     required this.capacity,
   });
