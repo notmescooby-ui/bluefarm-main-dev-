@@ -95,13 +95,13 @@ class CreatePondData {
 class CreatePondVariables {
   final String name;
   final String location;
-  late final Optional<double>capacity;
+  final Optional<double>capacity;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   CreatePondVariables.fromJson(Map<String, dynamic> json):
   
   name = nativeFromJson<String>(json['name']),
   location = nativeFromJson<String>(json['location']) {
-  
+        
   
   
   

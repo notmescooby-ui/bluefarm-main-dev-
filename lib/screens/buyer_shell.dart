@@ -12,11 +12,9 @@ import 'edit_profile_screen.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const _kGreen      = Color(0xFF2E7D32);
-const _kGreenLight = Color(0xFF4CAF50);
 const _kGreenDark  = Color(0xFF1B5E20);
 const _kAmber      = Color(0xFFF59E0B);
 const _kBg         = Color(0xFFF1F8F2);
-const _kCard       = Colors.white;
 const _kText       = Color(0xFF1A2E1A);
 const _kMuted      = Color(0xFF6B7C6B);
 
