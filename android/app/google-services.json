@@ -15,15 +15,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "52765421109-0q90gcfm2o08nefbn7r9tel3fjd30c1l.apps.googleusercontent.com",
+          "client_id": "52765421109-a7mgfjrl3dbjfl17i1v2u0rqdpr1kkq5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.bluefarm",
-            "certificate_hash": "b32177ea16c3e43cc6772168a5b978af04bc3c5f"
+            "certificate_hash": "502fb0544502c781ae7647d47a5c1c7ec83f71ad"
           }
         },
         {
-          "client_id": "52765421109-t0dtnt8b7ksicb9ndkaehjfpm6f3dgn0.apps.googleusercontent.com",
+          "client_id": "52765421109-cd5m2ph8br6s5fcudtlo1n4kabikmoh6.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -36,7 +36,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "52765421109-t0dtnt8b7ksicb9ndkaehjfpm6f3dgn0.apps.googleusercontent.com",
+              "client_id": "52765421109-cd5m2ph8br6s5fcudtlo1n4kabikmoh6.apps.googleusercontent.com",
               "client_type": 3
             },
             {
