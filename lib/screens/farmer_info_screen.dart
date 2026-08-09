@@ -8,9 +8,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:bluefarm/services/ui_feedback_service.dart';
 import 'buyer_shell.dart';
 import 'device_connect_screen.dart';
-import 'role_selection_screen.dart';
 
 import '../services/aadhaar_scanner_service.dart';
 
@@ -83,28 +83,27 @@ class FarmerInfoScreen extends StatefulWidget {
 
 class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     with TickerProviderStateMixin {
-
   // ── role ──────────────────────────────────────────────────────────────────
   String? _role;
   final _aadhaarScanner = AadhaarScannerService();
 
   // ── FARMER controllers ────────────────────────────────────────────────────
-  final _farmNameCtrl    = TextEditingController();
-  final _farmerNameCtrl  = TextEditingController();
-  final _farmerAgeCtrl   = TextEditingController();
-  final _aadhaarCtrl     = TextEditingController();
-  final _pincodeCtrl     = TextEditingController();
-  final _gpsCtrl         = TextEditingController();
-  final _farmSizeCtrl    = TextEditingController();
+  final _farmNameCtrl = TextEditingController();
+  final _farmerNameCtrl = TextEditingController();
+  final _farmerAgeCtrl = TextEditingController();
+  final _aadhaarCtrl = TextEditingController();
+  final _pincodeCtrl = TextEditingController();
+  final _gpsCtrl = TextEditingController();
+  final _farmSizeCtrl = TextEditingController();
   final _customWaterCtrl = TextEditingController();
-  final _stockingCtrl    = TextEditingController();
-  final _secondaryCtrl   = TextEditingController();
+  final _stockingCtrl = TextEditingController();
+  final _secondaryCtrl = TextEditingController();
 
   // ── BUYER controllers ─────────────────────────────────────────────────────
-  final _buyerNameCtrl    = TextEditingController();
-  final _companyCtrl      = TextEditingController();
+  final _buyerNameCtrl = TextEditingController();
+  final _companyCtrl = TextEditingController();
   final _buyerPincodeCtrl = TextEditingController();
-  final _buyerGpsCtrl     = TextEditingController();
+  final _buyerGpsCtrl = TextEditingController();
 
   // ── dropdowns ─────────────────────────────────────────────────────────────
   String? _waterbodyType;
@@ -112,31 +111,31 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
   String? _buyerType;
 
   // ── Aadhaar ───────────────────────────────────────────────────────────────
-  XFile?  _aadhaarPhoto;
-  bool    _aadhaarVerified  = false;
-  bool    _aadhaarVerifying = false;
+  XFile? _aadhaarPhoto;
+  bool _aadhaarVerified = false;
+  bool _aadhaarVerifying = false;
   String? _aadhaarError;
   String? _aadhaarSuccess;
-  bool _checkEmblem  = false;
-  bool _checkName    = false;
-  bool _checkFormat  = false;
+  bool _checkEmblem = false;
+  bool _checkName = false;
+  bool _checkFormat = false;
 
   // ── location – farmer ─────────────────────────────────────────────────────
   String? _region;
-  bool    _locLoading = false;
+  bool _locLoading = false;
 
   // ── location – buyer ──────────────────────────────────────────────────────
   String? _buyerRegion;
-  bool    _buyerLocLoading = false;
+  bool _buyerLocLoading = false;
 
   // ── submit ────────────────────────────────────────────────────────────────
   bool _submitting = false;
 
   // ── animations ────────────────────────────────────────────────────────────
   late AnimationController _fadeCtrl;
-  late Animation<double>   _fadeAnim;
+  late Animation<double> _fadeAnim;
   late AnimationController _roleCtrl;
-  late Animation<double>   _roleAnim;
+  late Animation<double> _roleAnim;
 
   @override
   void initState() {
@@ -161,11 +160,20 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     _fadeCtrl.dispose();
     _roleCtrl.dispose();
     for (final c in [
-      _farmNameCtrl, _farmerNameCtrl, _farmerAgeCtrl, _aadhaarCtrl,
-      _pincodeCtrl, _gpsCtrl, _farmSizeCtrl, _customWaterCtrl,
-      _stockingCtrl, _secondaryCtrl,
-      _buyerNameCtrl, _companyCtrl,
-      _buyerPincodeCtrl, _buyerGpsCtrl,
+      _farmNameCtrl,
+      _farmerNameCtrl,
+      _farmerAgeCtrl,
+      _aadhaarCtrl,
+      _pincodeCtrl,
+      _gpsCtrl,
+      _farmSizeCtrl,
+      _customWaterCtrl,
+      _stockingCtrl,
+      _secondaryCtrl,
+      _buyerNameCtrl,
+      _companyCtrl,
+      _buyerPincodeCtrl,
+      _buyerGpsCtrl,
     ]) {
       c.dispose();
     }
@@ -211,8 +219,8 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
   Future<void> _lookupPincode(String pin, {bool isBuyer = false}) async {
     if (pin.length != 6) return;
     try {
-      final res = await http.get(
-          Uri.parse('https://api.postalpincode.in/pincode/$pin'));
+      final res = await http
+          .get(Uri.parse('https://api.postalpincode.in/pincode/$pin'));
       final data = jsonDecode(res.body) as List;
       if (data.isNotEmpty && data[0]['Status'] == 'Success') {
         final po = (data[0]['PostOffice'] as List)[0];
@@ -224,11 +232,15 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
             _region = region;
           }
         });
+        if (mounted)
+          UIFeedback.showSuccess(context, "Location identified: $region");
       } else {
-        _showSnack('PIN code lookup failed. Please check the number.');
+        if (mounted)
+          UIFeedback.showError(
+              context, 'PIN code lookup failed. Please check the number.');
       }
     } catch (e) {
-      _showSnack('Could not resolve PIN code: $e');
+      if (mounted) UIFeedback.showError(context, 'Could not resolve PIN code');
     }
   }
 
@@ -244,27 +256,31 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     try {
       bool svcEnabled = await Geolocator.isLocationServiceEnabled();
       if (!svcEnabled) {
-        _showSnack('Location services are disabled. Please enable GPS in Settings.');
+        if (mounted)
+          UIFeedback.showInfo(
+              context, 'Please enable GPS/Location in Settings');
         return;
       }
       LocationPermission perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
         if (perm == LocationPermission.denied) {
-          _showSnack('Location permission denied. Please allow it to auto-detect location.');
+          if (mounted)
+            UIFeedback.showError(context, 'Location permission denied');
           return;
         }
       }
       if (perm == LocationPermission.deniedForever) {
-        _showSnack('Location permission permanently denied. Please enable it in App Settings.');
-        await Geolocator.openAppSettings();
+        if (mounted)
+          UIFeedback.showInfo(context,
+              'Location permission permanently denied. Enable it in Settings.');
         return;
       }
       final pos = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
           timeLimit: const Duration(seconds: 15));
 
-      // Reverse geocode via Nominatim — extract both display name and district/state
+      // Reverse geocode via Nominatim
       String address;
       String? detectedRegion;
       try {
@@ -279,7 +295,6 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         address = data['display_name'] as String? ??
             '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
 
-        // Extract district + state for the region field (e.g. "Thane, Maharashtra, India")
         final addr = data['address'] as Map<String, dynamic>?;
         if (addr != null) {
           final district = addr['county'] as String? ??
@@ -290,13 +305,11 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           final state = addr['state'] as String?;
           if (district != null && state != null) {
             detectedRegion = '$district, $state, India';
-          } else if (state != null) {
-            detectedRegion = '$state, India';
           }
         }
       } catch (_) {
-        // Fallback to coordinates if reverse geocode fails
-        address = '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
+        address =
+            '${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}';
       }
 
       setState(() {
@@ -308,8 +321,12 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           if (detectedRegion != null) _region = detectedRegion;
         }
       });
+      if (mounted)
+        UIFeedback.showSuccess(context, "Location detected successfully");
     } catch (e) {
-      _showSnack('Could not get location: $e');
+      if (mounted)
+        UIFeedback.showError(
+            context, 'Could not get location. Try manual entry.');
     } finally {
       setState(() {
         if (isBuyer) {
@@ -323,7 +340,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
 
   Future<void> _pickPhoto(ImageSource source) async {
     if (_registeredName.isEmpty) {
-      _showSnack('Please enter your full name first.');
+      UIFeedback.showInfo(context, 'Please enter your full name first.');
       return;
     }
 
@@ -350,7 +367,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           selection: TextSelection.collapsed(offset: cleanAadhaar.length),
         );
       }
-      
+
       setState(() {
         _aadhaarPhoto = XFile((result['image_file'] as File).path);
         _aadhaarVerified = true;
@@ -361,25 +378,28 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         _checkFormat = true;
         _aadhaarVerifying = false;
       });
+      UIFeedback.showSuccess(context, "Aadhaar verified successfully!");
     } else {
       setState(() {
         _aadhaarVerifying = false;
         _aadhaarError = result['message'];
       });
-      if (result['message'] == 'No image selected.') {
-        _aadhaarError = null; // hide error if they just cancelled
+      if (result['message'] != 'No image selected.') {
+        UIFeedback.showError(
+            context, result['message'] ?? "Verification failed");
       }
     }
   }
 
   void _showPhotoSourceSheet() {
     if (_registeredName.isEmpty) {
-      _showSnack('Please enter your full name first.');
+      UIFeedback.showInfo(context, 'Please enter your full name first.');
       return;
     }
     final aadhaar = _aadhaarCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (aadhaar.length != 12) {
-      _showSnack('Please enter a valid 12-digit Aadhaar number first.');
+      UIFeedback.showInfo(
+          context, 'Please enter a valid 12-digit Aadhaar number first.');
       return;
     }
 
@@ -394,43 +414,49 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(height: 16),
-              const Text('Upload Aadhaar Card Photo',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text('Verify Your Identity',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'Upload a clear, well-lit photo of your Aadhaar card.\n'
-                  'The system will verify:\n'
-                  '  ✦ Government of India logo\n'
-                  '  ✦ Your name matches\n'
-                  '  ✦ Aadhaar number format (XXXX XXXX XXXX)',
+                  'Upload a clear photo of your Aadhaar card.\nWe use ML to verify details securely.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13, height: 1.5),
+                  style: TextStyle(
+                      color: Colors.grey.shade600, fontSize: 13, height: 1.5),
                 ),
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: const Color(0xFF1A6FA8).withValues(alpha: 0.1),
-                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF1A6FA8)),
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE3F2FD),
+                  child:
+                      Icon(Icons.camera_alt_rounded, color: Color(0xFF1565C0)),
                 ),
-                title: const Text('Take Photo'),
-                onTap: () { Navigator.pop(context); _pickPhoto(ImageSource.camera); },
+                title: const Text('Open Camera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickPhoto(ImageSource.camera);
+                },
               ),
               ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: const Color(0xFF1A6FA8).withValues(alpha: 0.1),
-                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF1A6FA8)),
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE3F2FD),
+                  child: Icon(Icons.photo_library_rounded,
+                      color: Color(0xFF1565C0)),
                 ),
                 title: const Text('Choose from Gallery'),
-                onTap: () { Navigator.pop(context); _pickPhoto(ImageSource.gallery); },
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickPhoto(ImageSource.gallery);
+                },
               ),
               const SizedBox(height: 8),
             ],
@@ -440,132 +466,88 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     );
   }
 
-  void _showNameMismatchDialog(String cardName, String inputName) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Name Mismatch', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(
-          'The name on the Aadhaar card ("$cardName") does not match the name you entered ("$inputName").\n\nPlease check for typos and try again.',
-          style: const TextStyle(fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK', style: TextStyle(color: Color(0xFF1565C0))),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  //  AADHAAR VERIFICATION
-  // ─────────────────────────────────────────────────────────────────────────
-  // Verification is now handled completely offline in AadhaarScannerService using ML Kit
-  // ── Submit ────────────────────────────────────────────────────────────────
   Future<void> _submit() async {
     setState(() => _submitting = true);
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        if (!mounted) return;
-        _showSnack('Your session has expired. Please log in again to continue.');
-        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
-          (route) => false,
-        );
+        if (mounted)
+          UIFeedback.showError(
+              context, 'Session expired. Please log in again.');
         return;
       }
 
+      UIFeedback.showInfo(context, "Saving your profile...");
+
       if (_role == 'farmer') {
         final payload = {
-          'id':                user.uid,
-          'farm_name':         _farmNameCtrl.text.trim(),
-          'full_name':         _farmerNameCtrl.text.trim(),
-          'age':               int.tryParse(_farmerAgeCtrl.text.trim()),
-          'phone':             widget.phone.isNotEmpty ? widget.phone : null,
-          'email':             widget.email ?? user.email,
-          'role':              'farmer',
-          'aadhaar_verified':  true,
-          'pincode':           _pincodeCtrl.text.trim(),
-          'region':            _region,
-          'gps_address':       _gpsCtrl.text.trim(),
-          'farm_size':         _farmSizeCtrl.text.trim(),
-          'waterbody_type':    _waterbodyType == 'Other'
+          'id': user.uid,
+          'farm_name': _farmNameCtrl.text.trim(),
+          'full_name': _farmerNameCtrl.text.trim(),
+          'age': int.tryParse(_farmerAgeCtrl.text.trim()),
+          'phone': widget.phone,
+          'email': widget.email ?? user.email,
+          'role': 'farmer',
+          'aadhaar_verified': true,
+          'pincode': _pincodeCtrl.text.trim(),
+          'region': _region,
+          'gps_address': _gpsCtrl.text.trim(),
+          'farm_size': _farmSizeCtrl.text.trim(),
+          'waterbody_type': _waterbodyType == 'Other'
               ? _customWaterCtrl.text.trim()
               : _waterbodyType,
-          'fish_species':      _primarySpecies,
-          'stocking_density':  _stockingCtrl.text.trim().isNotEmpty
-              ? _stockingCtrl.text.trim() : null,
-          'secondary_species': _secondaryCtrl.text.trim().isNotEmpty
-              ? _secondaryCtrl.text.trim() : null,
-          'account_status':    'active',
+          'fish_species': _primarySpecies,
+          'stocking_density': _stockingCtrl.text.trim(),
+          'secondary_species': _secondaryCtrl.text.trim(),
+          'account_status': 'active',
         };
 
-        await FirebaseFirestore.instance.collection('profiles').doc(user.uid).set(payload, SetOptions(merge: true));
+        await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(user.uid)
+            .set(payload, SetOptions(merge: true));
 
         if (!mounted) return;
-        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 600),
-            pageBuilder: (_, __, ___) => const DeviceConnectScreen(),
-            transitionsBuilder: (_, anim, __, child) => FadeTransition(
-              opacity: anim,
-              child: ScaleTransition(
-                scale: Tween(begin: 0.96, end: 1.0).animate(
-                    CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
-                child: child,
-              ),
-            ),
-          ),
+        UIFeedback.showSuccess(context, "Farmer profile created!");
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const DeviceConnectScreen()),
           (route) => false,
         );
       } else {
-        await FirebaseFirestore.instance.collection('profiles').doc(user.uid).set({
-          'id':               user.uid,
-          'full_name':        _buyerNameCtrl.text.trim(),
-          'company_name':     _companyCtrl.text.trim(),
-          'phone':            widget.phone.isNotEmpty ? widget.phone : null,
-          'email':            widget.email ?? user.email,
-          'role':             'buyer',
+        await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(user.uid)
+            .set({
+          'id': user.uid,
+          'full_name': _buyerNameCtrl.text.trim(),
+          'company_name': _companyCtrl.text.trim(),
+          'phone': widget.phone,
+          'email': widget.email ?? user.email,
+          'role': 'buyer',
           'aadhaar_verified': true,
-          'buyer_type':       _buyerType,
-          'pincode':          _buyerPincodeCtrl.text.trim(),
-          'region':           _buyerRegion,
-          'gps_address':      _buyerGpsCtrl.text.trim(),
-          'account_status':   'active',
+          'buyer_type': _buyerType,
+          'pincode': _buyerPincodeCtrl.text.trim(),
+          'region': _buyerRegion,
+          'gps_address': _buyerGpsCtrl.text.trim(),
+          'account_status': 'active',
         }, SetOptions(merge: true));
 
         if (!mounted) return;
-        final doc = await FirebaseFirestore.instance.collection('profiles').doc(user.uid).get();
-        final savedProfile = doc.data();
-
-        if (!mounted) return;
-        if (savedProfile == null || savedProfile['role'] != 'buyer') {
-          _showSnack('Buyer profile could not be created. Please try again.');
-          return;
-        }
-
+        UIFeedback.showSuccess(context, "Buyer profile created!");
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const BuyerShell()),
           (route) => false,
         );
       }
     } catch (e) {
-      _showSnack('Error saving profile: $e');
+      if (mounted)
+        UIFeedback.showError(
+            context, 'Failed to save profile. Check connection.');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
   }
 
-  void _showSnack(String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-
-  // ─────────────────────────────────────────────────────────────────────────
-  //  BUILD
-  // ─────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -576,9 +558,6 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  //  ROLE SELECTION
-  // ─────────────────────────────────────────────────────────────────────────
   Widget _buildRoleSelection() {
     return FadeTransition(
       opacity: _roleAnim,
@@ -590,7 +569,8 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
             child: Column(
               children: [
                 Container(
-                  width: 90, height: 90,
+                  width: 90,
+                  height: 90,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
@@ -608,22 +588,22 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
                   child: const Icon(Icons.water, size: 44, color: Colors.white),
                 ),
                 const SizedBox(height: 22),
-                const Text('Welcome to BlueFarm',
+                const Text('Complete Your Profile',
                     style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0D2B4E))),
                 const SizedBox(height: 8),
-                Text('Who are you? Choose your role to continue.',
+                Text('Choose your role to finish registration',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 15)),
+                    style:
+                        TextStyle(color: Colors.grey.shade600, fontSize: 15)),
                 const SizedBox(height: 40),
                 _roleCard(
                   role: 'farmer',
                   icon: Icons.agriculture_rounded,
                   label: 'Farmer',
-                  subtitle:
-                      'Monitor your fish pond, manage stock\nand sell produce to buyers',
+                  subtitle: 'Monitor ponds, manage stock, and sell produce',
                   gradient: const LinearGradient(
                     colors: [Color(0xFF1565C0), Color(0xFF0097A7)],
                     begin: Alignment.topLeft,
@@ -635,15 +615,13 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
                   role: 'buyer',
                   icon: Icons.storefront_rounded,
                   label: 'Buyer',
-                  subtitle:
-                      'Browse marketplace listings\nand purchase fish directly from farms',
+                  subtitle: 'Browse marketplace and purchase fish directly',
                   gradient: const LinearGradient(
                     colors: [Color(0xFF2E7D32), Color(0xFF00897B)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
-                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -676,7 +654,8 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         ),
         child: Row(children: [
           Container(
-            width: 62, height: 62,
+            width: 62,
+            height: 62,
             decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(16)),
@@ -701,16 +680,13 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios_rounded,
-              color: Colors.white.withValues(alpha: 0.7), size: 18),
+          const Icon(Icons.arrow_forward_ios_rounded,
+              color: Colors.white70, size: 18),
         ]),
       ),
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  //  FORM WRAPPER
-  // ─────────────────────────────────────────────────────────────────────────
   Widget _buildForm() {
     return FadeTransition(
       opacity: _fadeAnim,
@@ -744,16 +720,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => setState(() {
-              _role            = null;
-              _aadhaarVerified = false;
-              _aadhaarPhoto    = null;
-              _aadhaarError    = null;
-              _aadhaarSuccess  = null;
-              _checkEmblem     = false;
-              _checkName       = false;
-              _checkFormat     = false;
-            }),
+            onTap: () => setState(() => _role = null),
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -766,19 +733,11 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           const SizedBox(width: 14),
           Expanded(
             child: Text(
-              isFarmer ? 'Farmer Registration' : 'Buyer Registration',
+              isFarmer ? 'Farmer Details' : 'Buyer Details',
               style: const TextStyle(
-                  color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20)),
-            child: Text(
-              _aadhaarVerified ? '✓ Verified' : 'Unverified',
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -786,15 +745,12 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  //  FARMER FORM
-  // ─────────────────────────────────────────────────────────────────────────
   Widget _farmerForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Basic Information', icon: Icons.person_outline_rounded),
-        _field(_farmNameCtrl,   'Farm Name',   Icons.home_work_rounded),
+        _sectionLabel('Personal Info', icon: Icons.person_outline_rounded),
+        _field(_farmNameCtrl, 'Farm Name', Icons.home_work_rounded),
         const SizedBox(height: 12),
         _field(_farmerNameCtrl, 'Farmer Name', Icons.person_rounded),
         const SizedBox(height: 12),
@@ -804,16 +760,15 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
             keyboard: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
         const SizedBox(height: 28),
-
-        _sectionLabel('Aadhaar Verification', icon: Icons.verified_user_outlined),
+        _sectionLabel('Identity Verification',
+            icon: Icons.verified_user_outlined),
         _aadhaarSection(),
         const SizedBox(height: 28),
-
         if (!_aadhaarVerified) ...[
           _lockedPlaceholder(
-              'Complete Aadhaar verification to unlock location & farm details.'),
+              'Complete verification to unlock pond & location details.'),
         ] else ...[
-          _sectionLabel('Location', icon: Icons.location_on_outlined),
+          _sectionLabel('Farm Location', icon: Icons.location_on_outlined),
           _locationBlock(
             pincodeCtrl: _pincodeCtrl,
             region: _region,
@@ -822,105 +777,62 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
             isBuyer: false,
           ),
           const SizedBox(height: 28),
-
-          _sectionLabel('Farm Details', icon: Icons.water_drop_outlined),
-          _field(_farmSizeCtrl, 'Pond / Farm Area (in acres)',
-              Icons.straighten_rounded,
-              keyboard: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
-              ]),
+          _sectionLabel('Aquaculture Details', icon: Icons.water_drop_outlined),
+          _field(_farmSizeCtrl, 'Pond Area (Acres)', Icons.straighten_rounded,
+              keyboard: TextInputType.number),
           const SizedBox(height: 14),
           _dropdown(
-            label: 'Type of Water Body',
+            label: 'Water Body Type',
             icon: Icons.pool_rounded,
             value: _waterbodyType,
             items: _waterbodyTypes,
             onChanged: (v) => setState(() => _waterbodyType = v),
           ),
-          if (_waterbodyType == 'Other') ...[
-            const SizedBox(height: 12),
-            _field(_customWaterCtrl, 'Describe your water body type',
-                Icons.edit_note_rounded),
-          ],
           const SizedBox(height: 14),
           _dropdown(
-            label: 'Primary Fish Species',
+            label: 'Main Fish Species',
             icon: Icons.set_meal_rounded,
             value: _primarySpecies,
             items: _fishSpecies,
             onChanged: (v) => setState(() => _primarySpecies = v),
           ),
-          const SizedBox(height: 14),
-          TextFormField(
-            controller: _stockingCtrl,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Stocking Density (optional)',
-              hintText: 'e.g. 5',
-              prefixIcon: const Icon(Icons.density_medium_rounded),
-              suffixText: 'fish / m²',
-              suffixStyle: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              filled: true,
-              fillColor: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextFormField(
-            controller: _secondaryCtrl,
-            maxLines: 2,
-            decoration: InputDecoration(
-              labelText: 'Secondary Fish Species (optional)',
-              hintText: 'Type freely, e.g. Rohu, Catla, Mrigal',
-              prefixIcon: const Icon(Icons.add_circle_outline_rounded),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              filled: true,
-              fillColor: Colors.white,
-            ),
-          ),
           const SizedBox(height: 32),
           _submitButton(
-              label: 'Continue to Device Setup →',
+              label: 'Proceed to Connect Device',
               color: const Color(0xFF1565C0)),
         ],
       ],
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  //  BUYER FORM
-  // ─────────────────────────────────────────────────────────────────────────
   Widget _buyerForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Basic Information', icon: Icons.person_outline_rounded),
-        _field(_buyerNameCtrl, 'Buyer Name',              Icons.person_rounded),
+        _sectionLabel('Business Info', icon: Icons.person_outline_rounded),
+        _field(_buyerNameCtrl, 'Full Name', Icons.person_rounded),
         const SizedBox(height: 12),
-        _field(_companyCtrl,   'Company / Business Name', Icons.business_rounded),
+        _field(_companyCtrl, 'Business Name', Icons.business_rounded),
         const SizedBox(height: 12),
         _loginChip(),
         const SizedBox(height: 28),
-
-        _sectionLabel('Aadhaar Verification', icon: Icons.verified_user_outlined),
+        _sectionLabel('Identity Verification',
+            icon: Icons.verified_user_outlined),
         _aadhaarSection(),
         const SizedBox(height: 28),
-
         if (!_aadhaarVerified) ...[
           _lockedPlaceholder(
-              'Complete Aadhaar verification to unlock buyer details & location.'),
+              'Complete verification to unlock business details.'),
         ] else ...[
-          _sectionLabel('Buyer Details', icon: Icons.category_outlined),
+          _sectionLabel('Business Type', icon: Icons.category_outlined),
           _dropdown(
-            label: 'Type of Buyer',
+            label: 'Buyer Category',
             icon: Icons.storefront_rounded,
             value: _buyerType,
             items: _buyerTypes,
             onChanged: (v) => setState(() => _buyerType = v),
           ),
           const SizedBox(height: 28),
-
           _sectionLabel('Business Location', icon: Icons.location_on_outlined),
           _locationBlock(
             pincodeCtrl: _buyerPincodeCtrl,
@@ -931,20 +843,15 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           ),
           const SizedBox(height: 32),
           _submitButton(
-              label: 'Go to Dashboard →',
-              color: const Color(0xFF2E7D32)),
+              label: 'Finish Registration', color: const Color(0xFF2E7D32)),
         ],
       ],
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  //  AADHAAR SECTION
-  // ─────────────────────────────────────────────────────────────────────────
   Widget _aadhaarSection() {
-    final accentColor = _role == 'buyer'
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFF1565C0);
+    final accentColor =
+        _role == 'buyer' ? const Color(0xFF2E7D32) : const Color(0xFF1565C0);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -959,12 +866,6 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
                   : Colors.grey.shade200,
           width: 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2)),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -975,177 +876,71 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
             maxLength: 12,
             enabled: !_aadhaarVerified,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              labelText: 'Aadhaar Number (12 digits)',
+              labelText: 'Aadhaar Number',
               prefixIcon: const Icon(Icons.credit_card_rounded),
               counterText: '',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
               fillColor: Colors.grey.shade50,
-              suffixIcon: _aadhaarVerified
-                  ? const Icon(Icons.verified_rounded, color: Colors.green)
-                  : null,
             ),
           ),
           const SizedBox(height: 14),
-
           GestureDetector(
             onTap: _aadhaarVerified ? null : _showPhotoSourceSheet,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+            child: Container(
               width: double.infinity,
-              constraints:
-                  BoxConstraints(minHeight: _aadhaarPhoto == null ? 120 : 0),
+              height: _aadhaarPhoto == null ? 120 : 180,
               decoration: BoxDecoration(
-                color: _aadhaarPhoto != null
-                    ? Colors.blue.shade50
-                    : Colors.grey.shade50,
+                color: Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _aadhaarPhoto != null
-                      ? accentColor.withValues(alpha: 0.4)
-                      : Colors.grey.shade300,
-                  width: 1.5,
-                ),
+                border: Border.all(color: Colors.grey.shade300, width: 1.5),
               ),
               child: _aadhaarPhoto == null
-                  ? Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.upload_file_rounded,
-                              size: 40, color: Colors.grey.shade400),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Tap to upload your Aadhaar card photo',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: Colors.grey.shade500, fontSize: 14),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'OCR checks: Govt of India logo  ·  Name  ·  Number format',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: Colors.grey.shade400, fontSize: 11),
-                          ),
-                        ],
-                      ),
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo_rounded,
+                            size: 40, color: Colors.grey.shade400),
+                        const SizedBox(height: 10),
+                        Text('Upload Aadhaar Photo',
+                            style: TextStyle(color: Colors.grey.shade500)),
+                      ],
                     )
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: kIsWeb
-                          ? Container(
-                              height: 150,
-                              color: Colors.blue.shade50,
-                              child: Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.image_rounded,
-                                        size: 48, color: accentColor),
-                                    const SizedBox(height: 8),
-                                    Text('Photo selected ✓',
-                                        style: TextStyle(
-                                            color: accentColor,
-                                            fontWeight: FontWeight.w600)),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : Image.file(
-                              File(_aadhaarPhoto!.path),
-                              height: 190,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
+                          ? const Center(child: Text("Photo Uploaded ✓"))
+                          : Image.file(File(_aadhaarPhoto!.path),
+                              fit: BoxFit.cover),
                     ),
             ),
           ),
-
-          if (_aadhaarPhoto != null && !_aadhaarVerified) ...[
-            const SizedBox(height: 6),
-            GestureDetector(
-              onTap: _showPhotoSourceSheet,
-              child: Text('Change photo',
-                  style: TextStyle(
-                      color: accentColor,
-                      fontSize: 12,
-                      decoration: TextDecoration.underline)),
-            ),
-          ],
-          const SizedBox(height: 14),
-
           if (_aadhaarVerifying) ...[
-            const SizedBox(height: 14),
-            Center(
-              child: Column(
-                children: [
-                  CircularProgressIndicator(strokeWidth: 2, color: accentColor),
-                  const SizedBox(height: 8),
-                  const Text('Analyzing Aadhaar card...', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
+            const SizedBox(height: 12),
+            const LinearProgressIndicator(),
+            const SizedBox(height: 8),
+            const Text('Verifying with secure ML...',
+                style: TextStyle(fontSize: 12, color: Colors.grey)),
           ],
-
-          if (_aadhaarVerified || _aadhaarError != null) ...[
+          if (_aadhaarVerified) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _aadhaarVerified
-                    ? Colors.green.shade50
-                    : Colors.red.shade50,
+                color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: _aadhaarVerified
-                        ? Colors.green.shade200
-                        : Colors.red.shade200),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: const Row(
                 children: [
-                  Text(
-                    _aadhaarVerified ? 'All checks passed' : 'Verification failed',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: _aadhaarVerified
-                            ? Colors.green.shade800
-                            : Colors.red.shade800),
-                  ),
-                  const SizedBox(height: 8),
-                  _checkRow('Government of India logo detected', _checkEmblem),
-                  const SizedBox(height: 4),
-                  _checkRow('Name matches registered name', _checkName),
-                  const SizedBox(height: 4),
-                  _checkRow('Aadhaar number format valid (XXXX XXXX XXXX)', _checkFormat),
-                  if (_aadhaarError != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      _aadhaarError!,
+                  Icon(Icons.verified_rounded, color: Colors.green, size: 18),
+                  SizedBox(width: 8),
+                  Text('Identity Verified Successfully',
                       style: TextStyle(
-                          color: Colors.red.shade700,
-                          fontSize: 12,
-                          height: 1.4),
-                    ),
-                  ],
+                          color: Colors.green, fontWeight: FontWeight.bold)),
                 ],
               ),
-            ),
-          ],
-
-          if (_aadhaarSuccess != null) ...[
-            const SizedBox(height: 10),
-            _infoBanner(
-              icon: Icons.check_circle_rounded,
-              text: _aadhaarSuccess!,
-              color: Colors.green.shade700,
-              bg: Colors.green.shade50,
-              border: Colors.green.shade200,
             ),
           ],
         ],
@@ -1153,32 +948,6 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     );
   }
 
-  Widget _checkRow(String label, bool passed) {
-    return Row(
-      children: [
-        Icon(
-          passed ? Icons.check_circle_rounded : Icons.cancel_rounded,
-          color: passed ? Colors.green.shade600 : Colors.red.shade400,
-          size: 16,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-                fontSize: 12,
-                color: passed
-                    ? Colors.green.shade700
-                    : Colors.red.shade600),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  //  LOCATION BLOCK
-  // ─────────────────────────────────────────────────────────────────────────
   Widget _locationBlock({
     required TextEditingController pincodeCtrl,
     required String? region,
@@ -1193,9 +962,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           controller: pincodeCtrl,
           keyboardType: TextInputType.number,
           maxLength: 6,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onChanged: (v) {
-            setState(() {});
             if (v.length == 6) _lookupPincode(v, isBuyer: isBuyer);
           },
           decoration: InputDecoration(
@@ -1208,14 +975,10 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
           ),
         ),
         if (region != null) ...[
-          const SizedBox(height: 10),
-          _infoBanner(
-            icon: Icons.location_city_rounded,
-            text: region,
-            color: Colors.teal.shade700,
-            bg: Colors.teal.shade50,
-            border: Colors.teal.shade200,
-          ),
+          const SizedBox(height: 8),
+          Text('📍 $region',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.teal)),
         ],
         const SizedBox(height: 14),
         SizedBox(
@@ -1225,10 +988,12 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
                 locLoading ? null : () => _detectLocation(isBuyer: isBuyer),
             icon: locLoading
                 ? const SizedBox(
-                    width: 16, height: 16,
+                    width: 16,
+                    height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.my_location_rounded),
-            label: Text(locLoading ? 'Detecting…' : 'Detect My Location (GPS)'),
+            label:
+                Text(locLoading ? 'Detecting...' : 'Use Current GPS Location'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -1236,12 +1001,11 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         TextField(
           controller: gpsCtrl,
           decoration: InputDecoration(
-            labelText: 'Location Address (editable)',
-            hintText: 'Auto-detected, or enter manually',
+            labelText: 'Full Address',
             prefixIcon: const Icon(Icons.location_on_rounded),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
@@ -1252,88 +1016,45 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  //  SHARED WIDGETS
-  // ─────────────────────────────────────────────────────────────────────────
   Widget _loginChip() {
-    final hasPhone  = widget.phone.isNotEmpty;
-    final loginInfo = hasPhone
-        ? '📱  ${widget.phone}'
-        : widget.email != null
-            ? '✉️  ${widget.email}'
-            : 'No contact info available';
-
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.blue.shade50,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: Colors.blue.shade100),
       ),
-      child: Row(
-        children: [
-          Icon(Icons.lock_rounded, size: 16, color: Colors.blue.shade700),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(loginInfo,
-                style: TextStyle(
-                    color: Colors.blue.shade700,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500)),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade100,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text('Auto-filled',
-                style: TextStyle(color: Colors.blue.shade600, fontSize: 10)),
-          ),
-        ],
-      ),
+      child: Text('Verified Contact: ${widget.phone}',
+          style: TextStyle(
+              color: Colors.blue.shade700, fontWeight: FontWeight.w500)),
     );
   }
 
   Widget _sectionLabel(String text, {IconData? icon}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           if (icon != null) ...[
-            Container(
-              width: 28, height: 28,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A6FA8).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 15, color: const Color(0xFF1A6FA8)),
-            ),
-            const SizedBox(width: 10),
+            Icon(icon, size: 20, color: const Color(0xFF1565C0)),
+            const SizedBox(width: 8),
           ],
           Text(text,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: Color(0xFF0D2B4E))),
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ],
       ),
     );
   }
 
-  Widget _field(
-    TextEditingController ctrl,
-    String label,
-    IconData icon, {
-    TextInputType keyboard = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
+  Widget _field(TextEditingController ctrl, String label, IconData icon,
+      {TextInputType keyboard = TextInputType.text,
+      List<TextInputFormatter>? inputFormatters}) {
     return TextField(
       controller: ctrl,
       keyboardType: keyboard,
       inputFormatters: inputFormatters,
-      onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
@@ -1344,17 +1065,15 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     );
   }
 
-  Widget _dropdown({
-    required String label,
-    required IconData icon,
-    required String? value,
-    required List<String> items,
-    required void Function(String?) onChanged,
-  }) {
+  Widget _dropdown(
+      {required String label,
+      required IconData icon,
+      required String? value,
+      required List<String> items,
+      required void Function(String?) onChanged}) {
     return DropdownButtonFormField<String>(
-      isExpanded: true,
-      initialValue: value,
-      onChanged: (v) { onChanged(v); setState(() {}); },
+      value: value,
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
@@ -1362,83 +1081,20 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         filled: true,
         fillColor: Colors.white,
       ),
-      items: items
-          .map(
-            (e) => DropdownMenuItem(
-              value: e,
-              child: Text(
-                e,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-          .toList(),
-      selectedItemBuilder: (context) => items
-          .map(
-            (e) => Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                e,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-          .toList(),
+      items:
+          items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
     );
   }
 
   Widget _lockedPlaceholder(String message) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.lock_rounded, size: 38, color: Colors.grey.shade400),
-          const SizedBox(height: 12),
-          Text(message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: Colors.grey.shade500, fontSize: 14, height: 1.4)),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoBanner({
-    required IconData icon,
-    required String text,
-    required Color color,
-    required Color bg,
-    required Color border,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: border)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(text,
-                style: TextStyle(
-                    color: color,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    height: 1.4)),
-          ),
-        ],
-      ),
+          color: Colors.grey.shade100, borderRadius: BorderRadius.circular(16)),
+      child: Text(message,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey.shade600)),
     );
   }
 
@@ -1450,21 +1106,13 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: Colors.grey.shade300,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 4,
-          shadowColor: color.withValues(alpha: 0.4),
         ),
         child: _submitting
-            ? const SizedBox(
-                width: 22, height: 22,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: Colors.white))
-            : Text(label,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold)),
+            ? const CircularProgressIndicator(color: Colors.white)
+            : Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }

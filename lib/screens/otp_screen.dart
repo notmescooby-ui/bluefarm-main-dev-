@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bluefarm/services/auth_service.dart';
+import 'package:bluefarm/services/ui_feedback_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
 import 'role_selection_screen.dart';
@@ -8,7 +9,8 @@ class OtpScreen extends StatefulWidget {
   final String phone;
   final String verificationId;
 
-  const OtpScreen({super.key, required this.phone, required this.verificationId});
+  const OtpScreen(
+      {super.key, required this.phone, required this.verificationId});
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -59,7 +61,10 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
   String get _otp => _digitCtrls.map((c) => c.text).join();
 
   Future<void> _verify() async {
-    if (_otp.length < 6) return;
+    if (_otp.length < 6) {
+      UIFeedback.showInfo(context, "Please enter the full 6-digit code");
+      return;
+    }
     setState(() => _loading = true);
 
     try {
@@ -68,6 +73,7 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
       if (res.user != null && mounted) {
         setState(() => _verified = true);
         _successCtrl.forward();
+        UIFeedback.showSuccess(context, "Verification Successful!");
 
         await Future.delayed(const Duration(seconds: 1));
         if (!mounted) return;
@@ -83,11 +89,9 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
           (route) => false,
         );
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid OTP')),
-        );
+        UIFeedback.showError(context, "Invalid OTP. Please try again.");
       }
     }
 
@@ -188,7 +192,8 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                                 boxShadow: _focusNodes[i].hasFocus
                                     ? [
                                         BoxShadow(
-                                          color: Colors.white.withValues(alpha: 0.2),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.2),
                                           blurRadius: 12,
                                         ),
                                       ]
@@ -254,7 +259,8 @@ class _OtpScreenState extends State<OtpScreen> with TickerProviderStateMixin {
                                   height: 22,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1565C0)),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF1565C0)),
                                   ),
                                 )
                               : const Text(

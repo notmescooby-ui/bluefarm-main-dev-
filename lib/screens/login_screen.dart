@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:bluefarm/services/auth_service.dart';
+import 'package:bluefarm/services/ui_feedback_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
 import 'otp_screen.dart';
@@ -58,8 +59,8 @@ class _LoginScreenState extends State<LoginScreen>
     try {
       await AuthService().signInWithGoogle();
 
-      // FIX: Navigate to Role Selection after successful Google Login
       if (mounted) {
+        UIFeedback.showSuccess(context, "Welcome to BlueFarm!");
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
@@ -68,9 +69,7 @@ class _LoginScreenState extends State<LoginScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Google Sign-In failed: $e")),
-        );
+        UIFeedback.showError(context, "Google Sign-In failed: ${e.toString()}");
       }
     }
     if (mounted) setState(() => _loading = false);
@@ -78,7 +77,16 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> sendOtp() async {
     String phone = phoneController.text.trim();
-    if (phone.isEmpty) return;
+    if (phone.isEmpty) {
+      UIFeedback.showInfo(context, "Please enter your phone number");
+      return;
+    }
+
+    // Basic phone validation
+    if (phone.length < 10) {
+      UIFeedback.showError(context, "Please enter a valid phone number");
+      return;
+    }
 
     setState(() => _loading = true);
     try {
@@ -86,6 +94,7 @@ class _LoginScreenState extends State<LoginScreen>
         phone: phone,
         onCodeSent: (verificationId) {
           if (mounted) {
+            UIFeedback.showSuccess(context, "OTP sent successfully");
             Navigator.push(
               context,
               PageRouteBuilder(
@@ -113,8 +122,7 @@ class _LoginScreenState extends State<LoginScreen>
         },
         onError: (error) {
           if (mounted) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(error)));
+            UIFeedback.showError(context, error);
             setState(() => _loading = false);
           }
         },
@@ -122,15 +130,12 @@ class _LoginScreenState extends State<LoginScreen>
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Login failed')),
-        );
+        UIFeedback.showError(context, e.message ?? 'Login failed');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to send OTP: $e")),
-        );
+        UIFeedback.showError(
+            context, "Failed to send OTP. Please check your internet.");
       }
     }
     if (mounted) setState(() => _loading = false);

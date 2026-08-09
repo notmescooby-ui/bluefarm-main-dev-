@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:bluefarm/services/ui_feedback_service.dart';
 
 import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
@@ -26,6 +27,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (!mounted) return;
+      UIFeedback.showInfo(context, "Please sign in to continue");
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
@@ -34,16 +36,21 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     }
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('profiles').doc(user.uid).get();
+      UIFeedback.showInfo(context, "Checking your profile...");
+      final doc = await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(user.uid)
+          .get();
       final profile = doc.data();
 
       if (!mounted) return;
-      final hasProfile =
-          profile != null && (profile['full_name'] as String?)?.isNotEmpty == true;
+      final hasProfile = profile != null &&
+          (profile['full_name'] as String?)?.isNotEmpty == true;
       final isSelectedRoleReady =
           hasProfile && (profile['role'] as String?) == role;
 
       if (!isSelectedRoleReady) {
+        UIFeedback.showInfo(context, "Please complete your $role profile");
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => FarmerInfoScreen(
@@ -54,11 +61,15 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           ),
         );
       } else if (role == 'buyer') {
+        UIFeedback.showSuccess(
+            context, "Welcome back, ${profile['full_name']}");
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const BuyerShell()),
           (route) => false,
         );
       } else {
+        UIFeedback.showSuccess(
+            context, "Welcome back, ${profile['full_name']}");
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainShell()),
           (route) => false,
@@ -66,9 +77,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not continue: $e')),
-        );
+        UIFeedback.showError(context, 'Could not continue: ${e.toString()}');
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -125,8 +134,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     const SizedBox(height: 10),
                     Text(
                       isAuthenticated
-                          ? 'You are signed in. Choose how you want to continue right now.'
-                          : 'Choose whether you want to use BlueFarm as a farmer or as a buyer.',
+                          ? 'Choose how you want to use BlueFarm today.'
+                          : 'Sign in to access your farmer tools or buyer marketplace.',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.85),
@@ -137,12 +146,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     const SizedBox(height: 32),
                     _RoleCard(
                       icon: Icons.agriculture_rounded,
-                      title: isAuthenticated
-                          ? 'Continue as Farmer'
-                          : 'Farmer Login',
-                      subtitle: isAuthenticated
-                          ? 'Open the farmer dashboard and farm tools.'
-                          : 'Sign in and continue with farmer tools.',
+                      title: 'Farmer',
+                      subtitle:
+                          'Monitor ponds, manage stock, and sell your produce.',
                       gradient: const LinearGradient(
                         colors: [Color(0xFF1E88E5), Color(0xFF00ACC1)],
                         begin: Alignment.topLeft,
@@ -153,11 +159,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     const SizedBox(height: 16),
                     _RoleCard(
                       icon: Icons.storefront_rounded,
-                      title:
-                          isAuthenticated ? 'Continue as Buyer' : 'Buyer Login',
-                      subtitle: isAuthenticated
-                          ? 'Open the buyer marketplace and orders.'
-                          : 'Sign in and continue with buyer features.',
+                      title: 'Buyer',
+                      subtitle:
+                          'Browse marketplace and buy directly from farms.',
                       gradient: const LinearGradient(
                         colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
                         begin: Alignment.topLeft,
@@ -165,13 +169,26 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       ),
                       onTap: () => _continueAs('buyer'),
                     ),
-                    if (_loading) ...[
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                    if (_loading)
                       const CircularProgressIndicator(
                         strokeWidth: 2.5,
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
-                    ],
+                    if (!isAuthenticated)
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const LoginScreen()));
+                        },
+                        child: const Text(
+                          "Already have an account? Sign In",
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -206,14 +223,13 @@ class _RoleCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -241,22 +257,21 @@ class _RoleCard extends StatelessWidget {
                       color: Color(0xFF0D1F3C),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFF5A789E),
-                      height: 1.5,
+                      height: 1.4,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 12),
             const Icon(
               Icons.arrow_forward_ios_rounded,
-              size: 18,
+              size: 16,
               color: Color(0xFF5A789E),
             ),
           ],
