@@ -1074,6 +1074,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
     return DropdownButtonFormField<String>(
       value: value,
       onChanged: onChanged,
+      isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
@@ -1082,7 +1083,7 @@ class _FarmerInfoScreenState extends State<FarmerInfoScreen>
         fillColor: Colors.white,
       ),
       items:
-          items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+          items.map((e) => DropdownMenuItem(value: e, child: Text(e, overflow: TextOverflow.ellipsis))).toList(),
     );
   }
 
