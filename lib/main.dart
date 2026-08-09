@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 
 import 'providers/app_provider.dart';
@@ -22,9 +20,17 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-  );
+  // Initialize App Check
+  try {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.debug,
+      appleProvider: AppleProvider.debug,
+      webProvider:
+          ReCaptchaV3Provider('6Lcw-uQpAAAAAA_J1Q1_j_S8_k_l_m_n_o_p_q_r'),
+    );
+  } catch (e) {
+    debugPrint("Firebase App Check initialization failed: $e");
+  }
 
   try {
     final prefs = await SharedPreferences.getInstance();
@@ -52,19 +58,6 @@ class BlueFarmApp extends StatefulWidget {
 }
 
 class _BlueFarmAppState extends State<BlueFarmApp> {
-  
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(

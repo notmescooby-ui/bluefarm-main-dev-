@@ -36,12 +36,15 @@ class _MainShellState extends State<MainShell> {
         children: [
           IndexedStack(
             index: _currentIndex,
-            children: const [
-              HomeScreen(),
-              InsightsScreen(),
-              KnowledgeScreen(),
-              HarvestScreen(),
-              SettingsScreen(),
+            children: [
+              const HomeScreen(),
+              const InsightsScreen(),
+              const KnowledgeScreen(),
+              const HarvestScreen(),
+              const SettingsScreen(
+                themeColor: Colors.blue,
+                backgroundColor: Color(0xFFF7F9FC),
+              ),
             ],
           ),
 

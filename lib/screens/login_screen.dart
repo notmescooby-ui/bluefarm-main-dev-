@@ -4,6 +4,7 @@ import 'package:bluefarm/services/auth_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bounce_button.dart';
 import 'otp_screen.dart';
+import 'role_selection_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -56,6 +57,15 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => _loading = true);
     try {
       await AuthService().signInWithGoogle();
+
+      // FIX: Navigate to Role Selection after successful Google Login
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+          (route) => false,
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +90,8 @@ class _LoginScreenState extends State<LoginScreen>
               context,
               PageRouteBuilder(
                 transitionDuration: const Duration(milliseconds: 600),
-                pageBuilder: (_, __, ___) => OtpScreen(phone: phone, verificationId: verificationId),
+                pageBuilder: (_, __, ___) =>
+                    OtpScreen(phone: phone, verificationId: verificationId),
                 transitionsBuilder: (_, anim, __, child) {
                   return FadeTransition(
                     opacity: anim,
@@ -102,7 +113,8 @@ class _LoginScreenState extends State<LoginScreen>
         },
         onError: (error) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(error)));
             setState(() => _loading = false);
           }
         },
@@ -141,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Enlarged Logo
                     FadeTransition(
                       opacity: _fadeAt(0.0, 0.4),
                       child: SlideTransition(
@@ -168,9 +179,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
                     FadeTransition(
                       opacity: _fadeAt(0.1, 0.5),
                       child: const Text(
@@ -183,9 +192,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 6),
-
                     FadeTransition(
                       opacity: _fadeAt(0.15, 0.55),
                       child: Text(
@@ -196,10 +203,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 36),
-
-                    // Google button
                     FadeTransition(
                       opacity: _fadeAt(0.25, 0.65),
                       child: SlideTransition(
@@ -207,7 +211,8 @@ class _LoginScreenState extends State<LoginScreen>
                         child: BounceButton(
                           onPressed: _loading ? null : signInWithGoogle,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 16, horizontal: 20),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
@@ -250,10 +255,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // Divider
                     FadeTransition(
                       opacity: _fadeAt(0.35, 0.7),
                       child: Row(
@@ -285,10 +287,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // Phone input card
                     FadeTransition(
                       opacity: _fadeAt(0.4, 0.8),
                       child: SlideTransition(
@@ -335,12 +334,14 @@ class _LoginScreenState extends State<LoginScreen>
                                     size: 20,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white.withValues(alpha: 0.08),
+                                  fillColor:
+                                      Colors.white.withValues(alpha: 0.08),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide.none,
                                   ),
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(vertical: 16),
                                 ),
                               ),
                               const SizedBox(height: 20),
@@ -354,7 +355,8 @@ class _LoginScreenState extends State<LoginScreen>
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.06),
+                                        color: Colors.black
+                                            .withValues(alpha: 0.06),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -367,7 +369,9 @@ class _LoginScreenState extends State<LoginScreen>
                                             height: 22,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2.5,
-                                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1565C0)),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Color(0xFF1565C0)),
                                             ),
                                           )
                                         : const Row(
@@ -397,15 +401,13 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 30),
-
                     FadeTransition(
                       opacity: _fadeAt(0.6, 1.0),
-                      child: Text(
+                      child: const Text(
                         "First time here? Sign up now",
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: Colors.white70,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

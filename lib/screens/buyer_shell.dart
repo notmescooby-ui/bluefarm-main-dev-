@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:url_launcher/url_launcher.dart';
+
 import '../services/auth_redirect_service.dart';
 import 'edit_profile_screen.dart';
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2379,18 +2379,35 @@ class _ProfileTabState extends State<_ProfileTab> {
                         blurRadius: 8)
                   ]),
               child: Column(children: [
-                _buildSettingTile(Icons.person, 'Edit Profile / Personal Info', onTap: () {
+                _buildSettingTile(Icons.person, 'Edit Details', onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const EditProfileScreen()),
                   );
                 }),
                 Divider(height: 1, color: Colors.grey.shade200),
-                _buildSettingTile(Icons.notifications_outlined, 'Notifications', onTap: () => _showComingSoon(context)),
-                Divider(height: 1, color: Colors.grey.shade200),
-                _buildSettingTile(Icons.language_outlined, 'Language & Region', onTap: () => _showComingSoon(context)),
-                Divider(height: 1, color: Colors.grey.shade200),
-                _buildSettingTile(Icons.help_outline_rounded, 'Help & Support', onTap: () => _showComingSoon(context)),
+                _buildSettingTile(Icons.headset_mic, 'Ask Support', onTap: () async {
+                  final Uri emailLaunchUri = Uri(
+                    scheme: 'mailto',
+                    path: 'bluefarm1572@gmail.com',
+                    query: 'subject=BlueFarm%20App%20Support%20Request',
+                  );
+                  try {
+                    if (!await launchUrl(emailLaunchUri)) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Could not open email client')),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not open email client')),
+                      );
+                    }
+                  }
+                }),
               ]),
             ),
             const SizedBox(height: 20),

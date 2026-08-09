@@ -1,19 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Network -->
     <uses-permission android:name="android.permission.INTERNET"/>
-
-    <!-- Camera -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-
-    <!-- Location — ALL THREE required for geolocator to work -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
 
-    <!-- Camera hardware features -->
     <uses-feature android:name="android.hardware.camera"/>
     <uses-feature android:name="android.hardware.camera.autofocus"/>
 
@@ -35,13 +29,20 @@
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"/>
-                <intent-filter android:autoVerify="true">
-    <action android:name="android.intent.action.VIEW" />
-    <category android:name="android.intent.category.DEFAULT" />
-    <category android:name="android.intent.category.BROWSABLE" />
 
-    <data android:scheme="bluefarm" android:host="login-callback" />
-</intent-filter>
+            <!-- HANDLES THE REDIRECT BACK TO APP -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- Match the scheme mentioned in your prompt -->
+                <data android:scheme="io.bluefarm.app" android:host="login-callback" />
+                <data android:scheme="bluefarm" android:host="login-callback" />
+
+                <!-- Reversed Client ID (often required for Google Auth handoff) -->
+                <data android:scheme="com.googleusercontent.apps.52765421109-a7mgfjrl3dbjfl17i1v2u8rqdpr1kkq5" />
+            </intent-filter>
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -54,7 +55,6 @@
             android:value="2"/>
     </application>
 
-    <!-- Required for url_launcher to open UPI and other apps -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
@@ -66,19 +66,7 @@
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="gpay"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="phonepe"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="paytmmp"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="amazonpay"/>
+            <data android:scheme="io.bluefarm.app"/>
         </intent>
     </queries>
 
