@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index,follow">
+  <title>BlueFarm Privacy Policy</title>
+  <style>
+    :root { color-scheme: light; --ink: #17332b; --muted: #53645d; --accent: #176b52; --line: #dce6e0; --bg: #f6faf7; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    main { max-width: 860px; margin: 36px auto; padding: 32px clamp(20px, 5vw, 48px); background: white; border: 1px solid var(--line); border-radius: 18px; }
+    h1 { line-height: 1.2; margin-bottom: 8px; }
+    h2 { margin-top: 30px; font-size: 1.25rem; }
+    p, li { color: #293f36; }
+    a { color: var(--accent); overflow-wrap: anywhere; }
+    .meta { color: var(--muted); }
+    .callout { background: #eef7f1; border-left: 4px solid var(--accent); padding: 12px 16px; border-radius: 6px; }
+    footer { border-top: 1px solid var(--line); margin-top: 32px; padding-top: 16px; color: var(--muted); font-size: .9rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>BlueFarm Privacy Policy</h1>
+  <p class="meta">Effective date: 27 October 2026</p>
+  <p>BlueFarm helps aquaculture farmers manage farm profiles and access aquaculture-related information, including nearby fish markets, collection hubs and cold-storage facilities. This policy explains what information BlueFarm processes, why it is used, and the choices available to you.</p>
+  <p class="callout"><strong>Privacy highlights:</strong> Aadhaar document images and Aadhaar numbers are processed locally for the described verification flow and are not uploaded to BlueFarm servers. BlueFarm stores a readable farm-location address and related region/PIN-code text. Live GPS coordinates used to find nearby markets are held temporarily in memory and are not stored in the BlueFarm database.</p>
+
+  <h2>1. Information we collect or process</h2>
+  <ul>
+    <li><strong>Account information:</strong> information you provide to register or sign in, such as your email address and authentication-related identifiers.</li>
+    <li><strong>Profile and farm information:</strong> details you enter during onboarding or profile editing, which may include your name, age, phone number, farm name, pond area, waterbody type, species, region, PIN code and farm address.</li>
+    <li><strong>Farm location text:</strong> when you choose automatic location detection, BlueFarm may reverse-geocode device coordinates into a readable address and save that address in your profile. Region and PIN code may also be saved. If reverse geocoding fails, a coordinate string may be saved in the address field. You may manually edit your location text.</li>
+    <li><strong>Water-quality and farm readings:</strong> sensor readings or monitoring information that you submit or connect to BlueFarm, where those features are enabled.</li>
+    <li><strong>Aadhaar verification result:</strong> the app may store a boolean verification status (for example, <code>aadhaar_verified</code>) in your profile.</li>
+    <li><strong>Technical information:</strong> the app platform and diagnostic information may be processed by the operating system, Google Play, or infrastructure providers as part of operating, securing and troubleshooting the service.</li>
+  </ul>
+
+  <h2>2. Aadhaar document processing</h2>
+  <p>When you choose to scan or select an Aadhaar image for verification, BlueFarm uses on-device text recognition through Google ML Kit to check for government-issuer text, a 12-digit Aadhaar-number pattern and a name match. In this described flow, text recognition occurs on your device. BlueFarm does not upload or store the Aadhaar image, full Aadhaar number, Aadhaar address or date of birth on its servers. The image is held temporarily on the device for the session, and the app stores only the verification-status flag. Do not use the verification feature if you do not wish to provide the document for local processing.</p>
+
+  <h2>3. How we use information</h2>
+  <p>BlueFarm uses information to create and manage accounts, display and update farmer profiles, support farm-management features, show relevant aquaculture resources, find nearby markets when requested, perform the selected verification flow, maintain security, troubleshoot errors and respond to support or privacy requests.</p>
+
+  <h2>4. Location and third-party services</h2>
+  <ul>
+    <li><strong>Device location:</strong> BlueFarm requests location access when you initiate a feature that needs it. The app does not continuously track your movements or run background location tracking. Live coordinates used by the “Market Near Me” feature are used temporarily in memory to find nearby facilities and calculate distances, and are not saved to the BlueFarm database.</li>
+    <li><strong>OpenStreetMap Nominatim:</strong> when you request automatic address detection, coordinates may be sent to the Nominatim geocoding service to obtain a readable address. The resulting address text, region and PIN code may then be saved to your BlueFarm profile. Nominatim is a third-party service governed by its own terms and privacy practices.</li>
+    <li><strong>Supabase:</strong> BlueFarm uses Supabase for authentication and database storage of account/profile information and other data described above. Information stored there is subject to the app's configuration and the provider's infrastructure and privacy terms.</li>
+    <li><strong>Google ML Kit:</strong> the described Aadhaar text recognition is performed on-device; the Aadhaar image is not sent by BlueFarm to a remote OCR server in this flow.</li>
+    <li><strong>Google Play and device providers:</strong> they may process information under their own policies in connection with app distribution, device operation, security and diagnostics.</li>
+  </ul>
+
+  <h2>5. When information is shared</h2>
+  <p>BlueFarm does not sell your personal information. Information may be processed by service providers where needed to operate the app, as described in this policy, or disclosed where required by law, to protect users and the service, or to address security or abuse. We do not intend to share Aadhaar images or full Aadhaar numbers with BlueFarm servers or service providers.</p>
+
+  <h2>6. Storage, security and retention</h2>
+  <p>Profile information is stored in the BlueFarm backend while needed to provide the service. Live coordinates used for nearby-market calculations are temporary and are not written to the BlueFarm database. Aadhaar images and numbers are not retained by BlueFarm servers in the described verification flow. We use the security controls available through the app and its infrastructure, but no method of electronic storage or transmission can be guaranteed to be completely secure. Retention of information held by third-party providers may be governed by their own policies.</p>
+
+  <h2>7. Your choices and account deletion</h2>
+  <p>You can edit profile and farm-location text in the app where those features are available, and you can choose whether to grant location permission. To request account deletion or ask us to access, correct or delete information associated with your account, email <a href="mailto:bluefarm1572@gmail.com">bluefarm1572@gmail.com</a> from the address associated with your account where possible. Include “BlueFarm privacy request” in the subject and tell us what you are requesting. We may need to verify your identity before acting. We will handle requests subject to applicable law, security needs and any information we are legally required to retain.</p>
+
+  <h2>8. Children's privacy</h2>
+  <p>BlueFarm is intended for people involved in aquaculture and farm management, not for children. If you believe a child has provided personal information to BlueFarm, contact us so we can review the request.</p>
+
+  <h2>9. Changes to this policy</h2>
+  <p>We may update this policy as BlueFarm's features, data practices or legal requirements change. The updated policy will be published at this address with a revised effective date. Please review it periodically.</p>
+
+  <h2>10. Contact us</h2>
+  <p>For questions, concerns, or privacy and account-deletion requests, contact:</p>
+  <p><strong>BlueFarm Privacy Support</strong><br>Email: <a href="mailto:bluefarm1572@gmail.com">bluefarm1572@gmail.com</a></p>
+
+  <footer>This policy describes the BlueFarm data practices provided to us for drafting. The app owner should verify that every statement matches the released app and backend configuration before submitting it for review.</footer>
+</main>
+</body>
+</html>
